@@ -68,8 +68,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, item: dbItem });
 
-  } catch (error: any) {
+  } catch (error) { // 🌟 ': any'를 지웁니다!
     console.error("Upload/AI Error:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    // 🌟 Error 객체인지 확인하고 안전하게 메시지를 뽑아냅니다.
+    const errorMessage = error instanceof Error ? error.message : "알 수 없는 에러가 발생했습니다.";
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

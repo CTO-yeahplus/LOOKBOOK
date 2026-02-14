@@ -14,7 +14,7 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     // 1. Supabase 명부에서 알림을 허락한 '모든 유저'의 주소 가져오기
     const { data: subscriptions, error } = await supabase
