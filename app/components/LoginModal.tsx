@@ -1,6 +1,6 @@
 // components/LoginModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mail, Github, Twitter, MessageCircle, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
 
 interface LoginModalProps {
   isOpen: boolean;
