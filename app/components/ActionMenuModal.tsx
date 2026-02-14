@@ -22,27 +22,6 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, subscr
     onClose();
   };
 
-  // 🌟 바이럴 공유 로직 (이 모달 안으로 통합)
-  const handleShare = async () => {
-    if (!item) return;
-    const shareData = {
-      title: "AURA: 오늘의 추천 룩 🌤️",
-      text: `AURA가 추천하는 날씨 맞춤 룩! 태그: ${item.tags.join(', ')}`,
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) await navigator.share(shareData);
-      else {
-        await navigator.clipboard.writeText(shareData.url);
-        alert("링크가 복사되었습니다. 친구에게 공유해보세요!");
-      }
-    } catch (err) {
-      console.log("공유가 취소되었습니다.");
-    }
-    onClose(); // 공유 창을 띄운 후 메뉴 닫기
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (

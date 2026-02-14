@@ -67,7 +67,7 @@ export default function Home() {
       link.download = `AURA_Look_${new Date().getTime()}.png`;
       link.href = dataUrl;
       link.click();
-    } catch (e) { 
+    } catch { 
       alert('포토카드 캡처 실패. 네트워크 상태를 확인해주세요!'); 
     } finally { 
       setIsExporting(false); 
@@ -124,7 +124,7 @@ export default function Home() {
         setCurrentLikes(count || 0);
       };
       fetchLikes();
-    }, [currentItem?.id, isSaved]); // 카드가 넘어가거나, 내가 하트를 누를 때마다 갱신  
+    }, [currentItem, isSaved]); // 카드가 넘어가거나, 내가 하트를 누를 때마다 갱신  
 
   if (aura.fashionItems.length === 0) return (
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>

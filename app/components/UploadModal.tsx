@@ -56,8 +56,9 @@ export default function UploadModal({ isOpen, onClose, triggerHaptic }: UploadMo
       setPreviewUrl(null);
       window.location.reload(); // 새로고침하여 앱 메인 화면에 내 옷이 뜨게 만듭니다!
 
-    } catch (error: any) {
-      alert(`에러가 발생했습니다: ${error.message}`);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "업로드 실패";
+      alert(`에러가 발생했습니다: ${msg}`);
       setIsUploading(false);
     }
   };
