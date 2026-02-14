@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Heart, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2, MessageCircle, Mail, Github, Twitter, } from "lucide-react";
+import { Heart, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2} from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
@@ -38,7 +38,7 @@ export default function Home() {
       link.download = `Aura_Look_${new Date().getTime()}.png`;
       link.href = dataUrl;
       link.click();
-    } catch (err) { alert('포토카드 생성 실패 (보안 정책 문제일 수 있습니다)'); } 
+    } catch { alert('포토카드 생성 실패 (보안 정책 문제일 수 있습니다)'); } 
     finally { setIsExporting(false); }
   };
 
