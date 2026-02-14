@@ -1,36 +1,22 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🌟 AURA: The AI-Powered Ambient Lookbook
+AURA is a next-generation digital fashion lookbook that seamlessly blends AI vision technology, real-time weather data, and immersive 3D web design. Designed for modern fashion enthusiasts who seek daily inspiration, AURA intelligently curates and presents the perfect outfits tailored to the user's current environment and personal taste.
 
-## Getting Started
+✨ Core Features
+Intelligent Weather Sync: AURA automatically detects your local weather and temperature, instantly prioritizing outfits that perfectly match the climate outside your window.
 
-First, run the development server:
+AI Vision Tagging: Powered by the Gemini AI Vision model, every fashion item uploaded is automatically analyzed, categorized, and tagged with precise style keywords (e.g., Casual, Navy, Feminine) and optimal weather conditions.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Immersive 3D & Spatial Audio: Experience fashion like never before. Navigate through looks using fluid, swipeable 3D cards (driven by hardware-accelerated Framer Motion) accompanied by ambient soundscapes—like gentle rain or sunny breezes—that match the mood of the outfit.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Cloud Archive & Multiverse Login: Build your personal digital wardrobe. Seamlessly log in via Google, Kakao, X (Twitter), or GitHub (powered by Supabase Auth) to securely save and sync your favorite looks across all your devices.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Exportable Photocards: Found the perfect look? Instantly export your curated outfits as high-resolution, beautifully formatted digital photocards with a single click.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+🛠️ Tech Stack
+Frontend: Next.js, React, Tailwind CSS, Framer Motion
 
-## Learn More
+Backend & DB: Supabase (PostgreSQL, Storage, Auth)
 
-To learn more about Next.js, take a look at the following resources:
+AI Pipeline: Google Gemini Vision API
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+APIs: Open-Meteo API (Geolocation & Weather)

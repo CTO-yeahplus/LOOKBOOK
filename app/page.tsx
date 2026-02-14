@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Heart, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2} from "lucide-react";
+import { Heart, Send, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2, Bell} from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
@@ -84,12 +84,22 @@ export default function Home() {
       className="relative flex h-[100dvh] w-screen flex-col items-center justify-center overflow-hidden bg-black font-sans selection:bg-white/30"
       style={{ perspective: 1000 }}
     >
-      {/* 🌟 로그인 및 계정 버튼 */}
-      <div className="absolute left-6 top-8 z-40 md:left-12 md:top-12">
+      {/* 🌟 로그인 및 계정 버튼 (기존) */}
+      <div className="absolute left-6 top-8 z-40 md:left-12 md:top-12 flex items-center gap-3">
         {aura.user ? (
-          <button onClick={aura.signOut} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[14px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20">
-            <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" /> Logout
-          </button>
+          <>
+            <button onClick={aura.signOut} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[14px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20">
+              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" /> Logout
+            </button>
+            
+            {/* 🌟 알림 구독 버튼 & 테스트 발송 버튼 */}
+            <button onClick={aura.subscribeToPush} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" title="모닝 알림 받기">
+              <Bell className="h-4 w-4" />
+            </button>
+            <button onClick={aura.sendTestPush} className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 backdrop-blur-2xl transition-all hover:bg-emerald-500/30 active:scale-95" title="알림 테스트 발송">
+              <Send className="h-4 w-4" />
+            </button>
+          </>
         ) : (
           <button onClick={() => aura.setIsLoginModalOpen(true)} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[14px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95">
             <span className="font-bold">Login</span> to Save

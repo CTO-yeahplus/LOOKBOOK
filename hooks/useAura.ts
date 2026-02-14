@@ -183,6 +183,73 @@ export function useAura() {
     });
   }, [searchQuery, savedItems]);
 
+  // 🌟 [추가] 푸시 알림 권한 요청 및 구독 정보 저장 함수
+  const subscribeToPush = async () => {
+    if (!user) {
+      alert("알림을 받으려면 먼저 로그인해주세요!");
+      return setIsLoginModalOpen(true);
+    }
+    
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return alert("이 브라우저는 푸시 알림을 지원하지 않습니다.");
+    }
+
+    try {
+      // 1. 권한 요청
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') throw new Error("알림 권한이 거부되었습니다.");
+
+      // 2. 백그라운드 요원(sw.js) 등록
+      const register = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+
+      // 3. VAPID 공개키 변환 (Base64 -> Uint8Array)
+      const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
+      const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4);
+      const base64 = (publicVapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
+
+      // 4. 구글/애플 서버에서 기기 고유 주소(Subscription) 발급받기
+      const subscription = await register.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: outputArray
+      });
+
+      // 5. 발급받은 주소를 Supabase 명부에 저장 (upsert로 중복 방지)
+      const { error } = await supabase.from('aura_push_subscriptions').upsert({
+        user_id: user.id,
+        subscription: subscription
+      }, { onConflict: 'user_id' });
+
+      if (error) throw error;
+      
+      triggerHaptic([50, 100, 50]);
+      alert("✅ 모닝 알림 구독이 완료되었습니다!");
+
+    } catch (error) {
+      console.error("푸시 구독 실패:", error);
+      alert("알림 설정에 실패했습니다.");
+    }
+  };
+
+  // 🌟 [추가] 발송 테스트용 함수 (내가 나에게 보내기)
+  const sendTestPush = async () => {
+    if (!user) return;
+    try {
+      await fetch('/api/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: user.id, 
+          title: "AURA 모닝 알림 🌤️", 
+          body: "오늘 서울 15°C ☔️, AURA가 추천하는 비 오는 날의 룩을 확인하세요." 
+        })
+      });
+    } catch (e) { console.error(e); }
+  };
+
   // 🌟 8. 외부로 기능 내보내기 (user, 로그인 함수 추가)
   return {
     user, signIn, signOut, // <- signInWithGoogle을 signIn으로 변경
@@ -192,6 +259,7 @@ export function useAura() {
     isModalOpen, setIsModalOpen,
     isDetailOpen, setIsDetailOpen,
     searchQuery, setSearchQuery,
-    localWeather, filteredArchive, triggerHaptic
+    localWeather, filteredArchive, triggerHaptic,
+    subscribeToPush, sendTestPush
   };
 }
