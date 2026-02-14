@@ -1,14 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 // 🌟 MoreHorizontal 아이콘 추가 및 미사용 아이콘 정리
-import { Heart, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2, MoreHorizontal, User } from "lucide-react";
+import { Heart, Layers, X, Plus, Sparkles, MapPin, Crown, Download, ChevronUp, Palette, Volume2, MoreHorizontal, User } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
 import LoginModal from "./components/LoginModal"; 
-import ActionMenuModal from "./components/ActionMenuModal"; // 🌟 슬라이드 업 메뉴 모달
+import ActionMenuModal from "./components/ActionMenuModal";
+import UploadModal from "./components/UploadModal";
+import AdminModal from "./components/AdminModal"; // 🌟 추가
+import { supabase } from "../lib/supabase"; // 상단 임포트 확인
 
 const appleSpring = { type: "spring" as const, stiffness: 300, damping: 25 };
 const slowSpring = { type: "spring" as const, stiffness: 200, damping: 30 };
@@ -22,6 +25,13 @@ export default function Home() {
   
   // 🌟 슬라이드 메뉴 상태
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); // 🌟 업로드 모달 상태 추가
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false); // 🌟 어드민 모달 상태
+  const [currentLikes, setCurrentLikes] = useState(0);
+
+  // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
+  const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
+  const isAdmin = aura.user?.email === ADMIN_EMAIL;
 
   const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
   const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
@@ -29,6 +39,9 @@ export default function Home() {
   const rotateY = useTransform(mouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [-10, 10]);
   const x = useMotionValue(0);
   const imageX = useTransform(x, [-200, 200], [20, -20]);
+
+  const currentItem = aura.fashionItems[aura.currentIndex];
+  const isSaved = aura.savedItems.some(i => i.id === currentItem?.id);
 
   // 🌟 1. 다운로드 버튼용: 텍스트 밀림 현상을 완벽히 잡은 캡처 엔진
   const exportPhotocard = async () => {
@@ -100,13 +113,24 @@ export default function Home() {
       setIsExporting(false);
     }
   };
+    // 🌟 현재 카드의 총 하트 수를 실시간으로 긁어옵니다.
+    useEffect(() => {
+      if (!currentItem) return;
+      const fetchLikes = async () => {
+        const { count } = await supabase
+          .from('aura_saved_looks')
+          .select('*', { count: 'exact', head: true })
+          .eq('look_id', currentItem.id);
+        setCurrentLikes(count || 0);
+      };
+      fetchLikes();
+    }, [currentItem?.id, isSaved]); // 카드가 넘어가거나, 내가 하트를 누를 때마다 갱신  
 
   if (aura.fashionItems.length === 0) return (
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>
   );
 
-  const currentItem = aura.fashionItems[aura.currentIndex];
-  const isSaved = aura.savedItems.some(i => i.id === currentItem?.id);
+
 
   const paginate = (newDirection: number) => {
     aura.triggerHaptic(40);
@@ -133,6 +157,7 @@ export default function Home() {
       aura.setSavedItems(prev => [...prev, currentItem]);
     }
   };
+
 
   return (
     <div 
@@ -166,13 +191,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* ... (중간의 옷 렌더링 카드 <AnimatePresence> 부분은 그대로 유지합니다) ... */}
-
-      {/* 🌟 (카드 내부 UI 중) 다운로드 버튼 제거: 카드 안쪽(Deep Dive 옆)에 있던 아래 다운로드 코드는 지워주세요! 하단으로 이동했습니다. */}
-      {/* <div className="flex gap-3"><button onClick={exportPhotocard}...><Download/></button></div> (<- 이 부분을 삭제하세요) */}
-
-      
-
       <AnimatePresence mode="popLayout">
         <motion.div key={`bg-${currentItem.id}-${swipeKey}`} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0 z-0">
           <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[80px] saturate-150" alt="background blur" />
@@ -205,6 +223,12 @@ export default function Home() {
 
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
             <div className="mb-4 flex"><span className="whitespace-nowrap inline-block flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80 backdrop-blur-md"><Sparkles className="h-3 w-3" /> Aura AI</span></div>
+            {/* 🌟 실시간 글로벌 하트 카운터 뱃지 */}
+            {currentLikes > 0 && (
+                <span className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-rose-300 backdrop-blur-md">
+                  <Heart className="h-3 w-3 fill-current" /> {currentLikes}
+                </span>
+              )}
             <h1 className="flex items-center gap-3 text-[3.5rem] md:text-6xl font-semibold tracking-tighter text-white leading-none drop-shadow-lg"><span>{currentItem.weather}</span><span>{currentItem.temperature}</span></h1>
             <div className="mt-4 flex flex-wrap gap-2">
               {currentItem.tags?.map((tag: string, idx: number) => (<span key={idx} className="whitespace-nowrap inline-block rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-xl shadow-sm">{tag.replace('#', '')}</span>))}
@@ -249,7 +273,15 @@ export default function Home() {
       </AnimatePresence>
       {/* 🌟 3. 완벽한 비율의 하단 중앙 플로팅 툴바 */}
       <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/15 bg-black/40 p-2 shadow-2xl backdrop-blur-2xl">
-        
+        <button 
+          onClick={() => { aura.triggerHaptic(30); setIsUploadModalOpen(true); }} 
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+
+        <div className="mx-1 h-8 w-[1px] bg-white/15" />
+
         {/* 왼쪽: 다운로드 버튼 (새로 이사옴) */}
         <button 
           onClick={exportPhotocard} 
@@ -280,6 +312,19 @@ export default function Home() {
         >
           <MoreHorizontal className="h-5 w-5" />
         </button>
+
+        {/* 🌟 CEO 전용: 최고 관리자 왕관 버튼 (일반 유저에겐 안 보임) */}
+        {isAdmin && (
+          <>
+            <div className="mx-1 h-8 w-[1px] bg-white/15" />
+            <button 
+              onClick={() => { aura.triggerHaptic([30, 50]); setIsAdminModalOpen(true); }} 
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400/20 to-amber-600/20 text-yellow-500 transition-all hover:bg-yellow-500/30 active:scale-95 border border-yellow-500/30"
+            >
+              <Crown className="h-5 w-5" />
+            </button>
+          </>
+        )}
       </div>
 
       <ArchiveModal 
@@ -305,6 +350,10 @@ export default function Home() {
           sendTestPush={aura.sendTestPush || (() => {})} 
         />
       )}
+      {/* 🌟 나만의 옷장 업로드 모달 */}
+      <UploadModal isOpen={isUploadModalOpen} onClose={() => setIsUploadModalOpen(false)} triggerHaptic={aura.triggerHaptic} />
+      {/* 🌟 기존 모달들 아래에 추가 */}
+      <AdminModal isOpen={isAdminModalOpen} onClose={() => setIsAdminModalOpen(false)} triggerHaptic={aura.triggerHaptic} />
     </div>
   );
 }
