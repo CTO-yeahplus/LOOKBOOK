@@ -1,6 +1,7 @@
 // hooks/useAura.ts
 import { useState, useEffect, useRef, useMemo } from "react";
-import { supabase } from "../lib/supabase"; // 🌟 Supabase 통신망 연결
+import { supabase } from "../lib/supabase"; 
+import { getPersonalizedFeed } from "../lib/recommendation"; 
 
 export interface FashionItem {
   id: string | number;
@@ -17,9 +18,10 @@ const sounds = {
 };
 
 export function useAura() {
-  // 🌟 1. 유저 계정 상태 추가
   const [user, setUser] = useState<any>(null);
 
+  // 🌟 [핵심 변경] 원본 데이터 캐싱용 상태 추가
+  const [rawItems, setRawItems] = useState<FashionItem[]>([]); 
   const [fashionItems, setFashionItems] = useState<FashionItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
@@ -37,25 +39,21 @@ export function useAura() {
     if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
   };
 
-  // 🌟 2. 로그인 상태 감지 및 클라우드 보관함 불러오기 (로컬 스토리지 대체)
   useEffect(() => {
-    // 앱을 켰을 때 현재 로그인된 유저가 있는지 확인
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchSavedLooks(session.user.id);
     });
 
-    // 로그인/로그아웃 하는 순간 실시간으로 감지
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) fetchSavedLooks(session.user.id);
-      else setSavedItems([]); // 로그아웃하면 보관함 비우기
+      else setSavedItems([]); 
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  // 🌟 3. 클라우드(DB)에서 내가 저장한 하트 가져오기
   const fetchSavedLooks = async (userId: string) => {
     const { data, error } = await supabase
       .from('aura_saved_looks')
@@ -74,98 +72,71 @@ export function useAura() {
     }
   };
 
-  // 🌟 2. 4가지 로그인을 하나로 처리하는 스마트 함수 (signInWithGoogle 대신 이것을 넣으세요)
   const signIn = async (provider: 'google' | 'github' | 'kakao' | 'twitter') => {
     await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: { 
-        redirectTo: typeof window !== "undefined" ? window.location.origin : "/",
-      }
+      options: { redirectTo: typeof window !== "undefined" ? window.location.origin : "/" }
     });
   };
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const signOut = async () => { await supabase.auth.signOut(); };
 
-  // 5. 날씨 및 데이터 로드 (기존의 완벽한 캐시 파괴 코드 유지)
+  // 🌟 [최적화 1] 네트워크 호출은 무조건 앱 켤 때 1번만 수행
   useEffect(() => {
     const fetchWeatherAndData = async () => {
-      let currentTemp = 15; // 🌟 기본값: 위치 권한이 없으면 15도로 세팅
-      let currentCity = "Seoul"; // 🌟 기본값: 서울
+      let currentTemp = 15; let currentCity = "Seoul";
 
       try {
         if ("geolocation" in navigator) {
           const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
           const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
           const weatherData = await weatherRes.json();
-          currentTemp = weatherData.current_weather.temperature;
-          currentCity = "Current Location";
+          currentTemp = weatherData.current_weather.temperature; currentCity = "Current Location";
         }
-      } catch (e) {
-        console.warn("위치 권한 없음. 기본 날씨를 사용합니다.");
-      }
+      } catch (e) { console.warn("위치 권한 없음. 기본 날씨를 사용합니다."); }
       
       setLocalWeather({ temp: currentTemp, city: currentCity });
 
       try {
         const response = await fetch(`/api/fashion?timestamp=${new Date().getTime()}`, { 
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          }
+          cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
         });
         const data: FashionItem[] = await response.json();
-        const sortedData = [...data].sort((a, b) => {
-          const tempA = parseInt(a.temperature.replace(/[^0-9.-]+/g, "")) || 20;
-          const tempB = parseInt(b.temperature.replace(/[^0-9.-]+/g, "")) || 20;
-          return Math.abs(tempA - currentTemp) - Math.abs(tempB - currentTemp);
-        });
-        setFashionItems(sortedData);
-      } catch (error) {}
+        setRawItems(data); // 데이터 다운로드는 여기서 끝! 원본 저장.
+      } catch (error) { console.error("데이터 로드 실패:", error); }
     };
     fetchWeatherAndData();
-  }, []);
+  }, []); // 의존성 배열을 비워서 무한 호출 차단
 
-  // 6. 앰비언트 사운드 제어 (기존 동일)
+  // 🌟 [최적화 2] 하트를 누를 때마다 '로컬 연산'으로만 피드 재정렬 (서버 부하 제로)
+  useEffect(() => {
+    if (rawItems.length === 0) return;
+    const personalizedData = getPersonalizedFeed(rawItems, savedItems, localWeather?.temp || 15);
+    setFashionItems(personalizedData);
+  }, [rawItems, savedItems.length, localWeather?.temp]); 
+
+  // 오디오 제어
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     if (isDetailOpen && fashionItems.length > 0) {
-      const weather = fashionItems[currentIndex].weather;
+      const weather = fashionItems[currentIndex]?.weather || "";
       let soundUrl = sounds.default;
       if (weather.includes("☀️")) soundUrl = sounds.sunny;
       if (weather.includes("☔️") || weather.includes("🌧")) soundUrl = sounds.rain;
 
-      if (!audioRef.current) {
-        audioRef.current = new Audio(soundUrl);
-        audioRef.current.loop = true;
-      } else {
-        audioRef.current.src = soundUrl;
-      }
+      if (!audioRef.current) { audioRef.current = new Audio(soundUrl); audioRef.current.loop = true; } 
+      else { audioRef.current.src = soundUrl; }
       
       audioRef.current.volume = 0;
       audioRef.current.play().then(() => {
-        let vol = 0;
-        const fade = setInterval(() => {
-          if (vol < 0.3 && audioRef.current) { vol += 0.05; audioRef.current.volume = vol; } 
-          else clearInterval(fade);
-        }, 100);
+        let vol = 0; const fade = setInterval(() => { if (vol < 0.3 && audioRef.current) { vol += 0.05; audioRef.current.volume = vol; } else clearInterval(fade); }, 100);
       }).catch(e => console.log("오디오 자동 재생 제한"));
     } else if (audioRef.current) {
       let vol = audioRef.current.volume;
-      const fade = setInterval(() => {
-        if (vol > 0.05 && audioRef.current) { vol -= 0.05; audioRef.current.volume = vol; } 
-        else {
-          clearInterval(fade);
-          if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
-        }
-      }, 50);
+      const fade = setInterval(() => { if (vol > 0.05 && audioRef.current) { vol -= 0.05; audioRef.current.volume = vol; } else { clearInterval(fade); if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; } } }, 50);
     }
   }, [isDetailOpen, currentIndex, fashionItems]);
 
-  // 7. 지능형 검색 필터링 (기존 동일)
   const filteredArchive = useMemo(() => {
     if (!searchQuery) return savedItems;
     const lowerQ = searchQuery.toLowerCase();
@@ -183,27 +154,17 @@ export function useAura() {
     });
   }, [searchQuery, savedItems]);
 
-  // 🌟 [추가] 푸시 알림 권한 요청 및 구독 정보 저장 함수
   const subscribeToPush = async () => {
-    if (!user) {
-      alert("알림을 받으려면 먼저 로그인해주세요!");
-      return setIsLoginModalOpen(true);
-    }
-    
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return alert("이 브라우저는 푸시 알림을 지원하지 않습니다.");
-    }
+    if (!user) { alert("알림을 받으려면 먼저 로그인해주세요!"); return setIsLoginModalOpen(true); }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return alert("이 브라우저는 푸시 알림을 지원하지 않습니다.");
 
     try {
-      // 1. 권한 요청
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') throw new Error("알림 권한이 거부되었습니다.");
 
-      // 2. 백그라운드 요원(sw.js) 등록
       const register = await navigator.serviceWorker.register('/sw.js');
       await navigator.serviceWorker.ready;
 
-      // 3. VAPID 공개키 변환 (Base64 -> Uint8Array)
       const publicVapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!;
       const padding = '='.repeat((4 - publicVapidKey.length % 4) % 4);
       const base64 = (publicVapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -211,49 +172,39 @@ export function useAura() {
       const outputArray = new Uint8Array(rawData.length);
       for (let i = 0; i < rawData.length; ++i) { outputArray[i] = rawData.charCodeAt(i); }
 
-      // 4. 구글/애플 서버에서 기기 고유 주소(Subscription) 발급받기
-      const subscription = await register.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: outputArray
-      });
+      const subscription = await register.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: outputArray });
 
-      // 5. 발급받은 주소를 Supabase 명부에 저장 (upsert로 중복 방지)
-      const { error } = await supabase.from('aura_push_subscriptions').upsert({
-        user_id: user.id,
-        subscription: subscription
-      }, { onConflict: 'user_id' });
-
+      const { error } = await supabase.from('aura_push_subscriptions').upsert({ user_id: user.id, subscription: subscription }, { onConflict: 'user_id' });
       if (error) throw error;
       
       triggerHaptic([50, 100, 50]);
       alert("✅ 모닝 알림 구독이 완료되었습니다!");
-
-    } catch (error) {
-      console.error("푸시 구독 실패:", error);
-      alert("알림 설정에 실패했습니다.");
-    }
+    } catch (error) { console.error("푸시 구독 실패:", error); alert("알림 설정에 실패했습니다."); }
   };
 
-  // 🌟 [추가] 발송 테스트용 함수 (내가 나에게 보내기)
   const sendTestPush = async () => {
     if (!user) return;
     try {
+      // 🌟 [최적화 3] 실제 위치와 날씨를 반영한 다이내믹 푸시 알림
+      const temp = localWeather?.temp || 15;
+      const city = localWeather?.city || "Seoul";
+      const weatherIcon = temp > 20 ? "☀️" : "☔️";
+
       await fetch('/api/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           userId: user.id, 
           title: "AURA 모닝 알림 🌤️", 
-          body: "오늘 서울 15°C ☔️, AURA가 추천하는 비 오는 날의 룩을 확인하세요." 
+          body: `오늘 ${city} ${temp}°C ${weatherIcon}, AURA가 추천하는 당신만의 룩을 확인하세요.` 
         })
       });
     } catch (e) { console.error(e); }
   };
 
-  // 🌟 8. 외부로 기능 내보내기 (user, 로그인 함수 추가)
   return {
-    user, signIn, signOut, // <- signInWithGoogle을 signIn으로 변경
-    isLoginModalOpen, setIsLoginModalOpen, // <- 추가
+    user, signIn, signOut,
+    isLoginModalOpen, setIsLoginModalOpen,
     fashionItems, currentIndex, setCurrentIndex, direction, setDirection,
     savedItems, setSavedItems,
     isModalOpen, setIsModalOpen,

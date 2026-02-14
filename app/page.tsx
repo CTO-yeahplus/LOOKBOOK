@@ -2,24 +2,26 @@
 
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Heart, Send, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2, Bell} from "lucide-react";
+// 🌟 MoreHorizontal 아이콘 추가 및 미사용 아이콘 정리
+import { Heart, Layers, X, Sparkles, MapPin, Download, ChevronUp, Palette, Volume2, MoreHorizontal, User } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
-import LoginModal from "./components/LoginModal"; // 🌟 추가
+import LoginModal from "./components/LoginModal"; 
+import ActionMenuModal from "./components/ActionMenuModal"; // 🌟 슬라이드 업 메뉴 모달
 
 const appleSpring = { type: "spring" as const, stiffness: 300, damping: 25 };
 const slowSpring = { type: "spring" as const, stiffness: 200, damping: 30 };
-
-
 
 export default function Home() {
   const aura = useAura();
   
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  // 🌟 [추가] 1. 스와이프할 때마다 증가하는 고유 키
   const [swipeKey, setSwipeKey] = useState(0);
+  
+  // 🌟 슬라이드 메뉴 상태
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
   const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
   const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
@@ -28,18 +30,75 @@ export default function Home() {
   const x = useMotionValue(0);
   const imageX = useTransform(x, [-200, 200], [20, -20]);
 
+  // 🌟 1. 다운로드 버튼용: 텍스트 밀림 현상을 완벽히 잡은 캡처 엔진
   const exportPhotocard = async () => {
     if (!cardRef.current) return;
     aura.triggerHaptic([50, 100, 50]);
-    setIsExporting(true);
+    setIsExporting(true); // 1. 버튼들을 화면에서 숨김 처리
+
+    // 🌟 [핵심 보수] UI가 숨겨지고 폰트/레이아웃이 완벽히 자리를 잡을 때까지 0.15초 대기
+    await new Promise(resolve => setTimeout(resolve, 150));
+
     try {
-      const dataUrl = await toPng(cardRef.current, { quality: 1.0, pixelRatio: 2, cacheBust: true });
+      const dataUrl = await toPng(cardRef.current, { 
+        quality: 1.0, 
+        pixelRatio: 2, 
+        cacheBust: true,
+        // 🌟 [핵심 보수] 캡처하는 순간에만 Framer Motion의 3D 기울기를 평면으로 강제 고정!
+        style: { 
+          transform: 'none', 
+          transition: 'none'
+        }
+      });
       const link = document.createElement('a');
-      link.download = `Aura_Look_${new Date().getTime()}.png`;
+      link.download = `AURA_Look_${new Date().getTime()}.png`;
       link.href = dataUrl;
       link.click();
-    } catch { alert('포토카드 생성 실패 (보안 정책 문제일 수 있습니다)'); } 
-    finally { setIsExporting(false); }
+    } catch (e) { 
+      alert('포토카드 캡처 실패. 네트워크 상태를 확인해주세요!'); 
+    } finally { 
+      setIsExporting(false); 
+    }
+  };
+
+  // 🌟 2. 공유 버튼용: 텍스트 밀림 현상을 완벽히 잡은 공유 엔진
+  const sharePhotocard = async () => {
+    if (!cardRef.current) return;
+    aura.triggerHaptic(50);
+    setIsExporting(true);
+
+    // 🌟 [핵심 보수] 대기 시간 부여
+    await new Promise(resolve => setTimeout(resolve, 150));
+
+    try {
+      const dataUrl = await toPng(cardRef.current, { 
+        quality: 1.0, 
+        pixelRatio: 2, 
+        cacheBust: true,
+        // 🌟 [핵심 보수] 3D 효과 무력화
+        style: { 
+          transform: 'none', 
+          transition: 'none'
+        }
+      });
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], 'AURA_Look.png', { type: 'image/png' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'AURA: 오늘의 추천 룩 🌤️',
+          text: 'AURA가 추천하는 날씨 맞춤 룩을 확인해보세요!',
+          files: [file],
+        });
+      } else {
+        alert("이 기기는 이미지 직접 공유를 지원하지 않아 링크가 복사되었습니다.");
+        navigator.clipboard.writeText(window.location.href);
+      }
+    } catch (err) {
+      console.log("공유 실패:", err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (aura.fashionItems.length === 0) return (
@@ -47,7 +106,7 @@ export default function Home() {
   );
 
   const currentItem = aura.fashionItems[aura.currentIndex];
-  const isSaved = aura.savedItems.some(i => i.id === currentItem.id);
+  const isSaved = aura.savedItems.some(i => i.id === currentItem?.id);
 
   const paginate = (newDirection: number) => {
     aura.triggerHaptic(40);
@@ -58,7 +117,6 @@ export default function Home() {
   };
 
   const toggleSave = async () => {
-    // 🌟 로그인이 안 되어있으면 하트를 못 누르게 하고 로그인을 띄움
     if (!aura.user) {
       aura.triggerHaptic([50, 50]);
       alert("나만의 옷장을 만들려면 로그인이 필요합니다!");
@@ -68,11 +126,9 @@ export default function Home() {
     aura.triggerHaptic(isSaved ? 30 : [30, 50, 40]);
     
     if (isSaved) {
-      // 클라우드에서 삭제
       await import('../lib/supabase').then(m => m.supabase.from('aura_saved_looks').delete().match({ user_id: aura.user.id, look_id: currentItem.id }));
       aura.setSavedItems(prev => prev.filter(i => i.id !== currentItem.id));
     } else {
-      // 클라우드에 추가
       await import('../lib/supabase').then(m => m.supabase.from('aura_saved_looks').insert([{ user_id: aura.user.id, look_id: currentItem.id }]));
       aura.setSavedItems(prev => [...prev, currentItem]);
     }
@@ -84,37 +140,39 @@ export default function Home() {
       className="relative flex h-[100dvh] w-screen flex-col items-center justify-center overflow-hidden bg-black font-sans selection:bg-white/30"
       style={{ perspective: 1000 }}
     >
-      {/* 🌟 로그인 및 계정 버튼 (기존) */}
-      <div className="absolute left-6 top-8 z-40 md:left-12 md:top-12 flex items-center gap-3">
+      {/* 🌟 1. 초미니멀 상단 좌측: 로그인/프로필 버튼 */}
+      <div className="absolute left-6 top-8 z-40 md:left-8 md:top-8">
         {aura.user ? (
-          <>
-            <button onClick={aura.signOut} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[14px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20">
-              <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" /> Logout
-            </button>
-            
-            {/* 🌟 알림 구독 버튼 & 테스트 발송 버튼 */}
-            <button onClick={aura.subscribeToPush} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" title="모닝 알림 받기">
-              <Bell className="h-4 w-4" />
-            </button>
-            <button onClick={aura.sendTestPush} className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-500/30 bg-emerald-500/20 text-emerald-400 backdrop-blur-2xl transition-all hover:bg-emerald-500/30 active:scale-95" title="알림 테스트 발송">
-              <Send className="h-4 w-4" />
-            </button>
-          </>
+          <button onClick={aura.signOut} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" title="로그아웃">
+            <User className="h-5 w-5 opacity-80" />
+            <span className="absolute right-0 top-0 h-3 w-3 rounded-full border-2 border-[#1c1c1e] bg-green-400" />
+          </button>
         ) : (
-          <button onClick={() => aura.setIsLoginModalOpen(true)} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[14px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95">
-            <span className="font-bold">Login</span> to Save
+          <button onClick={() => aura.setIsLoginModalOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" title="로그인">
+            <User className="h-5 w-5 opacity-80" />
           </button>
         )}
       </div>
 
-      <div className="absolute right-6 top-8 z-40 md:right-12 md:top-12">
-        <button onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} className="flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2.5 text-[15px] font-medium text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95">
-          <Layers className="h-4 w-4 opacity-80" strokeWidth={2} /> <span>Archive</span>
-          {aura.savedItems.length > 0 && <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-bold text-black">{aura.savedItems.length}</span>}
+      {/* 🌟 2. 초미니멀 상단 우측: 아카이브 버튼 */}
+      <div className="absolute right-6 top-8 z-40 md:right-8 md:top-8">
+        <button onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" title="보관함">
+          <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
+          {aura.savedItems.length > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-black">
+              {aura.savedItems.length}
+            </span>
+          )}
         </button>
       </div>
 
-      {/* 🌟 수정: 프록시 제거 및 직결 */}
+      {/* ... (중간의 옷 렌더링 카드 <AnimatePresence> 부분은 그대로 유지합니다) ... */}
+
+      {/* 🌟 (카드 내부 UI 중) 다운로드 버튼 제거: 카드 안쪽(Deep Dive 옆)에 있던 아래 다운로드 코드는 지워주세요! 하단으로 이동했습니다. */}
+      {/* <div className="flex gap-3"><button onClick={exportPhotocard}...><Download/></button></div> (<- 이 부분을 삭제하세요) */}
+
+      
+
       <AnimatePresence mode="popLayout">
         <motion.div key={`bg-${currentItem.id}-${swipeKey}`} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0 z-0">
           <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[80px] saturate-150" alt="background blur" />
@@ -140,28 +198,23 @@ export default function Home() {
           ref={cardRef} 
           className="relative z-10 flex h-[75vh] md:h-[80vh] w-[85vw] max-w-[420px] cursor-grab active:cursor-grabbing flex-col overflow-hidden rounded-[2.5rem] border border-white/20 bg-white/5 shadow-2xl backdrop-blur-2xl aspect-[2/3] transform-gpu"
         >
-          {/* 🌟 수정: 프록시 제거 및 직결 */}
           <div className="absolute inset-0 w-full h-full overflow-hidden bg-black/20">
             <motion.img style={{ x: imageX, scale: 1.15 }} src={currentItem.imageUrl} crossOrigin="anonymous" alt="Fashion look" className="pointer-events-none h-full w-full object-cover" draggable="false" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" />
           </div>
 
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
-            <div className="mb-4 flex"><span className="flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80 backdrop-blur-md"><Sparkles className="h-3 w-3" /> Aura AI</span></div>
+            <div className="mb-4 flex"><span className="whitespace-nowrap inline-block flex items-center gap-1.5 rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/80 backdrop-blur-md"><Sparkles className="h-3 w-3" /> Aura AI</span></div>
             <h1 className="flex items-center gap-3 text-[3.5rem] md:text-6xl font-semibold tracking-tighter text-white leading-none drop-shadow-lg"><span>{currentItem.weather}</span><span>{currentItem.temperature}</span></h1>
             <div className="mt-4 flex flex-wrap gap-2">
-              {/* 🌟 수정: 안전한 태그 렌더링 (? 추가) */}
-              {currentItem.tags?.map((tag: string, idx: number) => (<span key={idx} className="rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-xl shadow-sm">{tag.replace('#', '')}</span>))}
+              {currentItem.tags?.map((tag: string, idx: number) => (<span key={idx} className="whitespace-nowrap inline-block rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-xl shadow-sm">{tag.replace('#', '')}</span>))}
             </div>
 
             <div className={`pointer-events-auto mt-8 flex items-center justify-between transition-opacity duration-300 ${isExporting ? 'opacity-0' : 'opacity-100'}`}>
               <button onClick={() => { aura.triggerHaptic(20); aura.setIsDetailOpen(true); }} className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors">
                 <ChevronUp className="h-4 w-4 animate-bounce" /> Deep Dive
               </button>
-              <div className="flex gap-3">
-                <button onClick={exportPhotocard} className="flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-90"><Download className="h-5 w-5" strokeWidth={2} /></button>
-                <button onClick={toggleSave} className={`flex h-14 w-14 items-center justify-center rounded-full backdrop-blur-2xl transition-all active:scale-90 ${isSaved ? 'bg-white text-black shadow-[0_0_30px_rgba(255,255,255,0.3)]' : 'bg-white/10 border border-white/20 text-white hover:bg-white/20'}`}><Heart className={`h-6 w-6 transition-transform ${isSaved ? 'fill-black scale-110' : ''}`} strokeWidth={isSaved ? 0 : 1.5} /></button>
-              </div>
+            
             </div>
           </div>
           
@@ -194,6 +247,40 @@ export default function Home() {
           </AnimatePresence>
         </motion.div>
       </AnimatePresence>
+      {/* 🌟 3. 완벽한 비율의 하단 중앙 플로팅 툴바 */}
+      <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/15 bg-black/40 p-2 shadow-2xl backdrop-blur-2xl">
+        
+        {/* 왼쪽: 다운로드 버튼 (새로 이사옴) */}
+        <button 
+          onClick={exportPhotocard} 
+          disabled={isExporting}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95 disabled:opacity-50"
+        >
+          {isExporting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" /> : <Download className="h-5 w-5" />}
+        </button>
+        
+        <div className="mx-1 h-8 w-[1px] bg-white/15" />
+
+        {/* 중앙: 메인 액션 하트 (가장 큼) */}
+        <button 
+          onClick={toggleSave} 
+          className={`flex h-14 w-14 items-center justify-center rounded-full transition-all active:scale-95 ${
+            isSaved ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/10 text-white hover:bg-white/20'
+          }`}
+        >
+          <Heart className={`h-6 w-6 transition-transform ${isSaved ? 'fill-current scale-110' : ''}`} strokeWidth={isSaved ? 0 : 1.5} />
+        </button>
+        
+        <div className="mx-1 h-8 w-[1px] bg-white/15" />
+
+        {/* 오른쪽: 더보기(메뉴) 버튼 */}
+        <button 
+          onClick={() => setIsActionMenuOpen(true)} 
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95"
+        >
+          <MoreHorizontal className="h-5 w-5" />
+        </button>
+      </div>
 
       <ArchiveModal 
         isOpen={aura.isModalOpen} onClose={() => aura.setIsModalOpen(false)} 
@@ -201,13 +288,23 @@ export default function Home() {
         triggerHaptic={aura.triggerHaptic} 
       />
 
-      {/* 🌟 완전히 분리된 로그인 컴포넌트 */}
       <LoginModal 
         isOpen={aura.isLoginModalOpen} 
         onClose={() => aura.setIsLoginModalOpen(false)} 
         onSignIn={aura.signIn} 
       />
-      
+
+      {/* 🌟 수정된 모달 호출부 */}
+      {aura.fashionItems.length > 0 && (
+        <ActionMenuModal 
+          isOpen={isActionMenuOpen} 
+          onClose={() => setIsActionMenuOpen(false)} 
+          item={currentItem} 
+          onShare={sharePhotocard} // 🌟 새로 만든 공유 함수 전달
+          subscribeToPush={aura.subscribeToPush || (() => {})} 
+          sendTestPush={aura.sendTestPush || (() => {})} 
+        />
+      )}
     </div>
   );
 }

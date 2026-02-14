@@ -48,7 +48,7 @@ export default function ArchiveModal({ isOpen, onClose, archiveData, searchQuery
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
                   {archiveData.map((item) => (
                     <div key={`saved-${item.id}`} className="group relative aspect-[2/3] overflow-hidden rounded-2xl border border-white/10 bg-white/5 cursor-pointer">
-                      <img src={`/api/proxy?url=${encodeURIComponent(item.imageUrl)}`} crossOrigin="anonymous" alt="Saved look" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      <img src={item.imageUrl} crossOrigin="anonymous" alt="Saved look" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                         <p className="text-sm font-medium text-white">{item.weather} {item.temperature}</p>
                       </div>

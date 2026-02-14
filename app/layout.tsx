@@ -1,10 +1,22 @@
-import type { Metadata } from "next";
+// app/layout.tsx 파일 상단
+import type { Metadata, Viewport } from "next"; // 🌟 Viewport 임포트 추가
 import "./globals.css";
 
-// 🌟 AURA 브랜딩 적용
+// 1. 순수한 메타데이터 (기존 코드에서 themeColor 뺌)
 export const metadata: Metadata = {
-  title: "AURA | Your Spatial AI Stylist",
-  description: "현재 날씨와 당신의 무드에 완벽하게 동기화되는 나만의 AI 룩북",
+  title: "AURA | Ambient Lookbook",
+  description: "AI 기반 초개인화 날씨 맞춤 룩북",
+  manifest: "/manifest.json",
+};
+
+// 2. 🌟 뷰포트 설정 분리 (Next.js 최신 규격 반영)
+export const viewport: Viewport = {
+  themeColor: "#1c1c1e",
+  // 💡 아키텍트의 보너스: 모바일에서 웹페이지처럼 줌(Zoom)되는 현상을 막아 완벽한 앱처럼 보이게 만듭니다.
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, 
 };
 
 export default function RootLayout({

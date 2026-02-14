@@ -1,0 +1,80 @@
+// components/ActionMenuModal.tsx
+import { motion, AnimatePresence } from "framer-motion";
+import { Share2, Bell, Send, X } from "lucide-react";
+import { FashionItem } from "../../hooks/useAura";
+
+interface ActionMenuModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: FashionItem;
+  onShare: () => void;
+  subscribeToPush: () => void;
+  sendTestPush: () => void;
+}
+
+export default function ActionMenuModal({ isOpen, onClose, item, onShare, subscribeToPush, sendTestPush }: ActionMenuModalProps) {
+
+  // 🌟 바이럴 공유 로직 (이 모달 안으로 통합)
+  const handleShare = async () => {
+    if (!item) return;
+    const shareData = {
+      title: "AURA: 오늘의 추천 룩 🌤️",
+      text: `AURA가 추천하는 날씨 맞춤 룩! 태그: ${item.tags.join(', ')}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) await navigator.share(shareData);
+      else {
+        await navigator.clipboard.writeText(shareData.url);
+        alert("링크가 복사되었습니다. 친구에게 공유해보세요!");
+      }
+    } catch (err) {
+      console.log("공유가 취소되었습니다.");
+    }
+    onClose(); // 공유 창을 띄운 후 메뉴 닫기
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm" />
+          
+          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 25, stiffness: 200 }} className="fixed bottom-0 left-0 right-0 z-[101] rounded-t-3xl border-t border-white/20 bg-[#1c1c1e]/95 p-6 pb-12 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] backdrop-blur-3xl">
+            <div className="mx-auto mb-8 h-1.5 w-12 rounded-full bg-white/20" />
+            
+            <div className="flex flex-col gap-3">
+              {/* 🌟 1. 공유 버튼 (누르면 포토카드를 캡처해서 보냄) */}
+              <button 
+                onClick={() => { onShare(); onClose(); }} 
+                className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 text-white transition-all hover:bg-white/10 active:scale-95"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10"><Share2 className="h-5 w-5" /></div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[15px] font-bold">이 룩 공유하기</span>
+                  <span className="text-[12px] text-white/50">룩북 이미지를 카카오톡/인스타로 전송</span>
+                </div>
+              </button>
+
+              <button onClick={() => { subscribeToPush(); onClose(); }} className="flex items-center gap-4 rounded-2xl bg-white/5 p-4 text-white transition-all hover:bg-white/10 active:scale-95">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10"><Bell className="h-5 w-5" /></div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[15px] font-bold">모닝 푸시 알림 켜기</span>
+                  <span className="text-[12px] text-white/50">매일 아침 날씨 맞춤 룩 받아보기</span>
+                </div>
+              </button>
+
+              {process.env.NODE_ENV === 'development' && (
+                <button onClick={() => { sendTestPush(); onClose(); }} className="flex items-center gap-4 rounded-2xl bg-emerald-500/10 p-4 text-emerald-400 transition-all hover:bg-emerald-500/20 active:scale-95">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20"><Send className="h-5 w-5" /></div>
+                  <span className="text-[15px] font-bold">알림 테스트 발송 (Dev)</span>
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
