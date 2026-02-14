@@ -1,0 +1,197 @@
+// hooks/useAura.ts
+import { useState, useEffect, useRef, useMemo } from "react";
+import { supabase } from "../lib/supabase"; // 🌟 Supabase 통신망 연결
+
+export interface FashionItem {
+  id: string | number;
+  imageUrl: string;
+  weather: string;
+  temperature: string;
+  tags: string[];
+}
+
+const sounds = {
+  sunny: "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
+  rain: "https://assets.mixkit.co/active_storage/sfx/2391/2391-preview.mp3",
+  default: "https://assets.mixkit.co/active_storage/sfx/123/123-preview.mp3",
+};
+
+export function useAura() {
+  // 🌟 1. 유저 계정 상태 추가
+  const [user, setUser] = useState<any>(null);
+
+  const [fashionItems, setFashionItems] = useState<FashionItem[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0);
+  
+  const [savedItems, setSavedItems] = useState<FashionItem[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const [localWeather, setLocalWeather] = useState<{ temp: number; city: string } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const triggerHaptic = (pattern: number | number[] = 50) => {
+    if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
+  };
+
+  // 🌟 2. 로그인 상태 감지 및 클라우드 보관함 불러오기 (로컬 스토리지 대체)
+  useEffect(() => {
+    // 앱을 켰을 때 현재 로그인된 유저가 있는지 확인
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchSavedLooks(session.user.id);
+    });
+
+    // 로그인/로그아웃 하는 순간 실시간으로 감지
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) fetchSavedLooks(session.user.id);
+      else setSavedItems([]); // 로그아웃하면 보관함 비우기
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // 🌟 3. 클라우드(DB)에서 내가 저장한 하트 가져오기
+  const fetchSavedLooks = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('aura_saved_looks')
+      .select('look_id, aura_fashion_items(*)')
+      .eq('user_id', userId);
+      
+    if (!error && data) {
+      const looks = data.map((d: any) => ({
+        id: d.aura_fashion_items.id,
+        imageUrl: d.aura_fashion_items.image_url,
+        weather: d.aura_fashion_items.weather,
+        temperature: d.aura_fashion_items.temperature,
+        tags: d.aura_fashion_items.tags,
+      }));
+      setSavedItems(looks);
+    }
+  };
+
+  // 🌟 2. 4가지 로그인을 하나로 처리하는 스마트 함수 (signInWithGoogle 대신 이것을 넣으세요)
+  const signIn = async (provider: 'google' | 'github' | 'kakao' | 'twitter') => {
+    await supabase.auth.signInWithOAuth({
+      provider: provider,
+      options: { 
+        redirectTo: typeof window !== "undefined" ? window.location.origin : "/",
+      }
+    });
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  // 5. 날씨 및 데이터 로드 (기존의 완벽한 캐시 파괴 코드 유지)
+  useEffect(() => {
+    const fetchWeatherAndData = async () => {
+      let currentTemp = 15; // 🌟 기본값: 위치 권한이 없으면 15도로 세팅
+      let currentCity = "Seoul"; // 🌟 기본값: 서울
+
+      try {
+        if ("geolocation" in navigator) {
+          const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+          const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
+          const weatherData = await weatherRes.json();
+          currentTemp = weatherData.current_weather.temperature;
+          currentCity = "Current Location";
+        }
+      } catch (e) {
+        console.warn("위치 권한 없음. 기본 날씨를 사용합니다.");
+      }
+      
+      setLocalWeather({ temp: currentTemp, city: currentCity });
+
+      try {
+        const response = await fetch(`/api/fashion?timestamp=${new Date().getTime()}`, { 
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        const data: FashionItem[] = await response.json();
+        const sortedData = [...data].sort((a, b) => {
+          const tempA = parseInt(a.temperature.replace(/[^0-9.-]+/g, "")) || 20;
+          const tempB = parseInt(b.temperature.replace(/[^0-9.-]+/g, "")) || 20;
+          return Math.abs(tempA - currentTemp) - Math.abs(tempB - currentTemp);
+        });
+        setFashionItems(sortedData);
+      } catch (error) {}
+    };
+    fetchWeatherAndData();
+  }, []);
+
+  // 6. 앰비언트 사운드 제어 (기존 동일)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (isDetailOpen && fashionItems.length > 0) {
+      const weather = fashionItems[currentIndex].weather;
+      let soundUrl = sounds.default;
+      if (weather.includes("☀️")) soundUrl = sounds.sunny;
+      if (weather.includes("☔️") || weather.includes("🌧")) soundUrl = sounds.rain;
+
+      if (!audioRef.current) {
+        audioRef.current = new Audio(soundUrl);
+        audioRef.current.loop = true;
+      } else {
+        audioRef.current.src = soundUrl;
+      }
+      
+      audioRef.current.volume = 0;
+      audioRef.current.play().then(() => {
+        let vol = 0;
+        const fade = setInterval(() => {
+          if (vol < 0.3 && audioRef.current) { vol += 0.05; audioRef.current.volume = vol; } 
+          else clearInterval(fade);
+        }, 100);
+      }).catch(e => console.log("오디오 자동 재생 제한"));
+    } else if (audioRef.current) {
+      let vol = audioRef.current.volume;
+      const fade = setInterval(() => {
+        if (vol > 0.05 && audioRef.current) { vol -= 0.05; audioRef.current.volume = vol; } 
+        else {
+          clearInterval(fade);
+          if (audioRef.current) { audioRef.current.pause(); audioRef.current.currentTime = 0; }
+        }
+      }, 50);
+    }
+  }, [isDetailOpen, currentIndex, fashionItems]);
+
+  // 7. 지능형 검색 필터링 (기존 동일)
+  const filteredArchive = useMemo(() => {
+    if (!searchQuery) return savedItems;
+    const lowerQ = searchQuery.toLowerCase();
+    return savedItems.filter(item => {
+      const isRain = lowerQ.includes("비") || lowerQ.includes("rain");
+      const isSunny = lowerQ.includes("맑") || lowerQ.includes("해") || lowerQ.includes("sun");
+      const tempValue = parseInt(item.temperature.replace(/[^0-9.-]+/g, "")) || 20;
+
+      if (isRain && (item.weather.includes("☔️") || item.weather.includes("🌧"))) return true;
+      if (isSunny && item.weather.includes("☀️")) return true;
+      if (lowerQ.includes("더") && tempValue >= 25) return true;
+      if (lowerQ.includes("추") && tempValue <= 10) return true;
+      
+      return item.tags.some(tag => tag.toLowerCase().includes(lowerQ)) || item.temperature.includes(lowerQ);
+    });
+  }, [searchQuery, savedItems]);
+
+  // 🌟 8. 외부로 기능 내보내기 (user, 로그인 함수 추가)
+  return {
+    user, signIn, signOut, // <- signInWithGoogle을 signIn으로 변경
+    isLoginModalOpen, setIsLoginModalOpen, // <- 추가
+    fashionItems, currentIndex, setCurrentIndex, direction, setDirection,
+    savedItems, setSavedItems,
+    isModalOpen, setIsModalOpen,
+    isDetailOpen, setIsDetailOpen,
+    searchQuery, setSearchQuery,
+    localWeather, filteredArchive, triggerHaptic
+  };
+}
