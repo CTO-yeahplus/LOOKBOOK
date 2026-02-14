@@ -1,6 +1,6 @@
 // components/ArchiveModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Heart } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura";
 
 interface ArchiveModalProps {
