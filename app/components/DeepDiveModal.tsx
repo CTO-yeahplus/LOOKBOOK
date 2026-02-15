@@ -71,6 +71,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                 zIndex: isFlipped ? 0 : 20 
             }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={item.imageUrl} alt="Look Front" className="w-full h-full object-cover filter contrast-110" />
               
               {/* 앞면 하단 힌트 텍스트 */}

@@ -8,7 +8,7 @@ export default function InstallPrompt() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // 이미 앱으로 설치해서 들어왔거나, 닫기를 누른 적이 있다면 무시합니다.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone;
     const hasDismissed = localStorage.getItem("aura_install_dismissed");
     
@@ -46,11 +46,11 @@ export default function InstallPrompt() {
               <div className="rounded-xl bg-black/30 p-3 text-sm text-white/90 border border-white/5">
                 {isIOS ? (
                   <div className="flex items-center gap-2">
-                    하단의 <Share className="w-4 h-4 text-blue-400" /> <b>공유 버튼</b>을 누르고<br/><b>'홈 화면에 추가'</b>를 선택하세요.
+                    하단의 <Share className="w-4 h-4 text-blue-400" /> <b>공유 버튼</b>을 누르고<br/><b>&apos;홈 화면에 추가&apos;</b>를 선택하세요.
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    상단의 <MoreVertical className="w-4 h-4 text-white" /> <b>메뉴 버튼</b>을 누르고<br/><b>'앱 설치'</b>를 선택하세요.
+                    상단의 <MoreVertical className="w-4 h-4 text-white" /> <b>메뉴 버튼</b>을 누르고<br/><b>&apos;앱 설치&apos;</b>를 선택하세요.
                   </div>
                 )}
               </div>
