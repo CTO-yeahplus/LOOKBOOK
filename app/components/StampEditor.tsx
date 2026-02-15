@@ -105,8 +105,8 @@ export default function StampEditor({ imageFile, onFinish, onCancel }: StampEdit
         onClick={() => setSelectedStampId(null)} // 빈 공간 클릭 시 조절자 해제
       >
         <div ref={editorRef} className="relative shadow-2xl inline-block max-h-full max-w-full overflow-hidden">
-          <img src={imageUrl} className="max-h-[75vh] object-contain pointer-events-none" alt="Editing Base" />
-          
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={imageUrl} className="max-h-[75vh] object-contain pointer-events-none" alt="Editing Base" />          
           {stamps.map((stamp) => (
             <DraggableStamp 
               key={stamp.id} 
@@ -131,8 +131,16 @@ export default function StampEditor({ imageFile, onFinish, onCancel }: StampEdit
   );
 }
 
-const ToolbarButton = ({ icon, label, onClick, color, stroke = false }: any) => (
-  <button onClick={onClick} className="flex flex-col items-center group active:scale-95 transition-transform">
+interface ToolbarButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+  color: string;
+  stroke?: boolean;
+}
+
+const ToolbarButton = ({ icon, label, onClick, color, stroke = false }: ToolbarButtonProps) => (
+    <button onClick={onClick} className="flex flex-col items-center group active:scale-95 transition-transform">
     <div className={`w-12 h-12 ${color} rounded-full flex items-center justify-center border-2 border-[#EBE6DD] shadow-[3px_3px_0px_rgba(0,0,0,0.5)] group-hover:-translate-y-1 transition-transform ${stroke ? 'text-transparent bg-clip-text border-blue-500' : 'text-[#EBE6DD]'}`}>
       {icon}
     </div>
@@ -140,8 +148,17 @@ const ToolbarButton = ({ icon, label, onClick, color, stroke = false }: any) => 
   </button>
 );
 
+interface DraggableStampProps {
+  stamp: StampData;
+  containerRef: React.RefObject<HTMLDivElement>;
+  isSelected: boolean;
+  onSelect: () => void;
+  onUpdate: (id: string, updates: Partial<StampData>) => void;
+  onDelete: (id: string) => void;
+}
+
 // 🌟 마우스 트래킹 및 튕김 현상 완벽 해결판
-const DraggableStamp = ({ stamp, containerRef, isSelected, onSelect, onUpdate, onDelete }: any) => {
+const DraggableStamp = ({ stamp, containerRef, isSelected, onSelect, onUpdate, onDelete }: DraggableStampProps) => {
   const x = useMotionValue(stamp.x);
   const y = useMotionValue(stamp.y);
 

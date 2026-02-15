@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Compass, Heart, Layers, Plus, Trophy, Sparkles, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User, Link } from "lucide-react";
+import { Compass, Heart, Layers, Plus, Trophy, Sparkles, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
@@ -18,7 +18,6 @@ import RankingModal from "./components/RankingModal";
 import ProfileModal from "./components/ProfileModal";
 
 const appleSpring = { type: "spring" as const, stiffness: 300, damping: 25 };
-const slowSpring = { type: "spring" as const, stiffness: 200, damping: 30 };
 
 export default function Home() {
   const aura = useAura();
@@ -286,6 +285,7 @@ export default function Home() {
 
       <AnimatePresence mode="popLayout">
         <motion.div key={`bg-${currentItem.id}-${swipeKey}`} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0 z-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[80px] saturate-150" alt="background blur" />
         </motion.div>
       </AnimatePresence>
@@ -504,9 +504,6 @@ export default function Home() {
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
         triggerHaptic={aura.triggerHaptic}
-        userId={aura.user?.id} 
-        userEmail={aura.user?.email}
-        user={aura.user}
         
         // 🌟 방금 위에서 만든 상태와 함수를 드디어 연결합니다!
         isAnalyzing={isAnalyzing} 

@@ -11,9 +11,6 @@ interface UploadModalProps {
   onUpload: (file: File) => void;
   isAnalyzing: boolean;
   triggerHaptic: (pattern: number | number[]) => void;
-  userId?: string | null;
-  userEmail?: string | null;
-  user?: any;
 }
 
 export default function UploadModal({ 
@@ -22,9 +19,6 @@ export default function UploadModal({
   onUpload, 
   isAnalyzing, 
   triggerHaptic,
-  userId,
-  userEmail,
-  user
 }: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isStamping, setIsStamping] = useState(false);

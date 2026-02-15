@@ -2,7 +2,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Metadata } from 'next';
 import { Heart, Grid3X3, ArrowDownRight, Sparkles } from 'lucide-react';
-import Image from 'next/image';
 
 // Supabase 서버 사이드 연결
 const supabase = createClient(

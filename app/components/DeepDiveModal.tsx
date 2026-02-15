@@ -1,7 +1,7 @@
 // components/DeepDiveModal.tsx
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Transition } from "framer-motion"; // 🌟 Transition 타입 유지!
-import { X, Volume2, Palette, Sparkles, Instagram, ArrowDownRight, Ticket, Heart, RefreshCw } from "lucide-react";
+import { X, Volume2, Palette, Instagram, ArrowDownRight, Ticket, Heart, RefreshCw } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura"; 
 
 interface DeepDiveModalProps {
