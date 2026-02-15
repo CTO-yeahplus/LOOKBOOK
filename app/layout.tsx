@@ -1,7 +1,11 @@
 // app/layout.tsx 파일 상단
 import type { Metadata, Viewport } from "next"; // 🌟 Viewport 임포트 추가
 import "./globals.css";
-
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Inter } from "next/font/google";
+// 🌟 2. Inter 폰트 초기화
+const inter = Inter({ subsets: ["latin"] });
 // 1. 순수한 메타데이터 (기존 코드에서 themeColor 뺌)
 export const metadata: Metadata = {
   title: "AURA | Ambient Lookbook",
@@ -21,12 +25,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="ko">
-      <body>{children}</body>
+      <body className={`${inter.className} bg-black text-white antialiased`}>
+        {/* 🌟 기존 children 아래에 레이더 컴포넌트를 달아줍니다! */}
+        {children}
+        <Analytics />
+        <SpeedInsights />
+      </body>
     </html>
   );
 }
