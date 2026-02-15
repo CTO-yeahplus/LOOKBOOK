@@ -55,7 +55,11 @@ export default function Home() {
 
   // 🌟 처음에 기기가 아이폰(iOS 13+)인지 검사하여 버튼을 띄울지 결정합니다.
   useEffect(() => {
-    if (typeof window !== 'undefined' && typeof (window.DeviceOrientationEvent as any)?.requestPermission === 'function') {
+    // ✅ [수정 후] 인터페이스를 인라인으로 정의하여 우회합니다.
+    if (
+      typeof window !== 'undefined' && 
+      typeof (DeviceOrientationEvent as unknown as { requestPermission: Function }).requestPermission === 'function'
+    ) {
       setShowGyroButton(true);
     }
   }, []);
@@ -63,10 +67,9 @@ export default function Home() {
   // 🌟 유저가 버튼을 눌렀을 때 애플의 보안 창을 띄우는 함수
   const requestGyroPermission = async () => {
     try {
-      const permission = await (window.DeviceOrientationEvent as any).requestPermission();
-      if (permission === 'granted') {
-        setShowGyroButton(false); // 허용되었으니 버튼을 숨깁니다!
-        aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+      const permission = await (DeviceOrientationEvent as unknown as { requestPermission: () => Promise<string> }).requestPermission();      if (permission === 'granted') {
+      setShowGyroButton(false); // 허용되었으니 버튼을 숨깁니다!
+      aura.triggerHaptic([50, 100, 50]); // 성공 진동!
       } else {
         alert("3D 입체 효과를 보려면 기기 모션 접근 권한이 필요합니다.");
       }
