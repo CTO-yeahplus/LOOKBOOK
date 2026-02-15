@@ -23,12 +23,16 @@ export async function GET() {
 
     // 🌟 프론트엔드가 절대 뻗지 않도록 데이터 안전망(Fallback) 씌우기
     const formattedData = (data || []).map(item => ({
-      id: item.id,
-      imageUrl: item.image_url || '',
-      weather: item.weather || '☀️',
-      temperature: item.temperature || '20°C',
-      tags: Array.isArray(item.tags) ? item.tags : [], // 태그가 깨져도 무조건 배열로 보장
-    }));
+        id: item.id,
+        imageUrl: item.image_url || '',
+        weather: item.weather || '☀️',
+        temperature: item.temperature || '20°C',
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        colors: Array.isArray(item.colors) ? item.colors : ["#E5E0D8", "#2C2C2C", "#8A7B6E"],
+        uploaderName: item.uploader_name || 'AURA Editor', // 🌟 DB에서 가져온 이름표 세팅 
+        uploaderIg: item.uploader_ig, // 🌟 
+        likes: item.likes_count || 0, // 🌟
+      }));
 
     return NextResponse.json(formattedData);
   } catch (error) {

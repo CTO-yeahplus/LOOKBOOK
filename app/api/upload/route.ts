@@ -15,6 +15,9 @@ export async function POST(req: Request) {
     // 1. 프론트엔드에서 보낸 파일(사진) 꺼내기
     const formData = await req.formData();
     const file = formData.get('image') as File;
+    const userId = formData.get('userId') as string; // 🌟 추가됨!
+    const uploaderName = formData.get('uploaderName') as string; // 🌟 추가!
+    const uploaderIg = formData.get('uploaderIg') as string; // 🌟 프론트에서 보낸 인스타 ID 받기!
     if (!file) throw new Error("파일이 없습니다.");
 
     // 2. 파일을 버퍼(Buffer)로 변환
@@ -39,7 +42,8 @@ export async function POST(req: Request) {
         {
           "weather": "어울리는 날씨 이모지 1개 (☀️, ☁️, ☔️, ❄️ 중 택 1)",
           "temperature": "어울리는 온도 (예: 15°C, 28°C 등)",
-          "tags": ["스타일 태그1", "스타일 태그2", "스타일 태그3"]
+          "tags": ["스타일 태그1", "스타일 태그2", "스타일 태그3"],
+          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"]
         }
     `;
 
@@ -52,14 +56,22 @@ export async function POST(req: Request) {
     const responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '');
     const aiData = JSON.parse(responseText);
 
+    // 🌟 디버깅용: 터미널에서 AI가 진짜로 뭐라고 대답했는지 확인합니다.
+    console.log("🤖 AI가 분석한 원본 데이터:", aiData);
+
     // 5. AI가 분석한 데이터를 Supabase DB(aura_fashion_items)에 저장
     const { data: dbItem, error: dbError } = await supabase
       .from('aura_fashion_items')
       .insert([{
+        user_id: userId || null, // 🌟 이 옷의 주인을 명시합니다!
+        uploader_name: uploaderName || '@AURA', // 🌟 작성자 이름 저장!
+        uploader_ig: uploaderIg || null, // 🌟 DB에 인스타 ID 저장
+        likes_count: Math.floor(Math.random() * 15), // 🌟 (테스트용) 0~15개의 랜덤 하트 자동 부여!
         image_url: publicUrl,
-        weather: aiData.weather,
-        temperature: aiData.temperature,
-        tags: aiData.tags
+        weather: aiData.weather || "☀️",
+        temperature: aiData.temperature || "20°C",
+        tags: aiData.tags || ["#OOTD"],
+        colors: aiData.colors || aiData.color || ["#E5E0D8", "#2C2C2C", "#8A7B6E"]
       }])
       .select()
       .single();

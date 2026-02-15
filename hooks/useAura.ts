@@ -9,6 +9,10 @@ export interface FashionItem {
   weather: string;
   temperature: string;
   tags: string[];
+  colors?: string[];
+  uploaderName?: string;
+  uploaderIg?: string; // 🌟 추가됨
+  likes?: number;      // 🌟 추가됨
 }
 
 const sounds = {
@@ -20,13 +24,13 @@ const sounds = {
 export function useAura() {
   const [user, setUser] = useState<any>(null);
 
-  // 🌟 [핵심 변경] 원본 데이터 캐싱용 상태 추가
   const [rawItems, setRawItems] = useState<FashionItem[]>([]); 
   const [fashionItems, setFashionItems] = useState<FashionItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
   
   const [savedItems, setSavedItems] = useState<FashionItem[]>([]);
+  const [uploadedItems, setUploadedItems] = useState<FashionItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,13 +46,21 @@ export function useAura() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (session?.user) fetchSavedLooks(session.user.id);
+      if (session?.user) {
+        fetchSavedLooks(session.user.id);
+        fetchUploadedLooks(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) fetchSavedLooks(session.user.id);
-      else setSavedItems([]); 
+      if (session?.user) {
+        fetchSavedLooks(session.user.id);
+        fetchUploadedLooks(session.user.id);
+      } else {
+        setSavedItems([]); 
+        setUploadedItems([]);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -67,8 +79,28 @@ export function useAura() {
         weather: d.aura_fashion_items.weather,
         temperature: d.aura_fashion_items.temperature,
         tags: d.aura_fashion_items.tags,
+        uploaderName: d.aura_fashion_items.uploader_name,
+        uploaderIg: d.aura_fashion_items.uploader_ig, 
+        likes: d.aura_fashion_items.likes_count || 0, 
       }));
       setSavedItems(looks);
+    }
+  };
+
+  const fetchUploadedLooks = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('aura_fashion_items')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+      
+    if (!error && data) {
+      setUploadedItems(data.map((d: any) => ({
+        id: d.id, imageUrl: d.image_url, weather: d.weather, temperature: d.temperature, tags: d.tags,
+        uploaderName: d.uploader_name,
+        uploaderIg: d.uploader_ig, // 🌟 
+        likes: d.likes_count || 0, // 🌟
+      })));
     }
   };
 
@@ -81,7 +113,20 @@ export function useAura() {
 
   const signOut = async () => { await supabase.auth.signOut(); };
 
-  // 🌟 [최적화 1] 네트워크 호출은 무조건 앱 켤 때 1번만 수행
+  // 🌟 인스타그램 아이디를 Supabase 유저 메타데이터에 안전하게 저장하는 함수 추가
+  const saveInstagram = async (handle: string) => {
+    if (!user) return;
+    const { data, error } = await supabase.auth.updateUser({
+      data: { instagram: handle }
+    });
+    if (data?.user) {
+      setUser(data.user); // 로컬 상태 즉시 업데이트
+    }
+    if (error) {
+      console.error("인스타그램 정보 저장 실패:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchWeatherAndData = async () => {
       let currentTemp = 15; let currentCity = "Seoul";
@@ -102,20 +147,18 @@ export function useAura() {
           cache: 'no-store', headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
         });
         const data: FashionItem[] = await response.json();
-        setRawItems(data); // 데이터 다운로드는 여기서 끝! 원본 저장.
+        setRawItems(data); 
       } catch (error) { console.error("데이터 로드 실패:", error); }
     };
     fetchWeatherAndData();
-  }, []); // 의존성 배열을 비워서 무한 호출 차단
+  }, []);
 
-  // 🌟 [최적화 2] 하트를 누를 때마다 '로컬 연산'으로만 피드 재정렬 (서버 부하 제로)
   useEffect(() => {
     if (rawItems.length === 0) return;
     const personalizedData = getPersonalizedFeed(rawItems, savedItems, localWeather?.temp || 15);
     setFashionItems(personalizedData);
   }, [rawItems, savedItems.length, localWeather?.temp]); 
 
-  // 오디오 제어
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isDetailOpen && fashionItems.length > 0) {
@@ -185,7 +228,6 @@ export function useAura() {
   const sendTestPush = async () => {
     if (!user) return;
     try {
-      // 🌟 [최적화 3] 실제 위치와 날씨를 반영한 다이내믹 푸시 알림
       const temp = localWeather?.temp || 15;
       const city = localWeather?.city || "Seoul";
       const weatherIcon = temp > 20 ? "☀️" : "☔️";
@@ -203,10 +245,15 @@ export function useAura() {
   };
 
   return {
-    user, signIn, signOut,
+    user, 
+    signIn, signOut,
+    login: signIn,     // 🌟 page.tsx에서 aura.login()을 호출해도 정상 작동하도록 연결
+    logout: signOut,   // 🌟 page.tsx에서 aura.logout()을 호출해도 정상 작동하도록 연결
+    saveInstagram,     // 🌟 프로필 모달에서 전달한 인스타 아이디를 저장하는 함수 노출
     isLoginModalOpen, setIsLoginModalOpen,
     fashionItems, currentIndex, setCurrentIndex, direction, setDirection,
     savedItems, setSavedItems,
+    uploadedItems, setUploadedItems, 
     isModalOpen, setIsModalOpen,
     isDetailOpen, setIsDetailOpen,
     searchQuery, setSearchQuery,

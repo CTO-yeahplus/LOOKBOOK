@@ -46,11 +46,12 @@ async function processImages() {
       // 🌟 [STEP 1] 제미나이 AI에게 사진을 보여주고 패션 분석 지시
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
       const prompt = `
-        너는 세계 최고의 패션 AI 스타일리스트야. 이 옷 사진을 보고 아래 JSON 형식으로만 완벽하게 대답해. 다른 말은 절대 하지마.
+        당신은 세계 최고의 패션 디렉터입니다. 사진의 옷을 분석하여 아래 JSON 형식으로만 완벽하게 대답해주세요. 다른 말은 절대 하지마. 마크다운(\`\`\`json 등)은 절대 포함하지 마세요.
         {
           "weather": "어울리는 날씨 이모지 1개 (☀️, ☁️, ☔️, ❄️ 중 택 1)",
           "temperature": "어울리는 온도 (예: 15°C, 28°C 등)",
-          "tags": ["스타일 태그1", "스타일 태그2", "스타일 태그3"]
+          "tags": ["스타일 태그1", "스타일 태그2", "스타일 태그3"],
+          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"] // 🌟 옷에서 가장 돋보이는 핵심 컬러 3가지 추가!
         }
       `;
       const imagePart = fileToGenerativePart(filePath, "image/jpeg");
@@ -79,20 +80,24 @@ async function processImages() {
         console.error(`\n🚨 Supabase 스토리지 에러 상세 정보:`, uploadError);
         throw new Error("스토리지 업로드 실패");
       }
-      
+
       // 🌟 [STEP 3] 업로드된 사진의 URL 획득
       const { data: publicUrlData } = supabase.storage.from('aura_images').getPublicUrl(fileName);
       const imageUrl = publicUrlData.publicUrl;
 
       // 🌟 [STEP 4] Supabase DB(엑셀 표)에 AI 데이터와 함께 저장
-      const { error: dbError } = await supabase
+      const { data: dbItem, error: dbError } = await supabase
         .from('aura_fashion_items')
         .insert([{
-          image_url: imageUrl,
-          weather: aiData.weather,
-          temperature: aiData.temperature,
-          tags: aiData.tags
-        }]);
+            user_id: userId || null,
+            image_url: publicUrl,
+            weather: aiData.weather,
+            temperature: aiData.temperature,
+            tags: aiData.tags,
+            colors: aiData.colors // 🌟 AI가 뽑아준 컬러를 저장합니다!
+        }])
+        .select()
+        .single();
 
       if (dbError) throw new Error("DB 저장 실패");
 
