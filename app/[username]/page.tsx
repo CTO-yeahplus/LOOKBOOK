@@ -88,6 +88,7 @@ export default async function ProfileShowcasePage({ params }: Props) {
 
         {/* 하이엔드 룩북 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        {/*  eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {looks.map((look: any, index: number) => (
             <div key={look.id} className="group relative">
               <div className="absolute -inset-2 bg-red-600 transform rotate-2 opacity-0 group-hover:opacity-100 transition-opacity z-0" />
