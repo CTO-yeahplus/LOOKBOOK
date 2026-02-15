@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Compass, Heart, Layers, Plus, Trophy, Sparkles, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User } from "lucide-react";
+import { Compass, Heart, Bookmark, Layers, Plus, Trophy, Sparkles,Instagram, Smartphone, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
@@ -49,6 +49,31 @@ export default function Home() {
 
   const currentItem = aura.fashionItems[aura.currentIndex];
   const isSaved = aura.savedItems.some(i => i.id === currentItem?.id);
+
+  // 🌟 iOS 3D 모션 권한 상태
+  const [showGyroButton, setShowGyroButton] = useState(false);
+
+  // 🌟 처음에 기기가 아이폰(iOS 13+)인지 검사하여 버튼을 띄울지 결정합니다.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof (window.DeviceOrientationEvent as any)?.requestPermission === 'function') {
+      setShowGyroButton(true);
+    }
+  }, []);
+
+  // 🌟 유저가 버튼을 눌렀을 때 애플의 보안 창을 띄우는 함수
+  const requestGyroPermission = async () => {
+    try {
+      const permission = await (window.DeviceOrientationEvent as any).requestPermission();
+      if (permission === 'granted') {
+        setShowGyroButton(false); // 허용되었으니 버튼을 숨깁니다!
+        aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+      } else {
+        alert("3D 입체 효과를 보려면 기기 모션 접근 권한이 필요합니다.");
+      }
+    } catch (error) {
+      console.error("모션 권한 요청 실패:", error);
+    }
+  };
 
   // 🌟 2. 스탬프 완성본을 API(route.ts)로 쏘아 올리는 진짜 함수!
   const handleUploadSubmit = async (file: File) => {
@@ -177,24 +202,55 @@ export default function Home() {
       setIsExporting(false);
     }
   };
-    // 🌟 현재 카드의 총 하트 수를 실시간으로 긁어옵니다.
-    useEffect(() => {
-      if (!currentItem) return;
-      const fetchLikes = async () => {
-        const { count } = await supabase
-          .from('aura_saved_looks')
-          .select('*', { count: 'exact', head: true })
-          .eq('look_id', currentItem.id);
-        setCurrentLikes(count || 0);
-      };
-      fetchLikes();
-    }, [currentItem, isSaved]); // 카드가 넘어가거나, 내가 하트를 누를 때마다 갱신  
+  // 🌟 현재 카드의 총 하트 수를 실시간으로 긁어옵니다.
+  useEffect(() => {
+    if (!currentItem) return;
+    const fetchLikes = async () => {
+      const { count } = await supabase
+        .from('aura_saved_looks')
+        .select('*', { count: 'exact', head: true })
+        .eq('look_id', currentItem.id);
+      setCurrentLikes(count || 0);
+    };
+    fetchLikes();
+  }, [currentItem, isSaved]); // 카드가 넘어가거나, 내가 하트를 누를 때마다 갱신  
+
+  // 🌟 모바일 자이로스코프 (DeviceOrientation) 3D 입체 효과 연동
+  useEffect(() => {
+    // 모바일 환경인지 가볍게 체크 (터치 지원 기기)
+    const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    if (!isMobile) return;
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      const { beta, gamma } = event;
+      if (beta === null || gamma === null) return;
+
+      // 1. 좌우 기울기 (Gamma: 보통 -90 ~ 90도)
+      // 스마트폰을 살짝만 기울여도 반응하도록 범위를 -30 ~ 30도로 좁힙니다.
+      const maxGamma = 30;
+      const clampedGamma = Math.max(-maxGamma, Math.min(maxGamma, gamma));
+      // 기울기를 화면 가로 픽셀(0 ~ innerWidth)로 변환!
+      const mappedX = ((clampedGamma + maxGamma) / (maxGamma * 2)) * window.innerWidth;
+
+      // 2. 앞뒤 기울기 (Beta: 스마트폰을 들고 있는 각도, 보통 20도 ~ 70도 사이)
+      const minBeta = 20;
+      const maxBeta = 70;
+      const clampedBeta = Math.max(minBeta, Math.min(maxBeta, beta));
+      // 기울기를 화면 세로 픽셀(0 ~ innerHeight)로 변환!
+      const mappedY = ((clampedBeta - minBeta) / (maxBeta - minBeta)) * window.innerHeight;
+
+      // 🌟 기존 PC용 마우스 변수에 자이로 값을 덮어씌웁니다! (마법이 일어나는 곳)
+      mouseX.set(mappedX);
+      mouseY.set(mappedY);
+    };
+
+    window.addEventListener("deviceorientation", handleOrientation);
+    return () => window.removeEventListener("deviceorientation", handleOrientation);
+  }, [mouseX, mouseY]);
 
   if (aura.fashionItems.length === 0) return (
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>
   );
-
-
 
   const paginate = (newDirection: number) => {
     aura.triggerHaptic(40);
@@ -281,6 +337,8 @@ export default function Home() {
           )}
         </button>
 
+        
+
       </div>
 
       <AnimatePresence mode="popLayout">
@@ -348,6 +406,8 @@ export default function Home() {
           <div className="absolute inset-0 w-full h-full overflow-hidden bg-black/20">
             <motion.img style={{ x: imageX, scale: 1.15 }} src={currentItem.imageUrl} crossOrigin="anonymous" alt="Fashion look" className="pointer-events-none h-full w-full object-cover" draggable="false" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/10 to-transparent pointer-events-none" />
+          
+          
           </div>
 
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
@@ -364,21 +424,67 @@ export default function Home() {
               {currentItem.uploaderName === 'AURA Editor' ? 'AURA EXCLUSIVE' : currentLikes >= 10 ? 'AURA TRENDSETTER' : 'AURA DISCOVER'}
             </span>
               
-              {/* 🌟 실시간 글로벌 하트 카운터 뱃지 (Aura AI 뱃지 바로 옆에 나란히 붙음) */}
-              {currentLikes > 0 && (
-                <span className="flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-rose-300 backdrop-blur-md">
-                  <Heart className="h-3 w-3 fill-current" /> {currentLikes}
-                </span>
-              )}
               {/* 🌟 힙한 매거진 스타일의 크레딧 뱃지 추가! */}
-              <span className="whitespace-nowrap inline-block flex items-center gap-1.5 rounded-full border border-white/5 bg-transparent px-2 py-1 text-[11px] font-medium tracking-wide text-white/60">
-                by <span className="text-white/90">{currentItem.uploaderName || 'AURA'}</span>
+              <span className="whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-bold tracking-widest text-white/60 backdrop-blur-md transition-all duration-500 shadow-sm">
+                {currentItem.uploaderIg ? (
+                  // 🌟 1. 인스타 아이디가 연동되어 있는 경우
+                  <>
+                    <Instagram className="w-3 h-3 text-white/80" />
+                    <span className="text-white/90">
+                      @{currentItem.uploaderIg.replace('@', '')}
+                    </span>
+                  </>
+                ) : (
+                  // 🌟 2. 인스타 아이디가 없는 경우 (기존 이름 노출)
+                  <>
+                    by <span className="text-white/90">{currentItem.uploaderName || 'AURA'}</span>
+                  </>
+                )}
               </span>
             </div>
             <h1 className="flex items-center gap-3 text-[3.5rem] md:text-6xl font-semibold tracking-tighter text-white leading-none drop-shadow-lg"><span>{currentItem.weather}</span><span>{currentItem.temperature}</span></h1>
             <div className="mt-4 flex flex-wrap gap-2">
               {currentItem.tags?.map((tag: string, idx: number) => (<span key={idx} className="whitespace-nowrap inline-block rounded-full border border-white/10 bg-white/10 px-3.5 py-1.5 text-[13px] font-medium text-white backdrop-blur-xl shadow-sm">{tag.replace('#', '')}</span>))}
             </div>
+
+            {/* 🌟 2. currentItem이 존재할 때만 버튼을 보여줍니다 */}
+            {currentItem && (
+              <div className="pointer-events-auto flex gap-6 items-center mt-6">
+                
+                {/* 🌟 AURA IMPACT (좋아요) 버튼 */}
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    aura.toggleLike?.(String(currentItem.id), currentItem.likes || 0);
+                  }}
+                  className="flex items-center gap-1.5 group"
+                >
+                  <Heart 
+                    className={`w-7 h-7 transition-transform group-active:scale-75 ${aura.likedItems?.includes(String(currentItem.id)) ? 'fill-red-500 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-white hover:text-red-400 drop-shadow-md'}`} 
+                  />
+                  <span className="font-mono text-sm font-bold text-white drop-shadow-md">
+                    {currentItem.likes || 0}
+                  </span>
+                </button>
+
+                {/* 🌟 ARCHIVE (저장) 버튼 */}
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    toggleSave(); // 안전장치
+                  }}
+                  className="flex items-center gap-1.5 group ml-auto"
+                >
+                  <Bookmark 
+                    className={`w-7 h-7 transition-transform group-active:scale-75 ${isSaved ? 'fill-white text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'text-white hover:text-gray-300 drop-shadow-md'}`} 
+                  />
+                  {/* 🌟 북마크를 저장한 사람들의 숫자 표시! */}
+                  <span className="font-mono text-sm font-bold text-white drop-shadow-md">
+                    {currentLikes || 0}
+                  </span>
+                </button>
+              </div>
+            )}
 
             <div className={`pointer-events-auto mt-8 flex items-center justify-between transition-opacity duration-300 ${isExporting ? 'opacity-0' : 'opacity-100'}`}>
             
@@ -419,6 +525,27 @@ export default function Home() {
           />
         </motion.div>
       </AnimatePresence>
+
+      {/* 🌟 기존 하단 플로팅 툴바 코드 바로 위쪽에 이 코드를 넣어주세요! */}
+      <AnimatePresence>
+        {showGyroButton && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute bottom-28 left-1/2 z-40 flex -translate-x-1/2"
+          >
+            <button
+              onClick={requestGyroPermission}
+              className="group flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-[10px] font-bold tracking-widest text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.3)] backdrop-blur-md transition-all active:scale-95"
+            >
+              <Smartphone className="h-4 w-4 animate-pulse group-hover:animate-none group-hover:rotate-12 transition-transform" />
+              ENABLE 3D VIBE
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* 🌟 3. 완벽한 비율의 하단 중앙 플로팅 툴바 */}
       <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/15 bg-black/40 p-2 shadow-2xl backdrop-blur-2xl">
         <button 
@@ -440,16 +567,6 @@ export default function Home() {
         </button>
         
         <div className="mx-1 h-8 w-[1px] bg-white/15" />
-
-        {/* 중앙: 메인 액션 하트 (가장 큼) */}
-        <button 
-          onClick={toggleSave} 
-          className={`flex h-14 w-14 items-center justify-center rounded-full transition-all active:scale-95 ${
-            isSaved ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)]' : 'bg-white/10 text-white hover:bg-white/20'
-          }`}
-        >
-          <Heart className={`h-6 w-6 transition-transform ${isSaved ? 'fill-current scale-110' : ''}`} strokeWidth={isSaved ? 0 : 1.5} />
-        </button>
         
         <div className="mx-1 h-8 w-[1px] bg-white/15" />
 

@@ -66,7 +66,7 @@ export async function POST(req: Request) {
         user_id: userId || null, // 🌟 이 옷의 주인을 명시합니다!
         uploader_name: uploaderName || '@AURA', // 🌟 작성자 이름 저장!
         uploader_ig: uploaderIg || null, // 🌟 DB에 인스타 ID 저장
-        likes_count: Math.floor(Math.random() * 15), // 🌟 (테스트용) 0~15개의 랜덤 하트 자동 부여!
+        likes_count: 0, // 🌟 (테스트용) 0~15개의 랜덤 하트 자동 부여!
         image_url: publicUrl,
         weather: aiData.weather || "☀️",
         temperature: aiData.temperature || "20°C",

@@ -142,6 +142,54 @@ export function useAura() {
     }
   };
 
+  // 🌟 1. 아카이브 (저장) 함수 - 내 옷장에 킵하기
+  const toggleArchive = async (lookId: string) => {
+    if (!user) return setIsLoginModalOpen(true);
+
+    const isSaved = savedItems.some(item => item.id === lookId);
+    triggerHaptic(50);
+
+    try {
+      if (isSaved) {
+        await supabase.from('aura_saved_looks').delete().match({ user_id: user.id, look_id: lookId });
+        setSavedItems(prev => prev.filter(item => item.id !== lookId));
+      } else {
+        await supabase.from('aura_saved_looks').insert([{ user_id: user.id, look_id: lookId }]);
+        fetchSavedLooks(user.id);
+      }
+    } catch (error) {
+      console.error("아카이브 실패:", error);
+    }
+  };
+
+  // 🌟 2. AURA IMPACT (좋아요) 함수 - 하트 날리기
+  // (MVP 단계에서는 로컬 상태로 내가 하트를 눌렀는지 관리합니다)
+  const [likedItems, setLikedItems] = useState<string[]>([]);
+
+  const toggleLike = async (lookId: string, currentLikes: number) => {
+    if (!user) return setIsLoginModalOpen(true);
+
+    const isLiked = likedItems.includes(lookId);
+    triggerHaptic([50, 100]); // 심장 박동 같은 햅틱!
+
+    // UI 즉각 반영 (Optimistic UI)
+    setLikedItems(prev => isLiked ? prev.filter(id => id !== lookId) : [...prev, lookId]);
+    setFashionItems(prev => prev.map(item => 
+      // 🌟 핵심 수정: item.id와 lookId를 둘 다 문자로 변환해서 일치 여부 확인!
+      String(item.id) === String(lookId) 
+        ? { ...item, likes: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1 } 
+        : item
+    ));
+
+    try {
+      // DB의 likes_count 수치 업데이트
+      const newLikes = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+      await supabase.from('aura_fashion_items').update({ likes_count: newLikes }).eq('id', lookId);
+    } catch (error) {
+      console.error("AURA 하트 업데이트 실패:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchWeatherAndData = async () => {
       let currentTemp = 15; let currentCity = "Seoul";
@@ -273,6 +321,9 @@ export function useAura() {
     isDetailOpen, setIsDetailOpen,
     searchQuery, setSearchQuery,
     localWeather, filteredArchive, triggerHaptic,
-    subscribeToPush, sendTestPush
+    subscribeToPush, sendTestPush, 
+    toggleArchive,
+    toggleLike,
+    likedItems,
   };
 }
