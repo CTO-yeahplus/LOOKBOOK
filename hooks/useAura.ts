@@ -113,17 +113,32 @@ export function useAura() {
 
   const signOut = async () => { await supabase.auth.signOut(); };
 
-  // 🌟 인스타그램 아이디를 Supabase 유저 메타데이터에 안전하게 저장하는 함수 추가
+  // hooks/useAura.ts 내부에 있는 saveInstagram 함수 수정
   const saveInstagram = async (handle: string) => {
     if (!user) return;
+    
+    // 1. 유저 메타데이터에 새 아이디 저장
     const { data, error } = await supabase.auth.updateUser({
       data: { instagram: handle }
     });
+    
     if (data?.user) {
-      setUser(data.user); // 로컬 상태 즉시 업데이트
+      setUser(data.user); 
     }
+    
     if (error) {
-      console.error("인스타그램 정보 저장 실패:", error);
+      console.error("아이디 저장 실패:", error);
+      return;
+    }
+
+    // 🌟 2. 이 유저가 과거에 올린 모든 화보의 'uploader_ig'를 새 아이디로 싹 바꿔줍니다!
+    const { error: updateError } = await supabase
+      .from('aura_fashion_items')
+      .update({ uploader_ig: handle })
+      .eq('user_id', user.id);
+
+    if (updateError) {
+      console.error("과거 게시물 아이디 업데이트 실패:", updateError);
     }
   };
 

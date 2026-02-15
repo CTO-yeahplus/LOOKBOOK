@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Compass, Heart, Layers, X, Plus, Trophy, Sparkles, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User } from "lucide-react";
+import { Compass, Heart, Layers, Plus, Trophy, Sparkles, MapPin, Crown, Download, ChevronUp, MoreHorizontal, User, Link } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";

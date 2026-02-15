@@ -1,7 +1,7 @@
 // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Share2, Volume2, VolumeX, Instagram, Check } from "lucide-react";
+import { X, LogOut, Share2, Volume2, VolumeX, Instagram, Check, Link } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
 
@@ -12,22 +12,21 @@ interface ProfileModalProps {
   onLogout: () => void;
   uploadedCount: number;
   bestLook?: FashionItem;
-  onSaveInstagram: (handle: string) => void; // 🌟 추가!
+  // 🌟 비동기 함수로 타입 업데이트 (과거 게시물까지 업데이트해야 하므로)
+  onSaveInstagram: (handle: string) => Promise<void> | void; 
 }
 
 export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram }: ProfileModalProps) {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isIgSaved, setIsIgSaved] = useState(false); // 🌟 저장 완료 피드백 상태
+  const [isIgSaved, setIsIgSaved] = useState(false); 
   
-  // 🌟 인스타그램 핸들 상태 관리 및 공유 피드백 상태
   const [igHandle, setIgHandle] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // 🌟 저장 중 상태 추가
 
-  // 트렌드세터(ELITE) 판별 기준
   const isElite = uploadedCount >= 5; 
 
-  // 🌟 모달이 열릴 때 DB에 저장된 인스타 아이디가 있으면 불러오기
   useEffect(() => {
     if (user?.user_metadata?.instagram) {
       setIgHandle(user.user_metadata.instagram);
@@ -51,30 +50,60 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
     setIsMuted(!isMuted);
   };
 
-  // 🌟 PUBLISH(공유) 버튼 로직
+  // 🌟 닉네임 추출 (이메일 앞부분)
+  const nickname = user?.email ? user.email.split('@')[0].toLowerCase() : 'aura_user';
+
+  // 🌟 아이디 저장 로직 (@ 기호 제거 후 저장)
+  const handleSaveId = async () => {
+    if (!igHandle.trim() || isSaving) return;
+    setIsSaving(true);
+    const cleanHandle = igHandle.replace('@', '').trim();
+    
+    await onSaveInstagram(cleanHandle);
+    
+    setIsSaving(false);
+    setIsIgSaved(true);
+    setTimeout(() => setIsIgSaved(false), 2000);
+  };
+
+  const getShowcaseUrl = () => {
+    const targetId = igHandle ? igHandle.replace('@', '').trim() : nickname;
+    return `${window.location.origin}/@${targetId}`;
+  };
+
+  // 🌟 1. [SHARE] 버튼: 시스템 기본 공유 창 띄우기
   const handlePublish = async () => {
     const shareData = {
       title: 'AURA Editorial',
-      text: `Check out ${user?.email?.split('@')[0]}'s AURA Archive.`,
-      url: window.location.href,
+      text: `Check out my AURA Archive.`,
+      url: getShowcaseUrl(),
     };
-
     try {
       if (navigator.share) {
-        await navigator.share(shareData); // 모바일 네이티브 공유 창 호출
+        await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.href); // PC용 클립보드 복사
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        // PC 등에서 공유 창을 지원하지 않으면 복사 기능으로 대체
+        handleCopyLink();
       }
     } catch (error) {
       console.log('Share failed:', error);
     }
   };
 
+  // 🌟 2. [COPY LINK] 버튼: 주소만 클립보드에 복사
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(getShowcaseUrl());
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (error) {
+      console.log('Copy failed:', error);
+      alert(`Copy this URL:\n${getShowcaseUrl()}`);
+    }
+  };
+
   if (!user) return null;
 
-  const nickname = user.email ? user.email.split('@')[0].toLowerCase() : 'aura_user';
   const today = new Date();
   const dateString = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
 
@@ -124,7 +153,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                 </div>
                 
                 <h2 className="absolute bottom-4 -left-2 text-6xl font-serif italic text-white mix-blend-difference font-black drop-shadow-md z-10 pointer-events-none">
-                  {nickname}
+                  {igHandle ? igHandle.replace('@', '') : nickname}
                 </h2>
               </div>
 
@@ -133,7 +162,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                 
                 <div className="flex justify-between mb-1.5 border-b border-black/10 pb-1.5">
                   <span className="text-black/60">CURATOR</span>
-                  <span className="font-bold">{user.email?.split('@')[0]}</span>
+                  <span className="font-bold">{nickname}</span>
                 </div>
                 <div className="flex justify-between mb-1.5 border-b border-black/10 pb-1.5">
                   <span className="text-black/60">LOOKS_UPLOADED</span>
@@ -144,47 +173,36 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                   <span className="font-bold">99.9%</span>
                 </div>
 
-                {/* 🌟 트렌드세터(ELITE) 전용 인스타그램 연동 폼 */}
-                {isElite && (
-                  <div className="mt-3 pt-3 border-t border-dotted border-black/30">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1">
-                        <Instagram className="w-3 h-3 text-black/60" />
-                        <span className="text-black/60 tracking-widest uppercase">IG_LINK [UNLOCKED]</span>
-                      </div>
-                      <span className="text-[8px] text-black/40 tracking-widest italic">PRESS ENTER</span>
+                {/* 🌟 쇼케이스 아이디 설정 (모든 유저에게 노출하여 바이럴 유도) */}
+                <div className="mt-3 pt-3 border-t border-dotted border-black/30">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1">
+                      <Instagram className="w-3 h-3 text-black/60" />
+                      <span className="text-black/60 tracking-widest uppercase">SHOWCASE_ID</span>
                     </div>
-                    <div className="flex items-center bg-transparent border-b border-black/30 pb-1">
-                      <span className="font-bold text-black mr-1">@</span>
-                      <input 
-                        type="text" 
-                        placeholder="your_instagram" 
-                        value={igHandle}
-                        onChange={(e) => setIgHandle(e.target.value)}
-                        // 🌟 엔터 키를 누르면 자동 저장
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            onSaveInstagram(igHandle);
-                            setIsIgSaved(true);
-                            setTimeout(() => setIsIgSaved(false), 2000);
-                          }
-                        }}
-                        className="bg-transparent outline-none w-full font-bold text-black placeholder:text-black/20"
-                      />
-                      {/* 🌟 수동 저장 버튼 */}
-                      <button 
-                        onClick={() => {
-                          onSaveInstagram(igHandle);
-                          setIsIgSaved(true);
-                          setTimeout(() => setIsIgSaved(false), 2000);
-                        }}
-                        className={`text-[10px] font-bold tracking-widest transition-colors ${isIgSaved ? 'text-green-600' : 'text-black hover:text-red-600'}`}
-                      >
-                        {isIgSaved ? '[SAVED]' : '[SAVE]'}
-                      </button>
-                    </div>
+                    <span className="text-[8px] text-black/40 tracking-widest italic">PRESS ENTER</span>
                   </div>
-                )}
+                  <div className="flex items-center bg-transparent border-b border-black/30 pb-1">
+                    <span className="font-bold text-black mr-1">@</span>
+                    <input 
+                      type="text" 
+                      placeholder="your_id" 
+                      value={igHandle}
+                      onChange={(e) => setIgHandle(e.target.value.toLowerCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveId();
+                      }}
+                      className="bg-transparent outline-none w-full font-bold text-black placeholder:text-black/20"
+                    />
+                    <button 
+                      onClick={handleSaveId}
+                      disabled={isSaving}
+                      className={`text-[10px] font-bold tracking-widest transition-colors ${isIgSaved ? 'text-green-600' : 'text-black hover:text-red-600'}`}
+                    >
+                      {isSaving ? '[...]' : isIgSaved ? '[SAVED]' : '[SAVE]'}
+                    </button>
+                  </div>
+                </div>
                 
                 <div className="my-4 border-t border-dotted border-black/30" />
                 
@@ -195,11 +213,17 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                 </div>
 
                 <div className="flex gap-2 font-sans">
-                  {/* 🌟 PUBLISH 버튼에 이벤트 연결 */}
+                  {/* 🌟 1. COPY LINK 버튼 (주소 복사) */}
+                  <button onClick={handleCopyLink} className={`flex-1 py-3.5 border border-black font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 transition-colors active:scale-95 ${isCopied ? 'bg-green-50 text-green-600 border-green-600' : 'text-black hover:bg-black/5'}`}>
+                    {isCopied ? <Check className="w-3.5 h-3.5" /> : <Link className="w-3.5 h-3.5" />} 
+                    {isCopied ? 'COPIED!' : 'COPY LINK'}
+                  </button>
+                  {/* 🌟 2. 공유 버튼 (주소 복사) */}
                   <button onClick={handlePublish} className="flex-1 py-3.5 bg-black text-white font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 hover:bg-zinc-800 transition-colors active:scale-95">
                     {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />} 
-                    {isCopied ? 'COPIED!' : 'PUBLISH'}
+                    {isCopied ? 'URL COPIED!' : 'SHARE'}
                   </button>
+
                   <button onClick={onLogout} className="px-5 py-3.5 border border-black text-black font-bold flex justify-center items-center hover:bg-black/5 transition-colors active:scale-95">
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
