@@ -2,42 +2,26 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, ShieldCheck, Tag } from "lucide-react";
 
+// 🌟 아이템 타입 정의
+interface ShoppableItem {
+    id: number;
+    brand: string;
+    item_name: string;
+    price: string;
+    category: string;
+    image_url: string;
+    product_url: string;
+  }
+
 // 🌟 items 배열을 Props로 받습니다.
 interface ShopModalProps {
   isOpen: boolean;
   onClose: () => void;
   lookTitle?: string;
-  items: any[]; 
+  items: ShoppableItem[];
 }
 
-const taggedItems_faked = [
-    {
-      id: 1,
-      brand: "Maison Margiela",
-      name: "Tabi Leather Ankle Boots",
-      price: "$1,150",
-      category: "SHOES",
-      img: "https://images.unsplash.com/photo-1595341888016-a392ef81b7de?q=80&w=300&auto=format&fit=crop" // 임시 신발 이미지
-    },
-    {
-      id: 2,
-      brand: "Acne Studios",
-      name: "Oversized Wool Scarf",
-      price: "$290",
-      category: "ACC",
-      img: "https://images.unsplash.com/photo-1520903073715-0ebad9a64059?q=80&w=300&auto=format&fit=crop"
-    },
-    {
-      id: 3,
-      brand: "Jil Sander",
-      name: "Classic Tailored Trousers",
-      price: "$850",
-      category: "BOTTOM",
-      img: "https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=300&auto=format&fit=crop"
-    }
-  ];
-
-export default function ShopModal({ isOpen, onClose, lookTitle = "URBAN MINIMAL", items }: ShopModalProps) {
+export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (

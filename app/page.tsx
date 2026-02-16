@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag } from "lucide-react";
 import { toPng } from "html-to-image";
-import { useAura } from "../hooks/useAura";
+import { useAura, FashionItem } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
 import LoginModal from "./components/LoginModal"; 
 import ActionMenuModal from "./components/ActionMenuModal";
@@ -45,8 +45,8 @@ export default function Home() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [exploreSelectedItem, setExploreSelectedItem] = useState<FashionItem | null>(null);
 
-  
   // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
   const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
   const isAdmin = aura.user?.email === ADMIN_EMAIL;
@@ -319,9 +319,6 @@ export default function Home() {
                 aura.toggleArchive(String(currentItem.id));
                 setArchiveCount(prev => isCurrentlySaved ? Math.max(0, prev - 1) : prev + 1);
               }}
-              onToggleLike={() => {
-                aura.toggleLike(String(currentItem.id), currentItem.likes || 0);
-              }}
             />
           </AnimatePresence>
         ) : (
@@ -341,8 +338,8 @@ export default function Home() {
             <ExploreGrid 
               items={aura.trendingItems} 
               onSelect={(idx) => {
-                aura.setCurrentIndex(idx);
-                setViewMode('recommend'); // 선택 시 카드로 복귀
+                setExploreSelectedItem(aura.trendingItems[idx]); // 🌟 누른 카드의 데이터를 임시 저장!
+                aura.setIsDetailOpen(true); // 🌟 화면 전환 없이 바로 딥다이브 모달 오픈!
                 aura.triggerHaptic(20);
               }} 
             />
@@ -527,8 +524,6 @@ export default function Home() {
         triggerHaptic={aura.triggerHaptic} 
       />
 
-
-
       {/* 🌟 수정된 모달 호출부 */}
       {aura.fashionItems.length > 0 && (
         <ActionMenuModal 
@@ -544,8 +539,12 @@ export default function Home() {
       {/* 🌟 딥다이브(상세보기) 모달 복원 완.벽. */}
       <DeepDiveModal 
         isOpen={aura.isDetailOpen} 
-        onClose={() => aura.setIsDetailOpen(false)} 
-        item={currentItem} 
+        onClose={() => {
+          aura.setIsDetailOpen(false);
+          setTimeout(() => setExploreSelectedItem(null), 500); 
+        }} 
+        // 🌟 currentItem 뒤에 느낌표(!) 추가
+        item={exploreSelectedItem || currentItem!} 
         triggerHaptic={aura.triggerHaptic} 
       />
 

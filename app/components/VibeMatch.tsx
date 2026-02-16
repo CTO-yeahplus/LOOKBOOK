@@ -4,10 +4,21 @@ import { motion } from "framer-motion";
 import { Fingerprint, Zap, UserPlus } from "lucide-react";
 import Image from 'next/image'; // 🌟 추가
 
-// 🌟 Props에 matchedUsers 배열을 추가합니다.
+interface VibeUser {
+    id: string;
+    name: string;
+    ig: string;
+    matchRate: number;
+    img: string;
+  }
+
 interface VibeMatchProps {
-  report: any; 
-  matchedUsers: any[]; 
+    report: {
+        topTags: [string, number][];
+        vibeTitleKo: string;
+        vibeTitleEn: string;
+    } | null;
+    matchedUsers: VibeUser[];
 }
 
 export default function VibeMatch({ report, matchedUsers }: VibeMatchProps) {

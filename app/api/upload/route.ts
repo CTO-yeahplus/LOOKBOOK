@@ -1,4 +1,6 @@
 // app/api/upload/route.ts
+export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';

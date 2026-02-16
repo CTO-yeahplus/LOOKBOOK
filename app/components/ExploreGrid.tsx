@@ -66,7 +66,7 @@ export default function ExploreGrid({ items, onSelect }: ExploreGridProps) {
               idx === 2 ? "bg-amber-600 text-white border-amber-400" :
               "bg-black/50 text-white border-white/10"
             }`}>
-              {idx === 0 ? <Crown className="h-4 w-4" /> : idx + 1}
+              {idx === 0 ? <Crown className="h-4 w-4" /> : idx === 1 ? <Trophy className="h-4 w-4" /> : idx + 1}
             </div>
 
             {/* 메인 이미지 (1위에겐 은은한 스케일 애니메이션 추가) */}

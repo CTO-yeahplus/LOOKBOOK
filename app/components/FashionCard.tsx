@@ -15,7 +15,6 @@ interface FashionCardProps {
   x: MotionValue<number>;
   paginate: (newDirection: number) => void;
   onToggleSave: () => void;
-  onToggleLike: () => void;
 }
 
 // 🌟 스와이프 파워를 계산하는 물리 공식
@@ -23,7 +22,7 @@ const swipeConfidenceThreshold = 10000;
 const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
 
 const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({ 
-  item, aura, rotateX, rotateY, imageX, isExporting, archiveCount, x, paginate, onToggleSave, onToggleLike 
+  item, aura, rotateX, rotateY, imageX, isExporting, archiveCount, x, paginate, onToggleSave
 }, ref) => {
   
   const isSaved = aura.savedItems.some((i: any) => String(i.id) === String(item.id));
@@ -71,7 +70,17 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
 
         <h1 className="flex items-center gap-3 text-[3.5rem] md:text-6xl font-semibold tracking-tighter text-white leading-none">
           <span>{item.weather}</span><span>{item.temperature}</span>
-        </h1>
+        </h1> 
+        <div className="flex flex-wrap gap-2"> {/* 태그가 많아질 경우를 대비해 flex-wrap과 gap을 추가했습니다 */}
+          {item.tags?.map((tag: string, index: number) => (
+            <span 
+              key={index} // 리액트가 각 요소를 구분하기 위해 고유한 key가 필요합니다.
+              className="whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-[15px] font-bold text-white/90 backdrop-blur-md"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
 
         <div className="pointer-events-auto flex gap-6 items-center mt-6">
           {/* 🌟 AURA IMPACT (좋아요) 버튼 */}

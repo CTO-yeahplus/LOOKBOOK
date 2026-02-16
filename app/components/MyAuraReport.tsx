@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Share2, Download, Hexagon } from "lucide-react";
+import { Share2, Download, Hexagon } from "lucide-react";
 import { toPng } from "html-to-image";
 
 // 🌟 props에 user 추가
