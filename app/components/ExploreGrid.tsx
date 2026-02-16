@@ -93,8 +93,9 @@ export default function ExploreGrid({ items, onSelect }: ExploreGridProps) {
               
               <div className="flex flex-col items-end gap-1">
                 <div className="flex items-center gap-1 bg-white/10 px-2 py-1 rounded-full border border-white/10 backdrop-blur-md">
-                  <Heart className={`h-3 w-3 ${item.likes > 0 ? 'fill-red-500 text-red-500' : 'text-white/60'}`} />
-                  <span className="text-[11px] font-black text-white font-mono">{item.likes}</span>
+                    {/* 🌟 item.likes 양옆에 괄호를 치고 || 0 을 추가했습니다! */}
+                    <Heart className={`h-3 w-3 ${(item.likes || 0) > 0 ? 'fill-red-500 text-red-500' : 'text-white/60'}`} />
+                    <span className="text-[11px] font-black text-white font-mono">{item.likes || 0}</span>
                 </div>
               </div>
             </div>
