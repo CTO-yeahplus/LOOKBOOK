@@ -2,7 +2,13 @@
 import { motion } from "framer-motion";
 import { MapPin } from "lucide-react";
 
-export default function DynamicIsland({ weather }: { weather: any }) {
+// 날씨 데이터의 정확한 규격을 만들어 줍니다.
+interface WeatherData {
+  city: string;
+  temp: number;
+  condition?: string;
+}
+export default function DynamicIsland({ weather }: { weather: WeatherData | null }) {
   if (!weather) return null;
 
   return (

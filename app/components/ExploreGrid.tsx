@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
 import { Heart, Crown, Sparkles, Trophy } from "lucide-react";
+import { FashionItem } from "../../hooks/useAura"; // 🌟 FashionItem 규격서를 불러옵니다.
 
 interface ExploreGridProps {
-  items: any[];
+  items: FashionItem[];
   onSelect: (index: number) => void;
 }
 
