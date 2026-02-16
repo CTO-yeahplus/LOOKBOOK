@@ -4,6 +4,7 @@ import { Share2, Download, Hexagon } from "lucide-react";
 import { toPng } from "html-to-image";
 
 // 🌟 props에 user 추가
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,9 +44,9 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
   const renderRadarChart = () => {
     const tags = report.topTags.slice(0, 5);
     while (tags.length < 5) tags.push(["VAR", 1]); 
-    const maxVal = Math.max(...tags.map((t: any) => t[1]));
-    
-    const points = tags.map((t: any, i: number) => {
+    const maxVal = Math.max(...tags.map((t: [string, number]) => t[1]));
+
+    const points = tags.map((t: [string, number], i: number) => {
       const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
       const r = (t[1] / maxVal) * 40; 
       return `${50 + r * Math.cos(angle)},${50 + r * Math.sin(angle)}`;
@@ -63,7 +64,7 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
           <polygon points={points} fill="rgba(255,59,48,0.2)" stroke="#FF3B30" strokeWidth="1" />
           <polygon points={points} fill="none" stroke="#000000" strokeWidth="0.2" className="mix-blend-overlay" />
         </svg>
-        {tags.map((t: any, i: number) => {
+        {tags.map((t: [string, number], i: number) => {
           const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
           const x = 50 + 55 * Math.cos(angle);
           const y = 50 + 55 * Math.sin(angle);
@@ -130,15 +131,15 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
                   {renderRadarChart()}
                 </div>
                 <div className="col-span-1 flex flex-col justify-center space-y-4">
-                  {report.topTags.slice(0, 3).map(([tag, count]: any, idx: number) => (
+                {report.topTags.slice(0, 3).map(([tag, count]: [string, number], idx: number) => (
                     <div key={tag} className="border-b-[0.5px] border-black/10 pb-2">
-                      <div className="text-[6px] font-mono text-black/40 mb-1">COMP. 0{idx + 1}</div>
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-[11px] font-black uppercase tracking-tight">{tag}</span>
-                        <span className="text-[11px] font-mono italic text-[#FF3B30]">{Math.round((count / report.totalSaved) * 100)}%</span>
-                      </div>
+                    <div className="text-[6px] font-mono text-black/40 mb-1">COMP. 0{idx + 1}</div>
+                    <div className="flex justify-between items-baseline">
+                    <span className="text-[11px] font-black uppercase tracking-tight">{tag}</span>
+                    <span className="text-[11px] font-mono italic text-[#FF3B30]">{Math.round((count / report.totalSaved) * 100)}%</span>
                     </div>
-                  ))}
+                </div>
+                ))}
                 </div>
               </div>
               

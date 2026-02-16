@@ -1,9 +1,11 @@
 import { motion, MotionValue } from "framer-motion";
 import { Heart, Bookmark, Instagram, Crown, Sparkles, Compass, ChevronUp } from "lucide-react";
 import { forwardRef } from "react"; // 🌟 React에서 forwardRef 불러오기
+import { FashionItem } from "../../hooks/useAura";
 
 interface FashionCardProps {
-  item: any;
+  item: FashionItem; 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   aura: any;
   // cardRef: React.RefObject<HTMLDivElement>; ❌ 이건 이제 지웁니다!
   rotateX: MotionValue<number>;
@@ -25,7 +27,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
   item, aura, rotateX, rotateY, imageX, isExporting, archiveCount, x, paginate, onToggleSave
 }, ref) => {
   
-  const isSaved = aura.savedItems.some((i: any) => String(i.id) === String(item.id));
+  const isSaved = aura.savedItems.some((i: FashionItem) => String(i.id) === String(item.id));
 
   return (
     <motion.div
