@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Layers, Target, Camera, X, Trophy,  Smartphone, User, ShoppingBag } from "lucide-react";
+import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura } from "../hooks/useAura";
 import ArchiveModal from "./components/ArchiveModal";
@@ -24,7 +24,6 @@ import MyAuraReport from "./components/MyAuraReport";
 import { useGyroscope } from "../hooks/useGyroscope";
 import VibeMatch from "./components/VibeMatch";
 import ShopModal from "./components/ShopModal";
-const appleSpring = { type: "spring" as const, stiffness: 300, damping: 25 };
 
 export default function Home() {
   const aura = useAura();
@@ -62,8 +61,6 @@ export default function Home() {
   // 자이로스코프 커스텀 훅 사용
   const { showGyroButton, requestGyroPermission } = useGyroscope(mouseX, mouseY);
   const currentItem = aura.fashionItems[aura.currentIndex];
-  const isLiked = aura.likedItems.includes(String(currentItem?.id));
-
 
   // 🌟 2. 스탬프 완성본을 API(route.ts)로 쏘아 올리는 진짜 함수!
   const handleUploadSubmit = async (file: File) => {
@@ -202,7 +199,7 @@ export default function Home() {
         aura.user?.id || 'guest-id'
       );
     }
-  }, [viewMode, aura.styleReport?.vibeKey]);
+  }, [viewMode, aura.styleReport?.vibeKey, aura]);
 
   // 🌟 [핵심 로직] EXPLORE 모드로 바뀔 때만 데이터를 새로 가져옵니다.
   useEffect(() => {
