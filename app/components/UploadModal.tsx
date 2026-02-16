@@ -75,7 +75,7 @@ export default function UploadModal({
                   <Loader2 className="w-16 h-16 animate-spin relative z-10" />
                </div>
                <h3 className="text-2xl font-black font-serif italic tracking-tighter animate-pulse">ANALYZING VIBE...</h3>
-               <p className="font-mono text-xs mt-2 opacity-60 tracking-widest">Gemini AI is deconstructing your look.</p>
+               <p className="font-mono text-xs mt-2 opacity-60 tracking-widest">AURA Editor is deconstructing your look.</p>
             </div>
           </motion.div>
         )}

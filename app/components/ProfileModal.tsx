@@ -1,7 +1,7 @@
 // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Share2, Volume2, VolumeX, Instagram, Check, Link } from "lucide-react";
+import { X, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
 
@@ -12,11 +12,11 @@ interface ProfileModalProps {
   onLogout: () => void;
   uploadedCount: number;
   bestLook?: FashionItem;
-  // 🌟 비동기 함수로 타입 업데이트 (과거 게시물까지 업데이트해야 하므로)
   onSaveInstagram: (handle: string) => Promise<void> | void; 
+  onOpenReport: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram }: ProfileModalProps) {
+export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport }: ProfileModalProps) {
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isIgSaved, setIsIgSaved] = useState(false); 
@@ -216,7 +216,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                   {/* 🌟 1. COPY LINK 버튼 (주소 복사) */}
                   <button onClick={handleCopyLink} className={`flex-1 py-3.5 border border-black font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 transition-colors active:scale-95 ${isCopied ? 'bg-green-50 text-green-600 border-green-600' : 'text-black hover:bg-black/5'}`}>
                     {isCopied ? <Check className="w-3.5 h-3.5" /> : <Link className="w-3.5 h-3.5" />} 
-                    {isCopied ? 'COPIED!' : 'COPY LINK'}
+                    {isCopied ? 'COPIED!' : 'COPY'}
                   </button>
                   {/* 🌟 2. 공유 버튼 (주소 복사) */}
                   <button onClick={handlePublish} className="flex-1 py-3.5 bg-black text-white font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 hover:bg-zinc-800 transition-colors active:scale-95">
@@ -224,7 +224,19 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                     {isCopied ? 'URL COPIED!' : 'SHARE'}
                   </button>
 
-                  <button onClick={onLogout} className="px-5 py-3.5 border border-black text-black font-bold flex justify-center items-center hover:bg-black/5 transition-colors active:scale-95">
+                  {/* 🌟 'AI 스타일 분석' 버튼 추가 */}
+                  <button 
+                    onClick={() => {
+                      onOpenReport(); // AI 리포트 모달 열기
+                      onClose();      // 현재 프로필 모달은 닫기 (선택 사항)
+                    }}
+                    className="flex-1 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 hover:bg-zinc-800 transition-colors active:scale-95"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    STYLE
+                  </button>
+
+                  <button onClick={onLogout} className="px-5 py-3.5 border bg-red-400 text-black font-bold flex justify-center items-center hover:bg-black/5 transition-colors active:scale-95">
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
                 </div>

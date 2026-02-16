@@ -30,18 +30,152 @@ export function useAura() {
   const [direction, setDirection] = useState(0);
   
   const [savedItems, setSavedItems] = useState<FashionItem[]>([]);
+  const [likedItems, setLikedItems] = useState<string[]>([]);
   const [uploadedItems, setUploadedItems] = useState<FashionItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [trendingItems, setTrendingItems] = useState<FashionItem[]>([]); // 🌟 실시간 랭킹 데이터 전용
   
-  const [localWeather, setLocalWeather] = useState<{ temp: number; city: string } | null>(null);
+  const [localWeather, setLocalWeather] = useState({temp: 15, city: "Seoul", condition: "URBAN" });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [shoppableItems, setShoppableItems] = useState<any[]>([]);
+  const [matchedUsers, setMatchedUsers] = useState<any[]>([]);
+  const allTags = savedItems.flatMap(item => (item.tags as string[]) || []);
 
   const triggerHaptic = (pattern: number | number[] = 50) => {
     if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
   };
+
+  // ---------------------------------------------------------
+  // 🛒 1. Shop the Vibe 로직: 특정 룩(사진)에 달린 구매 링크 가져오기
+  // ---------------------------------------------------------
+  const loadShoppableItems = async (lookId: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('aura_shoppable_items')
+        .select('*')
+        .eq('look_id', lookId);
+        
+      if (error) throw error;
+      setShoppableItems(data || []);
+    } catch (error) {
+      console.error("커머스 아이템 로드 실패:", error);
+    }
+  };
+
+  // ---------------------------------------------------------
+  // ⚡ 2. Vibe Match 로직: 이제 '영어 키값'으로 정밀 매칭합니다.
+  // ---------------------------------------------------------
+  const loadMatchedUsers = async (myVibeKey: string, myUserId: string) => {
+    try {
+      // 🌟 핵심 변경: .eq('vibe_title', myVibeKey) 
+      // 이제 DB의 vibe_title 컬럼에는 'MINIMALIST' 같은 키값이 저장되어 있어야 합니다.
+      const { data, error } = await supabase
+        .from('aura_user_profiles')
+        .select('id, display_name, ig_handle, vibe_title, dna_tags')
+        .eq('vibe_title', myVibeKey) 
+        .neq('id', myUserId) 
+        .limit(5);
+        
+      if (error) throw error;
+      
+      const formattedUsers = data?.map((user) => ({
+        id: user.id,
+        name: user.display_name || "MUSE",
+        ig: user.ig_handle || "aura_user",
+        // 🌟 추후 실제 dna_tags 비교 로직을 여기에 넣으면 매칭률이 더 정확해집니다.
+        matchRate: Math.floor(Math.random() * 11) + 85, 
+        img: `https://images.unsplash.com/photo-${user.id.includes('1') ? '1506159904225-fbc51df093b5' : '1534528741775-53994a69daeb'}?q=80&w=500&auto=format&fit=crop`
+      })) || [];
+
+      setMatchedUsers(formattedUsers);
+    } catch (error) {
+      console.error("매칭 유저 로드 실패:", error);
+    }
+  };
+
+  const tagCounts = allTags.reduce((acc: Record<string, number>, tag: string) => {
+    acc[tag] = (acc[tag] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>); // 👈 핵심: 초기값에 타입을 강제(Casting)합니다.
+
+  // 🌟 3. AI 스타일 분석 엔진 (My AURA)
+  const styleReport = useMemo(() => {
+    if (savedItems.length === 0) return null;
+    
+    const sortedTags = Object.entries(tagCounts)
+      .sort(([, a]: any, [, b]: any) => b - a)
+      .slice(0, 5);
+
+    // 🌟 1. 바이브 메타데이터 정의 (내부 키, 국문명, 영문명)
+    const VIBE_MAP: Record<string, { key: string; ko: string; en: string }> = {
+      Minimal: { 
+        key: "MINIMALIST", 
+        ko: "절제미를 아는 미니멀리스트", 
+        en: "THE REFINED MINIMALIST" 
+      },
+      Street: { 
+        key: "STREET_SETTER", 
+        ko: "자유로운 스트릿 세터", 
+        en: "THE STREET TRENDSETTER" 
+      },
+      Office: { 
+        key: "URBAN_PROFESSIONAL", 
+        ko: "지적인 어반 프로페셔널", 
+        en: "URBAN PROFESSIONAL" 
+      },
+      Default: { 
+        key: "EXPLORER", 
+        ko: "새로운 스타일을 탐험하는 중", 
+        en: "STYLE EXPLORER" 
+      }
+    };
+
+    // 🌟 2. 매칭되는 바이브 추출
+    const topTag = sortedTags[0]?.[0];
+    const selectedVibe = VIBE_MAP[topTag] || VIBE_MAP.Default;
+
+    return {
+      topTags: sortedTags,
+      vibeKey: selectedVibe.key,     // 🔍 DB 매칭용 (영어 키값)
+      vibeTitleKo: selectedVibe.ko,  // 🇰🇷 UI 출력용 (한국어)
+      vibeTitleEn: selectedVibe.en,  // 🇺🇸 UI 출력용 (영어)
+      totalSaved: savedItems.length,
+      impactScore: likedItems.length * 10 + savedItems.length * 20,
+    };
+  }, [savedItems, likedItems.length]);
+
+  // 🔥 전 세계 실시간 좋아요 TOP 50 가져오는 함수
+  const fetchTrendingItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('aura_fashion_items')
+        .select('*')
+        .order('likes_count', { ascending: false }) // 좋아요 많은 순서대로
+        .limit(50); // 상위 50개만
+
+      if (error) throw error;
+
+      if (data) {
+        const formatted = data.map((d: any) => ({
+          id: d.id,
+          imageUrl: d.image_url,
+          weather: d.weather,
+          temperature: d.temperature,
+          tags: d.tags,
+          uploaderName: d.uploader_name,
+          uploaderIg: d.uploader_ig,
+          likes: d.likes_count || 0,
+        }));
+        setTrendingItems(formatted);
+      }
+    } catch (error) {
+      console.error("랭킹 데이터 로드 실패:", error);
+    }
+  };
+
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -142,68 +276,132 @@ export function useAura() {
     }
   };
 
-  // 🌟 1. 아카이브 (저장) 함수 - 내 옷장에 킵하기
+  // 🌟 1. 아카이브 (저장) 함수 - 완벽 보수 완료
   const toggleArchive = async (lookId: string) => {
     if (!user) return setIsLoginModalOpen(true);
 
-    const isSaved = savedItems.some(item => item.id === lookId);
-    triggerHaptic(50);
+    // ✅ [핵심 1] 무조건 문자로 변환해서 비교! (409 에러의 원인 해결)
+    const isAlreadySaved = savedItems.some(item => String(item.id) === String(lookId));
+    triggerHaptic(isAlreadySaved ? 30 : [30, 50, 40]);
+
+    // ✅ [핵심 2] Optimistic UI: 서버 응답 기다리지 않고 화면부터 즉각 변경
+    if (isAlreadySaved) {
+      setSavedItems(prev => prev.filter(item => String(item.id) !== String(lookId)));
+    } else {
+      const itemToSave = fashionItems.find(item => String(item.id) === String(lookId));
+      if (itemToSave) setSavedItems(prev => [...prev, itemToSave]);
+    }
 
     try {
-      if (isSaved) {
+      if (isAlreadySaved) {
         await supabase.from('aura_saved_looks').delete().match({ user_id: user.id, look_id: lookId });
-        setSavedItems(prev => prev.filter(item => item.id !== lookId));
       } else {
-        await supabase.from('aura_saved_looks').insert([{ user_id: user.id, look_id: lookId }]);
-        fetchSavedLooks(user.id);
+        const { error } = await supabase.from('aura_saved_looks').insert([{ user_id: user.id, look_id: lookId }]);
+        // ✅ [핵심 3] 중복 에러(PostgreSQL 23505/Conflict)는 쿨하게 무시!
+        if (error && error.code !== '23505') throw error;
       }
     } catch (error) {
-      console.error("아카이브 실패:", error);
+      console.error("아카이브 DB 업데이트 실패:", error);
     }
   };
 
-  // 🌟 2. AURA IMPACT (좋아요) 함수 - 하트 날리기
-  // (MVP 단계에서는 로컬 상태로 내가 하트를 눌렀는지 관리합니다)
-  const [likedItems, setLikedItems] = useState<string[]>([]);
+  // ✅ [추가] 유저가 로그인하면 DB에서 '좋아요' 내역을 긁어옵니다.
+  useEffect(() => {
+    if (!user) {
+      setLikedItems([]);
+      return;
+    }
+
+    const fetchLikes = async () => {
+      const { data, error } = await supabase
+        .from('aura_liked_looks')
+        .select('look_id')
+        .eq('user_id', user.id);
+      
+      if (data) {
+        setLikedItems(data.map(item => String(item.look_id)));
+      }
+    };
+    fetchLikes();
+  }, [user]);
 
   const toggleLike = async (lookId: string, currentLikes: number) => {
     if (!user) return setIsLoginModalOpen(true);
 
-    const isLiked = likedItems.includes(lookId);
-    triggerHaptic([50, 100]); // 심장 박동 같은 햅틱!
-
-    // UI 즉각 반영 (Optimistic UI)
-    setLikedItems(prev => isLiked ? prev.filter(id => id !== lookId) : [...prev, lookId]);
+    const targetId = String(lookId);
+    const isLiked = likedItems.includes(targetId);
+    
+    // 1. 햅틱 및 UI 즉각 반영 (Optimistic UI)
+    triggerHaptic([50, 100]);
+    setLikedItems(prev => isLiked ? prev.filter(id => id !== targetId) : [...prev, targetId]);
+    
     setFashionItems(prev => prev.map(item => 
-      // 🌟 핵심 수정: item.id와 lookId를 둘 다 문자로 변환해서 일치 여부 확인!
-      String(item.id) === String(lookId) 
+      String(item.id) === targetId 
         ? { ...item, likes: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1 } 
         : item
     ));
 
     try {
-      // DB의 likes_count 수치 업데이트
-      const newLikes = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-      await supabase.from('aura_fashion_items').update({ likes_count: newLikes }).eq('id', lookId);
+      if (isLiked) {
+        // DB 삭제 (좋아요 취소)
+        await supabase.from('aura_liked_looks').delete().match({ user_id: user.id, look_id: lookId });
+      } else {
+        // DB 추가 (좋아요)
+        const { error } = await supabase.from('aura_liked_looks').insert([{ user_id: user.id, look_id: lookId }]);
+        if (error && error.code !== '23505') throw error; // 중복 에러 무시
+      }
+
+      // aura_fashion_items 테이블의 likes_count 수치 동기화
+      const finalCount = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+      await supabase.from('aura_fashion_items').update({ likes_count: finalCount }).eq('id', lookId);
+
     } catch (error) {
-      console.error("AURA 하트 업데이트 실패:", error);
+      console.error("좋아요 DB 연동 실패:", error);
     }
+  };
+
+  // 🌟 1. Open-Meteo (WMO 기상 코드) -> AURA 패션 바이브 번역기
+  const getAuraVibe = (weatherCode: number) => {
+    // 0: 맑음
+    if (weatherCode === 0) return "SUNNY";
+    // 1, 2, 3: 구름 조금, 흐림
+    if (weatherCode >= 1 && weatherCode <= 3) return "CHILL";
+    // 45, 48: 안개
+    if (weatherCode === 45 || weatherCode === 48) return "MIST";
+    // 51~67, 80~82: 비, 소나기, 이슬비
+    if ((weatherCode >= 51 && weatherCode <= 67) || (weatherCode >= 80 && weatherCode <= 82)) return "GLOOMY";
+    // 71~77, 85~86: 눈, 싸락눈
+    if ((weatherCode >= 71 && weatherCode <= 77) || weatherCode === 85 || weatherCode === 86) return "FROST";
+    // 95~99: 뇌우 (천둥번개)
+    if (weatherCode >= 95) return "WILD";
+    
+    return "URBAN"; // 예외 혹은 기본값
   };
 
   useEffect(() => {
     const fetchWeatherAndData = async () => {
-      let currentTemp = 15; let currentCity = "Seoul";
+      // 🌟 초기 기본값 세팅
+      let currentTemp = 15; 
+      let currentCity = "Seoul";
+      let currentCondition = "URBAN"; 
 
       try {
         if ("geolocation" in navigator) {
           const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
           const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`);
           const weatherData = await weatherRes.json();
-          currentTemp = weatherData.current_weather.temperature; currentCity = "Current Location";
+          
+          currentTemp = Math.round(weatherData.current_weather.temperature); 
+          currentCity = "Current Location";
+          // 🌟 API에서 받아온 숫자 코드를 번역하여 장착합니다.
+          currentCondition = getAuraVibe(weatherData.current_weather.weathercode);
         }
-      } catch (e) { console.warn("위치 권한 없음. 기본 날씨를 사용합니다."); }
+      } catch (e) { 
+        console.warn("위치 권한 없음. 기본 날씨를 사용합니다."); 
+      }
       
-      setLocalWeather({ temp: currentTemp, city: currentCity });
+      // 🌟 condition이 포함된 완전한 데이터 전달
+      setLocalWeather({ temp: currentTemp, city: currentCity, condition: currentCondition });
 
       try {
         const response = await fetch(`/api/fashion?timestamp=${new Date().getTime()}`, { 
@@ -211,8 +409,11 @@ export function useAura() {
         });
         const data: FashionItem[] = await response.json();
         setRawItems(data); 
-      } catch (error) { console.error("데이터 로드 실패:", error); }
+      } catch (error) { 
+        console.error("데이터 로드 실패:", error); 
+      }
     };
+    
     fetchWeatherAndData();
   }, []);
 
@@ -220,7 +421,7 @@ export function useAura() {
     if (rawItems.length === 0) return;
     const personalizedData = getPersonalizedFeed(rawItems, savedItems, localWeather?.temp || 15);
     setFashionItems(personalizedData);
-  }, [rawItems, savedItems.length, localWeather?.temp]); 
+  }, [rawItems, localWeather?.temp]); 
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -325,5 +526,12 @@ export function useAura() {
     toggleArchive,
     toggleLike,
     likedItems,
+    trendingItems,
+    fetchTrendingItems,
+    styleReport,
+    shoppableItems,
+    loadShoppableItems,
+    matchedUsers,
+    loadMatchedUsers
   };
 }
