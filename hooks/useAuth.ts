@@ -19,9 +19,16 @@ export function useAuth() {
   }, []);
 
   const signIn = async (provider: 'google' | 'github' | 'kakao' | 'twitter') => {
+    // 🌟 현재 접속 중인 브라우저 주소(origin)를 파악해서 정확히 /home을 붙여줍니다.
+    const redirectUrl = typeof window !== "undefined" 
+      ? `${window.location.origin}/home` 
+      : "http://localhost:3000/home";
+
     await supabase.auth.signInWithOAuth({
       provider: provider,
-      options: { redirectTo: typeof window !== "undefined" ? window.location.origin : "/" }
+      options: { 
+        redirectTo: redirectUrl // 🌟 알아서 똑똑하게 찾아가도록 변수 삽입
+      }
     });
   };
 

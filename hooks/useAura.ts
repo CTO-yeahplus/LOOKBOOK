@@ -15,6 +15,11 @@ export interface FashionItem {
   uploaderName?: string;
   uploaderIg?: string;
   likes?: number;
+  // 🌟 [NEW] Phase 2: 스폰서십 전용 데이터
+  isSponsored?: boolean;      // 스폰서 카드 여부 (true/false)
+  sponsorBrand?: string;      // 브랜드명 (예: GENTLE MONSTER)
+  sponsorUrl?: string;        // 아웃링크 (컬렉션 구매 페이지)
+  sponsorMessage?: string;    // 브랜드 메시지
 }
 
 export function useAura() {

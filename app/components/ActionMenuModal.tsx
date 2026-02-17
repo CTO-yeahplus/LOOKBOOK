@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, Bell, Send, ShoppingCart } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura";
+import { generateTrackingLink } from "@/lib/affiliate";
 
 interface ActionMenuModalProps {
   isOpen: boolean;
@@ -13,12 +14,15 @@ interface ActionMenuModalProps {
 }
 
 export default function ActionMenuModal({ isOpen, onClose, item, onShare, subscribeToPush, sendTestPush }: ActionMenuModalProps) {
-  // 🌟 쇼핑몰 검색 이동 함수 추가
+  // 🌟 쇼핑몰 검색 이동 함수 (수익화 버전으로 업그레이드)
   const handleShopNow = () => {
     if (!item || !item.tags) return;
-    const query = encodeURIComponent(item.tags.map(t => t.replace('#', '')).join(' '));
-    const shopUrl = `https://www.musinsa.com/search/musinsa/integration?q=${query}`;
-    window.open(shopUrl, '_blank');
+    // 1. 태그에서 #을 제거하고 검색어 조립 (예: "미니멀 블랙자켓")
+    const query = item.tags.map(t => t.replace('#', '')).join(' ');
+    // 2. 💸 AURA 어필리에이트 라우터를 통해 트래킹 링크 발급!
+    const trackingUrl = generateTrackingLink('musinsa', query);
+    // 3. 새 창으로 열기 (여기서부터 구매 발생 시 AURA 계좌로 수수료 적립)
+    window.open(trackingUrl, '_blank');
     onClose();
   };
 
