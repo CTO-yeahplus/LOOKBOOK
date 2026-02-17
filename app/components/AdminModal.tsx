@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Crown, Activity, Image as ImageIcon, Heart, 
-  Send, Eye, ArrowUpRight, LayoutDashboard, Users, 
+  Send, ArrowUpRight, LayoutDashboard, Users, 
   UserCheck, Radio, Search, Megaphone, UploadCloud, Sparkles
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -19,8 +19,9 @@ type TabType = 'overview' | 'audit' | 'members' | 'broadcast' | 'sponsors';
 export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [stats, setStats] = useState({ items: 0, saves: 0, users: 0, waitlist: 0 });
-  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [waitlist, setWaitlist] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [members, setMembers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
@@ -188,6 +189,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
   };
 
   // 🌟 승인 로직 (기존과 동일)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleApprove = async (user: any) => {
     const confirmApprove = window.confirm(`@${user.instagram_id}님을 승인하시겠습니까? (합격 이메일 자동 발송)`);
     if (!confirmApprove) return;
@@ -230,7 +232,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
       await Promise.all(pushPromises);
       alert(`[SYSTEM] 총 ${subscribers.length}명에게 푸시 발송 완료!`);
       setPushMessage("");
-    } catch (e) { alert("오류 발생"); } finally { setIsSending(false); }
+    } catch { alert("오류 발생"); } finally { setIsSending(false); }
   };
 
   // 🌟 검색 필터링 (안전망 추가)
@@ -571,7 +573,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
 }
 
 // --- 보조 컴포넌트들 ---
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function NavButton({ icon, label, active, onClick, badge }: any) {
   return (
     <button 
@@ -590,7 +592,7 @@ function NavButton({ icon, label, active, onClick, badge }: any) {
     </button>
   );
 }
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function StatCard({ title, value, icon, trend, isAlert }: any) {
   return (
     <div className={`p-6 rounded-2xl border ${isAlert ? 'bg-[#ff3b30]/10 border-[#ff3b30]/30' : 'bg-[#111] border-white/5'}`}>

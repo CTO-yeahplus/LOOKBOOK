@@ -154,7 +154,7 @@ export default function IRPage() {
               현재의 커머스는 무의미한 정보의 홍수입니다. 우리는 유저에게 피로를 강요하고 있었습니다.
             </p>
             <p className="text-xl text-white/90 leading-relaxed font-medium">
-              AURA는 질문을 바꿨습니다. "무엇을 찾으십니까?" 대신 <b className="text-[#ff3b30]">"지금 당신이 있는 곳의 공기는 어떻습니까?"</b>를 묻습니다. 환경 데이터를 읽고 AI가 큐레이션 한 화보를 그저 스와이프하는 것만으로, 발견의 기쁨은 극대화됩니다.
+              AURA는 질문을 바꿨습니다. &quot;무엇을 찾으십니까?&quot; 대신 <b className="text-[#ff3b30]">&quot;지금 당신이 있는 곳의 공기는 어떻습니까?&quot;</b>를 묻습니다. 환경 데이터를 읽고 AI가 큐레이션 한 화보를 그저 스와이프하는 것만으로, 발견의 기쁨은 극대화됩니다.
             </p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

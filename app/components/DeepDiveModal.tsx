@@ -41,7 +41,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
       {isOpen && (
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-md perspective-[2000px]"
+          className="fixed inset-0 z-[30] flex items-center justify-center bg-black/80 backdrop-blur-md perspective-[2000px]"
           onClick={() => { triggerHaptic(20); onClose(); }}
         >
 
@@ -49,6 +49,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
           {/* 🌟 실제 유저가 보는 3D 양면 포토카드 본체 */}
           {/* ========================================================= */}
           <motion.div 
+            id="aura-deepdive-card"
             onClick={(e) => { 
               e.stopPropagation(); 
               setIsFlipped(!isFlipped); 
@@ -64,15 +65,12 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
             
             {/* ================= [앞면 (FRONT): 순수 이미지] ================= */}
             <div 
+              id={!isFlipped ? "aura-deepdive-target" : undefined} // 🌟 [NEW] 카드가 안 뒤집혔을 때 캡처 타겟 지정
               className="absolute inset-0 w-full h-full rounded-xl overflow-hidden border-[5px] border-[#F4F0EA] bg-[#F4F0EA]"
-              style={{ 
-                backfaceVisibility: 'hidden', 
-                WebkitBackfaceVisibility: 'hidden', 
-                zIndex: isFlipped ? 0 : 20 
-            }}
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', zIndex: isFlipped ? 0 : 20 }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.imageUrl} alt="Look Front" className="w-full h-full object-cover filter contrast-110" />
+              <img src={item.imageUrl} crossOrigin="anonymous" alt="Look Front" className="w-full h-full object-cover filter contrast-110" />
               
               {/* 앞면 하단 힌트 텍스트 */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[#EBE6DD]/90 font-mono text-[10px] tracking-[0.2em] uppercase bg-black/50 px-5 py-2 rounded-full backdrop-blur-sm shadow-xl border border-white/10">
@@ -82,13 +80,9 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
 
             {/* ================= [뒷면 (BACK): 순수 디테일 정보] ================= */}
             <div 
+              id={isFlipped ? "aura-deepdive-target" : undefined} // 🌟 [NEW] 카드가 뒤집혔을 때 캡처 타겟 지정
               className="absolute inset-0 w-full h-full bg-[#EBE6DD] text-black overflow-hidden rounded-xl flex flex-col shadow-inner border-[5px] border-[#F4F0EA]"
-              style={{ 
-                backfaceVisibility: 'hidden', 
-                WebkitBackfaceVisibility: 'hidden',
-                transform: 'rotateY(180deg)',
-                zIndex: isFlipped ? 20 : 0
-              }}
+              style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)', zIndex: isFlipped ? 20 : 0 }}
             >
               <div className="absolute inset-0 pointer-events-none opacity-[0.4] mix-blend-multiply bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')] filter contrast-120" />
 

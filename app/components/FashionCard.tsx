@@ -32,6 +32,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
 
   return (
     <motion.div
+      id="aura-main-card" // 🌟 [추가] 메인 카드 이름표
       style={{ x, rotateX, rotateY }}
       drag={isExporting ? false : "x"}
       dragConstraints={{ left: 0, right: 0 }}

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag, Lock, ArrowRight } from "lucide-react";
+import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
@@ -31,8 +31,7 @@ import LockModal from "../components/LockModal"; // 🌟 모달 임포트
 export default function Home() {
   const aura = useAura();
   const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
-  const [code, setCode] = useState("");
-  const [msg, setMsg] = useState("");
+
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   const [swipeKey, setSwipeKey] = useState(0);
@@ -210,56 +209,64 @@ export default function Home() {
       setIsAnalyzing(false); // AI 로딩 화면 끄기
     }
   };
-  // 🌟 1. 다운로드 버튼용: 텍스트 밀림 현상을 완벽히 잡은 캡처 엔진
+  // 🌟 1. 다운로드 버튼용: 텍스트 밀림 방지 + 스마트 타겟팅
   const exportPhotocard = async () => {
-    if (!cardRef.current) return;
-    aura.triggerHaptic([50, 100, 50]);
-    setIsExporting(true); // 1. 버튼들을 화면에서 숨김 처리
+    const targetNode = getCaptureElement();
+    if (!targetNode) return alert("캡처할 수 있는 카드를 찾을 수 없습니다. (새로고침 후 다시 시도해주세요)");
 
-    // 🌟 [핵심 보수] UI가 숨겨지고 폰트/레이아웃이 완벽히 자리를 잡을 때까지 0.15초 대기
+    aura.triggerHaptic([50, 100, 50]);
+    setIsExporting(true); // 버튼 숨김 처리
+
+    // 🌟 다운로드는 시간이 넉넉하므로 폰트/레이아웃이 자리 잡을 때까지 0.15초 대기
     await new Promise(resolve => setTimeout(resolve, 150));
 
     try {
-      const dataUrl = await toPng(cardRef.current, { 
+      const dataUrl = await toPng(targetNode, { 
         quality: 1.0, 
         pixelRatio: 2, 
         cacheBust: true,
-        // 🌟 [핵심 보수] 캡처하는 순간에만 Framer Motion의 3D 기울기를 평면으로 강제 고정!
-        style: { 
-          transform: 'none', 
-          transition: 'none'
-        }
+        style: { transform: 'none', transition: 'none' }
       });
       const link = document.createElement('a');
       link.download = `AURA_Look_${new Date().getTime()}.png`;
       link.href = dataUrl;
       link.click();
-    } catch { 
-      alert('포토카드 캡처 실패. 네트워크 상태를 확인해주세요!'); 
+    } catch (error) { 
+      console.error(error);
+      alert('포토카드 캡처 실패. 네트워크나 이미지 정책을 확인해주세요.'); 
     } finally { 
       setIsExporting(false); 
     }
   };
 
-  // 🌟 2. 공유 버튼용: 텍스트 밀림 현상을 완벽히 잡은 공유 엔진
+  // 🌟 [NEW] 캡처 대상을 스마트하게 찾는 레이더 함수
+  const getCaptureElement = () => {
+    // 1순위: 딥다이브 모달이 열려있다면 '현재 보고 있는 면(앞/뒤)'을 정밀 타겟팅
+    if (aura.isDetailOpen) return document.getElementById('aura-deepdive-target');
+    
+    // 2순위: 메인 추천 피드라면 기본 카드를 타겟팅
+    if (viewMode === 'recommend') return document.getElementById('aura-main-card');
+    
+    return null;
+  };
+
+  // 🌟 2. 공유 버튼용: 브라우저 타임아웃 차단 우회 엔진
   const sharePhotocard = async () => {
-    if (!cardRef.current) return;
+    const targetNode = getCaptureElement();
+    if (!targetNode) return alert("공유할 수 있는 카드를 찾을 수 없습니다.");
+
     aura.triggerHaptic(50);
     setIsExporting(true);
 
-    // 🌟 [핵심 보수] 대기 시간 부여
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // 🌟 [핵심 보수] 모바일 브라우저의 '공유 차단'을 막기 위해 대기 시간을 10ms로 극단적 단축!
+    await new Promise(resolve => setTimeout(resolve, 10));
 
     try {
-      const dataUrl = await toPng(cardRef.current, { 
-        quality: 1.0, 
+      const dataUrl = await toPng(targetNode, { 
+        quality: 0.8, // 🌟 캡처 속도를 올리기 위해 화질을 살짝만 타협
         pixelRatio: 2, 
         cacheBust: true,
-        // 🌟 [핵심 보수] 3D 효과 무력화
-        style: { 
-          transform: 'none', 
-          transition: 'none'
-        }
+        style: { transform: 'none', transition: 'none' }
       });
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], 'AURA_Look.png', { type: 'image/png' });
@@ -271,16 +278,17 @@ export default function Home() {
           files: [file],
         });
       } else {
-        alert("이 기기는 이미지 직접 공유를 지원하지 않아 링크가 복사되었습니다.");
-        navigator.clipboard.writeText(window.location.href);
+        throw new Error("Device does not support file sharing");
       }
     } catch (err) {
-      console.log("공유 실패:", err);
+      console.log("공유 시스템 에러(주소 복사로 대체):", err);
+      // 공유 창 띄우기에 실패하면 즉시 주소 복사로 대체
+      navigator.clipboard.writeText(window.location.href);
+      alert("이 기기는 이미지 직접 공유를 지원하지 않아 링크가 복사되었습니다.");
     } finally {
       setIsExporting(false);
     }
   };
-
 
   if (aura.fashionItems.length === 0) return (
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>

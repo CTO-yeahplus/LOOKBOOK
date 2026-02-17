@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, ArrowRight, Sparkles } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 import { VerifyResult } from "@/hooks/useGatekeeper";
 
 interface LockModalProps {

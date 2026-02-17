@@ -1,7 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Share2, Crown, Sparkles } from "lucide-react";
+import { Share2, Crown } from "lucide-react";
 
 export default function InvitationPage() {
   const code = "AURA-7777"; // 🌟 나중에 서버에서 동적으로 가져올 코드

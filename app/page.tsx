@@ -1,14 +1,9 @@
 "use client";
 
-import { motion, Variants, useScroll, useTransform } from "framer-motion";
-import { 
-  ArrowRight, Sparkles, CloudSun, Fingerprint, Lock, 
-  CheckCircle, Smartphone, Zap, Globe, Crown, 
-  ShieldCheck, Eye, MousePointer2, CreditCard, Mail
-} from "lucide-react";
+import { Crown, CreditCard, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // 🌟 [NEW] 라우터 엔진 장착
+import { motion, AnimatePresence, Variants, useScroll, useTransform } from "framer-motion";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -22,28 +17,19 @@ export default function LandingPage() {
 
   const scale = useTransform(scrollYProgress, [0, 0.3], [1, 1.2]);
   const textX = useTransform(scrollYProgress, [0, 1], [0, -500]);
-  const router = useRouter(); // 🌟 라우터 변수 활성화
-  const [accessCode, setAccessCode] = useState(""); // 🌟 입력한 코드 기억하기
 
   // 🌟 목업 슬라이드쇼 상태 관리
   const [currentScreenIndex, setCurrentScreenIndex] = useState(0);
 
-  //  handleGrantAccess 함수 수정
-  const handleGrantAccess = () => {
-    if (!accessCode.trim()) return alert("코드를 입력해주세요.");
-    
-    // 🌟 입력한 코드를 브라우저 메모리에 저장!
-    localStorage.setItem("aura_pending_code", accessCode.trim().toUpperCase());
-    
-    // 🌟 /home으로 이동
-    router.push('/home');
-  };
-
   // 🌟 앱 스크린샷 리스트 (나중에 실제 앱 캡쳐 화면으로 교체하세요!)
   const appScreens = [
-    "/images/aura_brand.png", // Screen 1: 메인 홈 (예시)
-    "/images/aura_brand_01.png", // Screen 2: AI 분석 결과 (예시 - 실제론 다른 이미지)
-    "/images/aura_brand_02.png", // Screen 3: 프로필 화면 (예시 - 실제론 다른 이미지)
+    "/images/aura_brand_03.png",
+    "/images/aura_brand_01.png", 
+    "/images/aura_brand_02.png",
+    "/images/aura_brand_04.png",
+    "/images/aura_brand_05.png", 
+    "/images/aura_brand_06.png", 
+    "/images/aura_brand_07.png", 
   ];
   // 🌟 [NEW] 웨이팅 리스트 상태 관리
   const [igHandle, setIgHandle] = useState("");
@@ -63,7 +49,7 @@ export default function LandingPage() {
       });
       if (res.ok) setIsSubmitted(true);
       else alert("오류가 발생했습니다. 다시 시도해주세요.");
-    } catch (e) {
+    } catch {
       alert("네트워크 오류가 발생했습니다.");
     } finally {
       setIsSubmitting(false);
@@ -113,7 +99,7 @@ export default function LandingPage() {
             Aura<span className="text-[#ff3b30]">.</span>
           </h1>
           <p className="text-xl md:text-3xl text-white/60 mb-12 max-w-2xl mx-auto font-light tracking-tight italic">
-            "검색의 시대는 끝났습니다. 이제 당신의 <span className="text-white border-b border-white/30">분위기</span>만 남습니다."
+          &quot;검색의 시대는 끝났습니다. 이제 당신의 <span className="text-white border-b border-white/30">분위기</span>만 남습니다.&quot;
           </p>
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <Link href="/home" className="group relative overflow-hidden bg-[#ff3b30] text-white px-12 py-6 rounded-full font-bold text-xl hover:scale-105 transition-all shadow-[0_0_50px_rgba(255,59,48,0.4)]">
@@ -161,13 +147,32 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
+          
+          {/* 🌟 수정된 목업 슬라이드쇼 영역 */}
           <div className="relative">
-            <motion.div animate={{ y: [0, -20, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="relative z-10 bg-gradient-to-tr from-[#111] to-[#222] p-2 rounded-[4rem] border border-white/10 shadow-2xl">
+            <motion.div animate={{ y: [0, -20, 0] }} transition={{ duration: 4, repeat: Infinity, ease: [0.16, 1, 0.3, 1] }} className="relative z-10 bg-gradient-to-tr from-[#111] to-[#222] p-2 rounded-[4rem] border border-white/10 shadow-2xl">
               <div className="aspect-[9/19] bg-black rounded-[3.8rem] overflow-hidden relative">
-                 <img src="/images/aura_brand.png" className="h-full w-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" alt="App Preview" />
+                
+                {/* 🌟 [핵심 수정 1] mode="popLayout" 제거 (Absolute 요소들끼리 자연스럽게 겹치도록 냅둡니다) */}
+                <AnimatePresence>
+                  <motion.img 
+                    key={currentScreenIndex}
+                    src={appScreens[currentScreenIndex]}
+                    initial={{ x: "100%" }}
+                    animate={{ x: 0 }}
+                    exit={{ x: "-100%" }}
+                    // 🌟 텐션이 너무 통통 튀지 않고 묵직하게 밀어내도록 tween 모드로 변경!
+                    transition={{ type: "tween", ease: [0.16, 1, 0.3, 1], duration: 0.8 }}
+                    // 🌟 [핵심 수정 2] transition-all duration-700 제거! (Framer Motion만 애니메이션을 통제하게 만듭니다)
+                    className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal" 
+                    alt={`App Preview ${currentScreenIndex + 1}`} 
+                  />
+                </AnimatePresence>
+
               </div>
             </motion.div>
           </div>
+
         </div>
       </section>
 
@@ -240,7 +245,7 @@ export default function LandingPage() {
                     <div className="space-y-4">
                        <div>
                           <span className="text-[9px] font-mono text-white/30 uppercase block mb-1">Authorized Code</span>
-                          <p className="text-4xl font-mono font-black tracking-widest text-white/90" style={{textShadow: "0 0 20px rgba(255,59,48,0.5)"}}>AURA-7777</p>
+                          <p className="text-4xl font-mono font-black tracking-widest text-white/90" style={{textShadow: "0 0 20px rgba(255,59,48,0.5)"}}>AURA-VVIP</p>
                        </div>
                        <div className="flex justify-between items-end">
                           <div>
