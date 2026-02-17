@@ -25,10 +25,14 @@ import { useGyroscope } from "../../hooks/useGyroscope";
 import VibeMatch from "../components/VibeMatch";
 import ShopModal from "../components/ShopModal";
 import { useGatekeeper } from "@/hooks/useGatekeeper";
-import LockModal from "../components/LockModal"; // 🌟 모달 임포트
+import LockModal from "../components/LockModal";
+import { track } from '@vercel/analytics/react';
+import imageCompression from 'browser-image-compression';
+import { useTranslations } from 'next-intl';
 
 
 export default function Home() {
+  const t = useTranslations('Home');
   const aura = useAura();
   const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
 
@@ -76,9 +80,9 @@ export default function Home() {
         // 주머니에 코드가 있으면 문지기에게 자동으로 제출!
         verifyCode(pendingCode).then((res) => {
           if (res.success) {
-            alert("AURA CULT에 오신 것을 환영합니다.");
+            alert(t('welcome_cult'));
           } else {
-            alert("만료되었거나 잘못된 코드입니다.");
+            alert(t('invalid_code'));
           }
           // 쓴 코드는 주머니에서 버림
           localStorage.removeItem("aura_pending_code"); 
@@ -157,9 +161,22 @@ export default function Home() {
     setIsAnalyzing(true); // AI 로딩 화면 켜기!
     
     try {
+      // 무식하게 깎아내지 않고, 화질(Quality)은 최상으로 유지하되 불필요한 메타데이터만 날립니다.
+      const options = {
+        maxSizeMB: 0.5,          // 🌟 0.5 -> 1.5로 대폭 상향 (최대 1.5MB 허용)
+        maxWidthOrHeight: 2048,  // 🌟 1920 -> 2048로 상향 (아이폰 프로 Max, 최신 갤럭시 초고해상도 대응)
+        initialQuality: 0.95,    // 🌟 [핵심 추가] 초기 화질 보존율 95% 강제 지정! (뭉개짐 방지)
+        alwaysKeepResolution: true, // 🌟 [핵심 추가] 억지로 해상도를 줄이지 않도록 방어
+        useWebWorker: true,
+      };
+      
+      console.log(`압축 전 원본 크기: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+      const compressedFile = await imageCompression(file, options);
+      console.log(`압축 후 최적화 크기: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
+
       // API가 요구하는 데이터(FormData) 조립
       const formData = new FormData();
-      formData.append('image', file); // 스탬프가 찍힌 1.1MB 파일!
+      formData.append('image', compressedFile); // 스탬프가 찍힌 1.1MB 파일!
       
       // 유저 정보가 있다면 같이 보냅니다 (route.ts가 기다리고 있음)
       if (aura.user) {
@@ -211,6 +228,8 @@ export default function Home() {
   };
   // 🌟 1. 다운로드 버튼용: 텍스트 밀림 방지 + 스마트 타겟팅
   const exportPhotocard = async () => {
+    // 🌟 커스텀 이벤트 추적: 누가 어떤 옷(ID)을 다운받았는지 기록!
+    track('Download_Photocard', { look_id: currentItem?.id || 'unknown' });
     const targetNode = getCaptureElement();
     if (!targetNode) return alert("캡처할 수 있는 카드를 찾을 수 없습니다. (새로고침 후 다시 시도해주세요)");
 
@@ -252,6 +271,8 @@ export default function Home() {
 
   // 🌟 2. 공유 버튼용: 브라우저 타임아웃 차단 우회 엔진
   const sharePhotocard = async () => {
+    // 🌟 커스텀 이벤트 추적: 어떤 옷이 제일 많이 공유되는지 기록!
+    track('Share_Look', { look_id: currentItem?.id || 'unknown' });
     const targetNode = getCaptureElement();
     if (!targetNode) return alert("공유할 수 있는 카드를 찾을 수 없습니다.");
 
@@ -284,7 +305,7 @@ export default function Home() {
       console.log("공유 시스템 에러(주소 복사로 대체):", err);
       // 공유 창 띄우기에 실패하면 즉시 주소 복사로 대체
       navigator.clipboard.writeText(window.location.href);
-      alert("이 기기는 이미지 직접 공유를 지원하지 않아 링크가 복사되었습니다.");
+      alert(t('share_link_copied'));
     } finally {
       setIsExporting(false);
     }
@@ -316,13 +337,13 @@ export default function Home() {
         <div className="relative z-10 text-center">
           <h2 className="text-[10vw] md:text-7xl font-serif italic font-black text-white mb-6 uppercase tracking-tighter mix-blend-difference">Aura.</h2>
           <p className="text-white/40 font-mono text-xs uppercase tracking-widest mb-10">
-            Identify yourself to access the archive.
+          {t('login_prompt')}
           </p>
           <button 
             onClick={() => aura.setIsLoginModalOpen(true)}
             className="bg-white text-black px-10 py-4 rounded-full font-bold text-sm tracking-widest uppercase hover:bg-[#ff3b30] hover:text-white transition-colors shadow-[0_0_30px_rgba(255,255,255,0.1)]"
           >
-            Verify Identity
+            {t('verify_identity')}
           </button>
         </div>
 
@@ -350,7 +371,7 @@ export default function Home() {
           onClick={aura.signOut} 
           className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/30 text-[10px] tracking-[0.3em] uppercase hover:text-white transition-colors z-[9999]"
         >
-          Switch Account
+          {t('switch_account')}
         </button>
       </main>
     );
@@ -369,18 +390,18 @@ export default function Home() {
       </AnimatePresence>
 
       {/* 상단 탭 (모드 전환) */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 flex bg-white/5 backdrop-blur-xl rounded-full p-1 border border-white/10">
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex bg-white/5 backdrop-blur-xl rounded-full p-1 border border-white/10">
         <button 
           onClick={() => setViewMode('recommend')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'recommend' ? 'bg-white text-black' : 'text-white/50'}`}
         >
-          FOR YOU
+          {t('for_you')}
         </button>
         <button 
           onClick={() => setViewMode('explore')}
           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'explore' ? 'bg-white text-black' : 'text-white/50'}`}
         >
-          EXPLORE
+          {t('explore')}
         </button>
       </div>
 
@@ -508,8 +529,6 @@ export default function Home() {
         </button>
       </div>
 
-      
-
       <DynamicIsland weather={aura.localWeather} />
 
       {/* 🌟 기존 하단 플로팅 툴바 코드 바로 위쪽에 이 코드를 넣어주세요! */}
@@ -578,7 +597,7 @@ export default function Home() {
                     {aura.localWeather?.temp}°C {aura.localWeather?.condition || "TODAY'S"} VIBE
                   </span>
                   <span className="text-[10px] text-white/50 mt-1 font-bold leading-snug">
-                    오늘 이 날씨를 완벽하게 정복한 당신의 OOTD를 세상에 증명하십시오.
+                    {t('mission_desc')}
                   </span>
                 </div>
 
@@ -625,8 +644,10 @@ export default function Home() {
           onClose={() => setIsActionMenuOpen(false)} 
           item={currentItem} 
           onShare={sharePhotocard} // 🌟 새로 만든 공유 함수 전달
-          subscribeToPush={aura.subscribeToPush || (() => {})} 
+          subscribeToPush={aura.subscribeToPush || (() => {})}
+          unsubscribeFromPush={aura.unsubscribeFromPush || (() => {})} 
           sendTestPush={aura.sendTestPush || (() => {})} 
+          isPushEnabled={aura.isPushEnabled} // 🌟 [NEW] 구독 상태 전달!
         />
       )}
 

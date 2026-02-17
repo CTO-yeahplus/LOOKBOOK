@@ -226,7 +226,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
       const pushPromises = subscribers.map(sub => 
         fetch('/api/push', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: sub.user_id, title: "AURA CEO 👑", body: pushMessage })
+          body: JSON.stringify({ userId: sub.user_id, title: "AURA EDITOR", body: pushMessage })
         })
       );
       await Promise.all(pushPromises);

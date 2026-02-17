@@ -4,6 +4,8 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
 
 // 🌟 2. Inter 폰트 초기화
 const inter = Inter({ subsets: ["latin"] });
@@ -51,16 +53,21 @@ export const viewport: Viewport = {
   userScalable: false, 
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const messages = await getMessages();
+
   return (
     <html lang="ko">
       <body className={`${inter.className} bg-black text-white antialiased`}>
         {/* 🌟 기존 children 아래에 레이더 컴포넌트를 달아줍니다! */}
-        {children}
+        {/* 🌟 3. 우리 앱 전체를 NextIntlClientProvider로 감싸줍니다! */}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Analytics />
         <SpeedInsights />
       </body>

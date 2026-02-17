@@ -1,6 +1,7 @@
 // components/ShopModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, ShieldCheck, Tag } from "lucide-react";
+import { useTranslations } from 'next-intl'; // 🌟 추가
 
 // 🌟 아이템 타입 정의
 interface ShoppableItem {
@@ -22,6 +23,7 @@ interface ShopModalProps {
 }
 
 export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopModalProps) {
+  const t = useTranslations('Shop');
   return (
     <AnimatePresence>
       {isOpen && (
@@ -36,7 +38,7 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
 
             <div className="flex items-center justify-between px-6 pb-6 pt-2 border-b border-white/5">
               <div className="flex flex-col">
-                <span className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase"><Tag className="w-3 h-3" /> Shop the Vibe</span>
+                <span className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase"><Tag className="w-3 h-3" /> {t('title')}</span>
                 <span className="text-xl font-serif italic font-bold text-white tracking-tight mt-1">{lookTitle}</span>
               </div>
               <button onClick={onClose} className="p-2 text-white/40 hover:text-white bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
@@ -46,7 +48,7 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
               {/* 🌟 DB에 등록된 아이템이 없을 경우의 처리 */}
               {items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-white/40">
-                  <span className="text-xs font-mono uppercase tracking-widest">No Items Tagged</span>
+                  <span className="text-xs font-mono uppercase tracking-widest">{t('empty')}</span>
                 </div>
               ) : (
                 /* 🌟 진짜 DB 데이터를 순회합니다! */
@@ -67,7 +69,7 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
                         <span className="text-sm font-mono font-black text-indigo-400">{item.price}</span>
                         {/* 🌟 실제 구매 링크(product_url) 연결 */}
                         <a href={item.product_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-black rounded-lg text-[9px] font-black uppercase active:scale-95 transition-transform hover:bg-indigo-50 hover:text-indigo-600">
-                          GET <ExternalLink className="w-3 h-3" />
+                        {t('get_btn')} <ExternalLink className="w-3 h-3" />
                         </a>
                       </div>
                     </div>
@@ -78,7 +80,7 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
 
             <div className="px-6 py-5 border-t border-white/5 flex items-center justify-center gap-2 bg-black/50">
               <ShieldCheck className="w-4 h-4 text-white/30" />
-              <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">Verified Links by AURA</span>
+              <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{t('verified')}</span>
             </div>
           </motion.div>
         </>

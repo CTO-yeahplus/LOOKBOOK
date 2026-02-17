@@ -1,6 +1,6 @@
 // hooks/useAura.ts
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
 import { useWeather } from "./useWeather";
 import { useSocial } from "./useSocial";
@@ -29,6 +29,7 @@ export function useAura() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isPushEnabled, setIsPushEnabled] = useState(false);
 
   const triggerHaptic = (pattern: number | number[] = 50) => {
     if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
@@ -44,6 +45,19 @@ export function useAura() {
   const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
   const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
 
+    // 🌟 2. useEffect들이 모여있는 곳에 구독 상태 체크 로직 추가
+  useEffect(() => {
+    const checkPushStatus = async () => {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          setIsPushEnabled(!!subscription); // 구독 정보가 있으면 true, 없으면 false
+        }
+      }
+    };
+    checkPushStatus();
+  }, []);
   // 🌟 [수정된 실제 웹 푸시 구독 엔진]
   const subscribeToPush = async () => {
     if (!auth.user) return alert("푸시 알림을 받으려면 로그인이 필요합니다.");
@@ -88,11 +102,42 @@ export function useAura() {
       }
       
       triggerHaptic([50, 100, 50]);
-      alert("푸시 알림이 성공적으로 활성화되었습니다! 🚀");
+      alert("AURA와 주파수 동기화가 시작되었습니다! 🚀");
       
     } catch (error) {
       console.error("Push Subscription Error:", error);
-      alert("알림 설정 중 오류가 발생했습니다. 네트워크 상태를 확인해주세요.");
+      alert("주파수동기화 설정 중 오류가 발생했습니다. 네트워크 상태를 확인해주세요.");
+    }
+  };
+  
+  // 🌟 [NEW] 웹 푸시 구독 해제 엔진
+  const unsubscribeFromPush = async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          if (subscription) {
+            // 1. 브라우저에서 알림 구독 해제
+            await subscription.unsubscribe();
+            
+            // 2. Supabase DB에서 내 기기 주소 삭제
+            if (auth.user) {
+              await supabase
+                .from('aura_push_subscriptions')
+                .delete()
+                .eq('user_id', auth.user.id);
+            }
+
+            // 3. 상태 업데이트 및 피드백
+            setIsPushEnabled(false);
+            triggerHaptic([50, 50]); // 해제될 때는 짧은 진동 두 번
+            alert("AURA 주파수 동기화가 해제되었습니다. 언제든 다시 연결해주세요.");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Push Unsubscribe Error:", error);
     }
   };
 
@@ -109,9 +154,10 @@ export function useAura() {
     isModalOpen, setIsModalOpen,
     isDetailOpen, setIsDetailOpen,
     triggerHaptic,
-
-    // 🌟 [수정] 방금 만든 진짜 엔진을 연결해 줍니다!
-    subscribeToPush: subscribeToPush, 
+    
+    isPushEnabled,
+    subscribeToPush: subscribeToPush,
+    unsubscribeFromPush, 
     sendTestPush: () => console.log("푸시 테스트"),
   };
 }

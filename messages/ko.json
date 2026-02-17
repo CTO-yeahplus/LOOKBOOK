@@ -1,0 +1,103 @@
+{
+    "Index": {
+      "title": "AURA : PRIVATE FITTING",
+      "description": "내일의 날씨와 완벽히 공명하는 하이엔드 아웃핏 큐레이터",
+      "invite_code": "초대 코드를 입력하세요",
+      "enter": "시스템 접속"
+    },
+    "Menu": {
+      "sync_active": "AURA SYNC : ACTIVE",
+      "sync_off": "SYNC WITH AURA",
+      "sync_desc_on": "주파수 동기화 완료. 내일의 영감을 대기 중입니다.",
+      "sync_desc_off": "매일 아침 7시, 날씨와 완벽히 공명하는 VIBE DROP",
+      "bug_report": "버그 제보 및 피드백"
+    },
+
+    "Home": {
+        "verify_identity": "VERIFY IDENTITY",
+        "switch_account": "SWITCH ACCOUNT",
+        "for_you": "FOR YOU",
+        "explore": "EXPLORE",
+        "aura_directive": "AURA DIRECTIVE",
+        "mission_desc": "오늘 이 날씨를 완벽하게 정복한 당신의 OOTD를 세상에 증명하십시오.",
+        "login_prompt": "Identify yourself to access the archive.",
+        "welcome_cult": "AURA CULT에 오신 것을 환영합니다.",
+        "invalid_code": "만료되었거나 잘못된 코드입니다.",
+        "share_link_copied": "이 기기는 이미지 직접 공유를 지원하지 않아 링크가 복사되었습니다."
+    },
+    "ActionMenu": {
+        "share_title": "이 룩 공유하기",
+        "share_desc": "룩북 이미지를 카카오톡/인스타로 전송",
+        "shop_title": "이 스타일 쇼핑하기",
+        "shop_desc": "무신사에서 비슷한 옷 검색",
+        "sync_active": "AURA SYNC : ACTIVE",
+        "sync_off": "SYNC WITH AURA",
+        "sync_desc_on": "주파수 동기화 완료. 내일의 영감을 대기 중입니다.",
+        "sync_desc_off": "매일 아침 7시, 날씨와 완벽히 공명하는 VIBE DROP",
+        "bug_report": "버그 제보 및 피드백",
+        "bug_desc": "AURA 개발팀에게 직접 의견 보내기",
+        "test_push": "알림 테스트 발송 (Dev)"
+    },
+
+    "Archive": {
+        "title": "My Space",
+        "tab_saved": "찜한 룩",
+        "tab_uploaded": "내 옷장",
+        "search_placeholder": "비 오는 날, 더운 날, OOTD...",
+        "empty_saved": "검색 조건에 맞는 룩이 없습니다.",
+        "empty_uploaded": "아직 올린 옷이 없습니다."
+    },
+    
+    "Profile": {
+        "editorial_issue": "Editorial Issue 02",
+        "no_archive": "No Archive",
+        "receipt_title": "*** Archive Receipt ***",
+        "curator": "CURATOR",
+        "looks_uploaded": "LOOKS_UPLOADED",
+        "aura_impact": "AURA_IMPACT",
+        "showcase_id": "SHOWCASE_ID",
+        "press_enter": "PRESS ENTER",
+        "btn_copy": "COPY",
+        "btn_copied": "COPIED!",
+        "btn_share": "SHARE",
+        "btn_style": "STYLE"
+    },
+
+    "Login": {
+        "title": "Join AURA",
+        "description": "로그인하고 나만의 옷장을 만드세요.",
+        "continue_google": "Continue with Google",
+        "continue_kakao": "Continue with Kakao",
+        "continue_github": "Continue with GitHub",
+        "continue_x": "Continue with X"
+    },
+    "Upload": {
+        "analyzing_title": "ANALYZING VIBE...",
+        "analyzing_desc": "AURA Editor가 당신의 룩을 디테일하게 분석 중입니다.",
+        "drop_active": "DROP IT LIKE IT'S HOT!",
+        "upload_prompt": "당신의 룩을 보여주세요.",
+        "upload_support_1": "터치하거나 이미지를 끌어다 놓으세요",
+        "upload_support_2": "지원 포맷: JPG, PNG"
+    },
+
+    "Shop": {
+        "title": "Shop the Vibe",
+        "empty": "No Items Tagged",
+        "get_btn": "GET",
+        "verified": "Verified Links by AURA"
+    },
+    "DeepDive": {
+        "tap_flip": "Tap to Flip",
+        "curator": "Curator",
+        "note": "Note",
+        "issue": "Issue",
+        "archived": "Archived",
+        "aura_impact": "Aura Impact",
+        "mood_notes": "Mood Notes",
+        "mood_desc_pre": "현재 날씨 ",
+        "mood_desc_post": " 와 완벽하게 공명하는 무드. 이 룩의 날것의 텍스처를 느껴보세요.",
+        "extracted_dna": "Extracted DNA",
+        "curator_pass": "Curator Pass",
+        "tap_back": "Tap anywhere to flip back"
+    }
+  }

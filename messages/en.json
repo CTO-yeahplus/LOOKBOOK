@@ -1,0 +1,103 @@
+{
+    "Index": {
+      "title": "AURA : PRIVATE FITTING",
+      "description": "High-end outfit curator in perfect resonance with tomorrow's weather.",
+      "invite_code": "Enter your invite code",
+      "enter": "ENTER SYSTEM"
+    },
+    "Menu": {
+      "sync_active": "AURA SYNC : ACTIVE",
+      "sync_off": "SYNC WITH AURA",
+      "sync_desc_on": "Frequency synced. Awaiting tomorrow's inspiration.",
+      "sync_desc_off": "Every 7 AM, receive a VIBE DROP synced with the weather.",
+      "bug_report": "BUG REPORT & FEEDBACK"
+    },
+
+
+    "Home": {
+        "verify_identity": "VERIFY IDENTITY",
+        "switch_account": "SWITCH ACCOUNT",
+        "for_you": "FOR YOU",
+        "explore": "EXPLORE",
+        "aura_directive": "AURA DIRECTIVE",
+        "mission_desc": "Prove your OOTD that perfectly conquered today's weather.",
+        "login_prompt": "Identify yourself to access the archive.",
+        "welcome_cult": "Welcome to AURA CULT.",
+        "invalid_code": "Expired or invalid code.",
+        "share_link_copied": "Direct sharing is not supported, so the link has been copied."
+    },
+    "ActionMenu": {
+        "share_title": "Share this Look",
+        "share_desc": "Send lookbook image to Kakao/Instagram",
+        "shop_title": "Shop this Style",
+        "shop_desc": "Search similar items on Musinsa",
+        "sync_active": "AURA SYNC : ACTIVE",
+        "sync_off": "SYNC WITH AURA",
+        "sync_desc_on": "Frequency synced. Awaiting tomorrow's inspiration.",
+        "sync_desc_off": "Every 7 AM, receive a VIBE DROP synced with the weather.",
+        "bug_report": "Bug Report & Feedback",
+        "bug_desc": "Send opinions directly to AURA team",
+        "test_push": "Send Test Push (Dev)"
+    },
+
+    "Archive": {
+        "title": "My Space",
+        "tab_saved": "Saved Looks",
+        "tab_uploaded": "My Closet",
+        "search_placeholder": "Rainy day, Hot day, OOTD...",
+        "empty_saved": "No looks match your search.",
+        "empty_uploaded": "No clothes uploaded yet."
+    },
+    "Profile": {
+        "editorial_issue": "Editorial Issue 02",
+        "no_archive": "No Archive",
+        "receipt_title": "*** Archive Receipt ***",
+        "curator": "CURATOR",
+        "looks_uploaded": "LOOKS_UPLOADED",
+        "aura_impact": "AURA_IMPACT",
+        "showcase_id": "SHOWCASE_ID",
+        "press_enter": "PRESS ENTER",
+        "btn_copy": "COPY",
+        "btn_copied": "COPIED!",
+        "btn_share": "SHARE",
+        "btn_style": "STYLE"
+    },
+
+    "Login": {
+        "title": "Join AURA",
+        "description": "Log in to create your own archive.",
+        "continue_google": "Continue with Google",
+        "continue_kakao": "Continue with Kakao",
+        "continue_github": "Continue with GitHub",
+        "continue_x": "Continue with X"
+    },
+    "Upload": {
+        "analyzing_title": "ANALYZING VIBE...",
+        "analyzing_desc": "AURA Editor is deconstructing your look.",
+        "drop_active": "DROP IT LIKE IT'S HOT!",
+        "upload_prompt": "UPLOAD YOUR FIT Check.",
+        "upload_support_1": "Tap or Drag & Drop",
+        "upload_support_2": "Supports JPG, PNG"
+    },
+    "Shop": {
+        "title": "Shop the Vibe",
+        "empty": "No Items Tagged",
+        "get_btn": "GET",
+        "verified": "Verified Links by AURA"
+    },
+    "DeepDive": {
+        "tap_flip": "Tap to Flip",
+        "curator": "Curator",
+        "note": "Note",
+        "issue": "Issue",
+        "archived": "Archived",
+        "aura_impact": "Aura Impact",
+        "mood_notes": "Mood Notes",
+        "mood_desc_pre": "A mood perfectly resonating with today's weather: ",
+        "mood_desc_post": ". Feel the raw texture of this look.",
+        "extracted_dna": "Extracted DNA",
+        "curator_pass": "Curator Pass",
+        "tap_back": "Tap anywhere to flip back"
+    }
+
+  }

@@ -1,6 +1,7 @@
 // components/LoginModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslations } from 'next-intl'; // 🌟 추가
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose, onSignIn }: LoginModalProps) {
+  const t = useTranslations('Login');
   return (
     <AnimatePresence>
       {isOpen && (
@@ -18,25 +20,25 @@ export default function LoginModal({ isOpen, onClose, onSignIn }: LoginModalProp
             
             <div className="mb-8 text-center">
               <h2 className="text-2xl font-bold tracking-tight text-white mb-2">Join AURA</h2>
-              <p className="text-sm text-white/50">로그인하고 나만의 옷장을 만드세요.</p>
+              <p className="text-sm text-white/50">{t('description')}</p>
             </div>
 
             <div className="flex flex-col gap-3">
               {/* Google */}
               <button onClick={() => onSignIn('google')} className="flex items-center justify-center gap-3 rounded-xl bg-white p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
-                <GoogleIcon /><span>Continue with Google</span>
+                <GoogleIcon /><span>{t('continue_google')}</span>
               </button>
               {/* Kakao */}
               <button onClick={() => onSignIn('kakao')} className="flex items-center justify-center gap-3 rounded-xl bg-[#FEE500] p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
-              <KakaoIcon /><span>Continue with Kakao</span>
+              <KakaoIcon /><span>{t('continue_kakao')}</span>
               </button>
               {/* GitHub */}
               <button onClick={() => onSignIn('github')} className="flex items-center justify-center gap-3 rounded-xl bg-[#24292E] p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/10">
-                <GithubIcon /><span>Continue with GitHub</span>
+                <GithubIcon /><span>{t('continue_github')}</span>
               </button>
               {/* X (Twitter) */}
               <button onClick={() => onSignIn('twitter')} className="flex items-center justify-center gap-3 rounded-xl bg-black p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/20">
-               <XIcon /><span>Continue with X</span>
+               <XIcon /><span>{t('continue_x')}</span>
               </button>
             </div>
           </motion.div>

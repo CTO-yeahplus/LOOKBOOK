@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence, Transition } from "framer-motion"; // 🌟 Transition 타입 유지!
 import { X, Volume2, Palette, Instagram, ArrowDownRight, Ticket, Heart, RefreshCw } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura"; 
+import { useTranslations } from 'next-intl'; // 🌟 추가
 
 interface DeepDiveModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const flipTransition: Transition = {
 };
 
 export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: DeepDiveModalProps) {
+  const t = useTranslations('DeepDive');
+  
   const [isFlipped, setIsFlipped] = useState(false);
 
   useEffect(() => {
@@ -74,7 +77,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
               
               {/* 앞면 하단 힌트 텍스트 */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[#EBE6DD]/90 font-mono text-[10px] tracking-[0.2em] uppercase bg-black/50 px-5 py-2 rounded-full backdrop-blur-sm shadow-xl border border-white/10">
-                <RefreshCw className="w-3 h-3" /> Tap to Flip
+                <RefreshCw className="w-3 h-3" /> {t('tap_flip')}
               </div>
             </div>
 
@@ -93,7 +96,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                   <div className="relative z-10">
                     <h2 className="text-6xl font-serif italic font-black tracking-tighter uppercase leading-[0.8] mix-blend-hard-light">Curator<br/>Note<span className="text-red-600">.</span></h2>
                     <div className="flex items-center gap-2 mt-3 font-mono text-[10px] font-bold uppercase tracking-widest bg-black text-[#EBE6DD] inline-block px-2 py-1 transform -rotate-2 shadow-[2px_2px_0px_rgba(0,0,0,0.5)]">
-                      <span>Issue {dateString}</span><span className="h-3 w-[1px] bg-white/30"/><span>Archived</span>
+                      <span>Issue {dateString}</span><span className="h-3 w-[1px] bg-white/30"/><span>{t('archived')}</span>
                     </div>
                   </div>
                   <div className="flex gap-3 relative z-10 items-center mb-2">
@@ -113,16 +116,16 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
               <div className="flex-1 overflow-y-auto p-6 relative z-10 custom-scrollbar">
                 <div className="flex flex-col gap-8">
                   <div className="flex items-center gap-1.5 bg-black text-[#EBE6DD] w-fit px-3 py-1 font-mono text-xs shadow-[2px_2px_0px_rgba(200,0,0,0.8)] transform -rotate-2">
-                    <Heart className="w-3 h-3 fill-current text-red-500" /><span>{likesCount} Aura Impact</span>
+                    <Heart className="w-3 h-3 fill-current text-red-500" /><span>{likesCount} {t('aura_impact')}</span>
                   </div>
                   <div className="relative w-[90%]">
                     <span className="absolute -top-8 -left-6 text-9xl font-serif text-black/10 pointer-events-none">“</span>
-                    <h3 className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-3 font-mono border-b border-black/20 pb-1 w-fit"><ArrowDownRight className="w-3 h-3 text-red-600" /> Mood Notes</h3>
-                    <p className="text-lg font-serif italic font-bold text-black leading-snug relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50">현재 날씨 <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> 와 완벽하게 공명하는 무드. 이 룩의 날것의 텍스처를 느껴보세요.</p>
+                    <h3 className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-3 font-mono border-b border-black/20 pb-1 w-fit"><ArrowDownRight className="w-3 h-3 text-red-600" /> {t('mood_notes')}</h3>
+                    <p className="text-lg font-serif italic font-bold text-black leading-snug relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50">{t('mood_desc_pre')} <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> {t('mood_desc_post')}</p>
                   </div>
                   <div className="self-end w-[90%] relative pl-8">
                     <div className="absolute top-0 left-0 w-full h-full border-2 border-dashed border-black/30 transform rotate-3 pointer-events-none" />
-                    <h3 className="flex items-center justify-end gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-4 font-mono text-right relative z-10">Extracted DNA <Palette className="w-3 h-3 text-red-600"/></h3>
+                    <h3 className="flex items-center justify-end gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-4 font-mono text-right relative z-10">{t('extracted_dna')} <Palette className="w-3 h-3 text-red-600"/></h3>
                     <div className="flex justify-end relative h-20 items-center z-10 pl-10 pr-2">
                       {(item.colors || ["#E5E0D8", "#2C2C2C", "#8A7B6E"]).map((colorHex, idx) => (
                         <div key={idx} className="w-14 h-16 bg-white border-[3px] border-black p-1 shadow-[4px_4px_0px_rgba(0,0,0,1)] transition-transform hover:-translate-y-2 absolute" style={{ backgroundColor: colorHex, right: `${idx * 30}px`, zIndex: 10 - idx, transform: `rotate(${idx % 2 === 0 ? -4 : 4}deg)` }}>
@@ -152,7 +155,7 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
               )}
               
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-black/30 font-mono text-[8px] tracking-[0.2em] uppercase pointer-events-none">
-                Tap anywhere to flip back
+                {t('tap_back')}
               </div>
             </div>
 

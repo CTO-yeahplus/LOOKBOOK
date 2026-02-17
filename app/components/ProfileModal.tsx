@@ -1,9 +1,12 @@
 // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link } from "lucide-react";
+// 🌟 Languages 아이콘 추가
+import { X, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link, Languages } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
+// 🌟 useLocale 훅 추가
+import { useTranslations, useLocale } from 'next-intl';
 
 interface ProfileModalProps {
   isOpen: boolean;
@@ -17,13 +20,16 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport }: ProfileModalProps) {
+  const t = useTranslations('Profile');
+  const locale = useLocale(); // 🌟 현재 언어 감지
+
   const [isMuted, setIsMuted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isIgSaved, setIsIgSaved] = useState(false); 
   
   const [igHandle, setIgHandle] = useState("");
   const [isCopied, setIsCopied] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // 🌟 저장 중 상태 추가
+  const [isSaving, setIsSaving] = useState(false); 
 
   const isElite = uploadedCount >= 5; 
 
@@ -50,10 +56,14 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
     setIsMuted(!isMuted);
   };
 
-  // 🌟 닉네임 추출 (이메일 앞부분)
+  // 🌟 언어 전환 함수
+  const toggleLanguage = (newLocale: string) => {
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000;`;
+    window.location.reload(); 
+  };
+
   const nickname = user?.email ? user.email.split('@')[0].toLowerCase() : 'aura_user';
 
-  // 🌟 아이디 저장 로직 (@ 기호 제거 후 저장)
   const handleSaveId = async () => {
     if (!igHandle.trim() || isSaving) return;
     setIsSaving(true);
@@ -71,7 +81,6 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
     return `${window.location.origin}/@${targetId}`;
   };
 
-  // 🌟 1. [SHARE] 버튼: 시스템 기본 공유 창 띄우기
   const handlePublish = async () => {
     const shareData = {
       title: 'AURA Editorial',
@@ -82,7 +91,6 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        // PC 등에서 공유 창을 지원하지 않으면 복사 기능으로 대체
         handleCopyLink();
       }
     } catch (error) {
@@ -90,7 +98,6 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
     }
   };
 
-  // 🌟 2. [COPY LINK] 버튼: 주소만 클립보드에 복사
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(getShowcaseUrl());
@@ -135,7 +142,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
 
               <div className="pt-10 px-6 pb-2 border-b-2 border-black relative">
                 <h1 className="text-6xl font-serif italic font-black tracking-tighter text-black uppercase">Aura.</h1>
-                <p className="font-mono text-[10px] tracking-[0.2em] mt-2 uppercase text-black/60">Editorial Issue 02 — {dateString}</p>
+                <p className="font-mono text-[10px] tracking-[0.2em] mt-2 uppercase text-black/60">{t('editorial_issue')} — {dateString}</p>
                 
                 <div className="absolute top-8 right-8 transform rotate-[15deg] border-[3px] border-red-600 text-red-600 px-3 py-1 text-2xl font-black tracking-widest opacity-80 mix-blend-multiply pointer-events-none">
                   {isElite ? 'CULT\nSTATUS' : 'NEW\nFACE'}
@@ -147,7 +154,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                   {bestLook ? (
                     <img src={bestLook.imageUrl} alt="Editorial" className="w-full h-full object-cover grayscale-[0.3] contrast-110 sepia-[0.2]" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center font-serif text-4xl text-black/20 italic bg-[#d9d4cb]">No Archive</div>
+                    <div className="w-full h-full flex items-center justify-center font-serif text-4xl text-black/20 italic bg-[#d9d4cb]">{t('no_archive')}</div>
                   )}
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-20 h-6 bg-white/40 backdrop-blur-md transform rotate-3 shadow-sm border border-black/5 mix-blend-screen" />
                 </div>
@@ -158,29 +165,28 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
               </div>
 
               <div className="px-6 py-5 bg-[#F8F5F0] border-t border-dashed border-black/30 font-mono text-xs shadow-inner">
-                <p className="text-center mb-4 font-bold tracking-widest uppercase">*** Archive Receipt ***</p>
+                <p className="text-center mb-4 font-bold tracking-widest uppercase">{t('receipt_title')}</p>
                 
                 <div className="flex justify-between mb-1.5 border-b border-black/10 pb-1.5">
-                  <span className="text-black/60">CURATOR</span>
+                  <span className="text-black/60">{t('curator')}</span>
                   <span className="font-bold">{nickname}</span>
                 </div>
                 <div className="flex justify-between mb-1.5 border-b border-black/10 pb-1.5">
-                  <span className="text-black/60">LOOKS_UPLOADED</span>
+                  <span className="text-black/60">{t('looks_uploaded')}</span>
                   <span className="font-bold">{String(uploadedCount).padStart(3, '0')}</span>
                 </div>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-black/60">AURA_IMPACT</span>
+                  <span className="text-black/60">{t('aura_impact')}</span>
                   <span className="font-bold">99.9%</span>
                 </div>
 
-                {/* 🌟 쇼케이스 아이디 설정 (모든 유저에게 노출하여 바이럴 유도) */}
                 <div className="mt-3 pt-3 border-t border-dotted border-black/30">
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-1">
                       <Instagram className="w-3 h-3 text-black/60" />
-                      <span className="text-black/60 tracking-widest uppercase">SHOWCASE_ID</span>
+                      <span className="text-black/60 tracking-widest uppercase">{t('showcase_id')}</span>
                     </div>
-                    <span className="text-[8px] text-black/40 tracking-widest italic">PRESS ENTER</span>
+                    <span className="text-[8px] text-black/40 tracking-widest italic">{t('press_enter')}</span>
                   </div>
                   <div className="flex items-center bg-transparent border-b border-black/30 pb-1">
                     <span className="font-bold text-black mr-1">@</span>
@@ -203,6 +209,33 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                     </button>
                   </div>
                 </div>
+
+                {/* 🌟 [NEW] 언어 설정 섹션 (영수증 옵션처럼 자연스럽게 배치) */}
+                <div className="mt-3 pt-3 border-t border-dotted border-black/30">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1">
+                      <Languages className="w-3 h-3 text-black/60" />
+                      <span className="text-black/60 tracking-widest uppercase">LANGUAGE_SETTING</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    {['ko', 'en'].map((lang) => (
+                      <button
+                        key={lang}
+                        onClick={() => toggleLanguage(lang)}
+                        className={`flex-1 py-2 border border-black text-[10px] font-black tracking-widest transition-all ${
+                          locale === lang 
+                            ? 'bg-black text-white' 
+                            : 'bg-transparent text-black opacity-40 hover:opacity-100'
+                        }`}
+                      >
+                        {lang === 'ko' ? 'KOREAN' : 'ENGLISH'}
+                        {locale === lang && <Check className="inline-block w-3 h-3 ml-1" />}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 
                 <div className="my-4 border-t border-dotted border-black/30" />
                 
@@ -213,27 +246,24 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                 </div>
 
                 <div className="flex gap-2 font-sans">
-                  {/* 🌟 1. COPY LINK 버튼 (주소 복사) */}
                   <button onClick={handleCopyLink} className={`flex-1 py-3.5 border border-black font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 transition-colors active:scale-95 ${isCopied ? 'bg-green-50 text-green-600 border-green-600' : 'text-black hover:bg-black/5'}`}>
                     {isCopied ? <Check className="w-3.5 h-3.5" /> : <Link className="w-3.5 h-3.5" />} 
-                    {isCopied ? 'COPIED!' : 'COPY'}
+                    {isCopied ? t('btn_copied') : t('btn_copy')}
                   </button>
-                  {/* 🌟 2. 공유 버튼 (주소 복사) */}
                   <button onClick={handlePublish} className="flex-1 py-3.5 bg-black text-white font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 hover:bg-zinc-800 transition-colors active:scale-95">
-                    {isCopied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />} 
-                    {isCopied ? 'URL COPIED!' : 'SHARE'}
+                    {isCopied ? <Share2 className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />} 
+                    {isCopied ? t('btn_copied') : t('btn_share')}
                   </button>
 
-                  {/* 🌟 'AI 스타일 분석' 버튼 추가 */}
                   <button 
                     onClick={() => {
-                      onOpenReport(); // AI 리포트 모달 열기
-                      onClose();      // 현재 프로필 모달은 닫기 (선택 사항)
+                      onOpenReport(); 
+                      onClose();      
                     }}
                     className="flex-1 py-3.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold text-[10px] tracking-[0.2em] flex justify-center items-center gap-2 hover:bg-zinc-800 transition-colors active:scale-95"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    STYLE
+                    {t('btn_style')}
                   </button>
 
                   <button onClick={onLogout} className="px-5 py-3.5 border bg-red-400 text-black font-bold flex justify-center items-center hover:bg-black/5 transition-colors active:scale-95">

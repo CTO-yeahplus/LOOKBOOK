@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useDropzone } from "react-dropzone";
 import { X, Upload, Loader2, Sparkles } from "lucide-react";
 import StampEditor from "./StampEditor"; 
+import { useTranslations } from 'next-intl'; // 🌟 추가
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export default function UploadModal({
   isAnalyzing, 
   triggerHaptic,
 }: UploadModalProps) {
+  const t = useTranslations('Upload');
   const [file, setFile] = useState<File | null>(null);
   const [isStamping, setIsStamping] = useState(false);
   const [fileForStamping, setFileForStamping] = useState<File | null>(null);
@@ -74,8 +76,8 @@ export default function UploadModal({
                   <div className="absolute inset-0 bg-red-600 blur-xl opacity-50 animate-pulse"></div>
                   <Loader2 className="w-16 h-16 animate-spin relative z-10" />
                </div>
-               <h3 className="text-2xl font-black font-serif italic tracking-tighter animate-pulse">ANALYZING VIBE...</h3>
-               <p className="font-mono text-xs mt-2 opacity-60 tracking-widest">AURA Editor is deconstructing your look.</p>
+               <h3 className="text-2xl font-black font-serif italic tracking-tighter animate-pulse">{t('analyzing_title')}</h3>
+               <p className="font-mono text-xs mt-2 opacity-60 tracking-widest">{t('analyzing_desc')}</p>
             </div>
           </motion.div>
         )}
@@ -128,10 +130,10 @@ export default function UploadModal({
                 
                 <div className="text-center relative z-10">
                   <p className={`text-xl font-black font-serif italic tracking-tighter ${isDragActive ? 'text-red-600' : 'text-black'}`}>
-                    {isDragActive ? "DROP IT LIKE IT'S HOT!" : "UPLOAD YOUR FIT Check."}
+                    {isDragActive ? t('drop_active') : t('upload_prompt')}
                   </p>
                   <p className="font-mono text-xs font-bold text-black/50 mt-2 tracking-widest uppercase">
-                    Tap or Drag & Drop <br/>Supports JPG, PNG
+                    {t('upload_support_1')} <br/>{t('upload_support_2')}
                   </p>
                 </div>
               </div>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Search, Heart, ImageIcon } from "lucide-react";
 import { useState } from "react";
 import { FashionItem } from "../../hooks/useAura";
+import { useTranslations } from 'next-intl'; // 🌟 추가
 
 interface ArchiveModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ interface ArchiveModalProps {
 const appleSpring = { type: "spring" as const, stiffness: 300, damping: 25 };
 
 export default function ArchiveModal({ isOpen, onClose, archiveData, searchQuery, setSearchQuery, triggerHaptic, uploadedData }: ArchiveModalProps) {
-  // 🌟 탭 상태 추가
+  const t = useTranslations('Archive');
   const [activeTab, setActiveTab] = useState<'saved' | 'uploaded'>('saved');
 
   return (
@@ -30,18 +31,18 @@ export default function ArchiveModal({ isOpen, onClose, archiveData, searchQuery
             
             <div className="flex flex-col border-b border-white/5 px-8 pb-4 md:px-12">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold tracking-tight text-white">My Space</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-white">{t('title')}</h2>
                 <button onClick={() => { triggerHaptic(20); onClose(); }} className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-white/20 active:scale-95"><X className="h-5 w-5 text-white/80" /></button>
               </div>
 
               {/* 🌟 탭 버튼 UI */}
               <div className="flex w-full rounded-2xl bg-white/5 p-1 mb-6">
                 <button onClick={() => { triggerHaptic(10); setActiveTab('saved'); }} className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all ${activeTab === 'saved' ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>
-                  <Heart className="w-4 h-4" /> 찜한 룩 ({archiveData.length})
+                  <Heart className="w-4 h-4" /> {t('tab_saved')} ({archiveData.length})
                 </button>
                 {/* 🌟 수정: (준비중) 텍스트를 지우고 실제 업로드한 사진 개수 표시 */}
                 <button onClick={() => { triggerHaptic(10); setActiveTab('uploaded'); }} className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition-all ${activeTab === 'uploaded' ? 'bg-white text-black shadow-md' : 'text-white/50 hover:text-white'}`}>
-                  <ImageIcon className="w-4 h-4" /> 내 옷장 ({uploadedData?.length || 0})
+                  <ImageIcon className="w-4 h-4" /> {t('tab_uploaded')} ({uploadedData?.length || 0})
                 </button>
               </div>
 
@@ -57,7 +58,7 @@ export default function ArchiveModal({ isOpen, onClose, archiveData, searchQuery
               {activeTab === 'saved' ? (
                 // 기존 저장된 룩 렌더링
                 archiveData.length === 0 ? (
-                  <div className="flex h-full flex-col items-center justify-center text-white/30"><Search className="mb-4 h-12 w-12 opacity-50" strokeWidth={1} /><p>검색 조건에 맞는 룩이 없습니다.</p></div>
+                  <div className="flex h-full flex-col items-center justify-center text-white/30"><Search className="mb-4 h-12 w-12 opacity-50" strokeWidth={1} /><p>{t('empty_saved')}</p></div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
                     {archiveData.map((item) => (
@@ -75,7 +76,7 @@ export default function ArchiveModal({ isOpen, onClose, archiveData, searchQuery
                 !uploadedData || uploadedData.length === 0 ? (
                   <div className="flex h-full flex-col items-center justify-center text-white/30">
                     <ImageIcon className="mb-4 h-12 w-12 opacity-50" strokeWidth={1} />
-                    <p>아직 올린 옷이 없습니다.</p>
+                    <p>{t('empty_uploaded')}</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5 md:gap-6">
