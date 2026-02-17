@@ -104,7 +104,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <Link href="/home" className="group relative overflow-hidden bg-[#ff3b30] text-white px-12 py-6 rounded-full font-bold text-xl hover:scale-105 transition-all shadow-[0_0_50px_rgba(255,59,48,0.4)]">
               <span className="relative z-10">ENTER THE SYSTEM</span>
-              <div className="absolute inset-0 bg-white translate-y-[101%] group-hover:translate-y-0 transition-transform duration-500" />
+              <div className="absolute inset-0 bg-black translate-y-[101%] group-hover:translate-y-0 transition-transform duration-500" />
               <style jsx>{`.group:hover span { color: black; }`}</style>
             </Link>
           </div>
