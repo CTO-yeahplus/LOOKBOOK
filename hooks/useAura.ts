@@ -44,53 +44,55 @@ export function useAura() {
   const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
   const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
 
-  // 🌟 [NEW] 실제 웹 푸시 구독 엔진
+  // 🌟 [수정된 실제 웹 푸시 구독 엔진]
   const subscribeToPush = async () => {
     if (!auth.user) return alert("푸시 알림을 받으려면 로그인이 필요합니다.");
     
     // 1. 브라우저 지원 여부 확인
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      return alert("현재 사용 중인 브라우저는 푸시 알림을 지원하지 않습니다. (Safari 최신 버전 또는 Chrome을 사용해주세요)");
+      return alert("현재 사용 중인 브라우저는 푸시 알림을 지원하지 않습니다.");
     }
 
     try {
-      // 2. 유저에게 알림 권한 요청 (브라우저 팝업)
+      // 2. 권한 요청
       const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        return alert("알림 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.");
-      }
+      if (permission !== 'granted') return alert("알림 권한이 거부되었습니다.");
 
-      // 3. 서비스 워커 등록 확인 및 푸시 매니저 구독
-      const registration = await navigator.serviceWorker.ready;
-      
-      // 💡 VAPID 공개키 (Vercel 환경 변수에 설정한 값)
+      // 🌟 [핵심 수정 1] 무한 대기를 막기 위해 서비스 워커를 명시적으로 먼저 등록합니다!
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready; // 등록 완료될 때까지 대기
+
+      // 3. VAPID 키 확인 및 구독
       const applicationServerKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!applicationServerKey) {
-        console.error("VAPID 공개키가 설정되지 않았습니다.");
-        return alert("푸시 서버 설정이 누락되었습니다.");
-      }
+      if (!applicationServerKey) return alert("푸시 서버(VAPID) 설정이 누락되었습니다.");
 
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: applicationServerKey
       });
 
-      // 4. Supabase DB에 유저 ID와 함께 구독 정보(기기 주소) 저장
+      // 🌟 [핵심 수정 2] onConflict 옵션을 명시하여 user_id 기준으로 완벽하게 upsert 되도록 지정!
       const { error } = await supabase
         .from('aura_push_subscriptions')
-        .upsert({ 
-          user_id: auth.user.id, 
-          subscription: subscription.toJSON() // 브라우저가 준 고유 식별 주소
-        });
+        .upsert(
+          { 
+            user_id: auth.user.id, 
+            subscription: subscription.toJSON() 
+          },
+          { onConflict: 'user_id' } // 👈 이 코드가 있어야 고유 키 충돌 에러가 나지 않습니다.
+        );
 
-      if (error) throw error;
+      if (error) {
+        console.error("DB Upsert Error:", error);
+        throw error;
+      }
       
       triggerHaptic([50, 100, 50]);
       alert("푸시 알림이 성공적으로 활성화되었습니다! 🚀");
       
     } catch (error) {
       console.error("Push Subscription Error:", error);
-      alert("알림 설정 중 오류가 발생했습니다.");
+      alert("알림 설정 중 오류가 발생했습니다. 네트워크 상태를 확인해주세요.");
     }
   };
 
