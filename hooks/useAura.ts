@@ -1,9 +1,11 @@
 // hooks/useAura.ts
+
 import { useState } from "react";
 import { useAuth } from "./useAuth";
 import { useWeather } from "./useWeather";
 import { useSocial } from "./useSocial";
 import { useFeed } from "./useFeed";
+import { supabase } from "../lib/supabase";
 
 export interface FashionItem {
   id: string | number;
@@ -42,24 +44,72 @@ export function useAura() {
   const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
   const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
 
+  // 🌟 [NEW] 실제 웹 푸시 구독 엔진
+  const subscribeToPush = async () => {
+    if (!auth.user) return alert("푸시 알림을 받으려면 로그인이 필요합니다.");
+    
+    // 1. 브라우저 지원 여부 확인
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return alert("현재 사용 중인 브라우저는 푸시 알림을 지원하지 않습니다. (Safari 최신 버전 또는 Chrome을 사용해주세요)");
+    }
+
+    try {
+      // 2. 유저에게 알림 권한 요청 (브라우저 팝업)
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        return alert("알림 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.");
+      }
+
+      // 3. 서비스 워커 등록 확인 및 푸시 매니저 구독
+      const registration = await navigator.serviceWorker.ready;
+      
+      // 💡 VAPID 공개키 (Vercel 환경 변수에 설정한 값)
+      const applicationServerKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!applicationServerKey) {
+        console.error("VAPID 공개키가 설정되지 않았습니다.");
+        return alert("푸시 서버 설정이 누락되었습니다.");
+      }
+
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey
+      });
+
+      // 4. Supabase DB에 유저 ID와 함께 구독 정보(기기 주소) 저장
+      const { error } = await supabase
+        .from('aura_push_subscriptions')
+        .upsert({ 
+          user_id: auth.user.id, 
+          subscription: subscription.toJSON() // 브라우저가 준 고유 식별 주소
+        });
+
+      if (error) throw error;
+      
+      triggerHaptic([50, 100, 50]);
+      alert("푸시 알림이 성공적으로 활성화되었습니다! 🚀");
+      
+    } catch (error) {
+      console.error("Push Subscription Error:", error);
+      alert("알림 설정 중 오류가 발생했습니다.");
+    }
+  };
+
   return {
     ...auth,
     ...weather,
     ...social,
     ...feed,
     
-    // 덮어씌운 래퍼 함수들 전달
     toggleArchive: toggleArchiveWrapper,
     toggleLike: toggleLikeWrapper,
 
-    // UI 상태 전달
     isLoginModalOpen, setIsLoginModalOpen,
     isModalOpen, setIsModalOpen,
     isDetailOpen, setIsDetailOpen,
     triggerHaptic,
 
-    // (기존 코드 호환용 빈 함수 - 푸시 구현 전까지 에러 방지용)
-    subscribeToPush: () => alert("푸시 기능이 분리되었습니다."),
+    // 🌟 [수정] 방금 만든 진짜 엔진을 연결해 줍니다!
+    subscribeToPush: subscribeToPush, 
     sendTestPush: () => console.log("푸시 테스트"),
   };
 }
