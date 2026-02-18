@@ -29,10 +29,12 @@ import LockModal from "../components/LockModal";
 import { track } from '@vercel/analytics/react';
 import imageCompression from 'browser-image-compression';
 import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation'; // 🌟 [NEW] 이 줄을 추가하세요!
 
 
 export default function Home() {
   const t = useTranslations('Home');
+  const router = useRouter();
   const aura = useAura();
   const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
 
@@ -403,6 +405,17 @@ export default function Home() {
         >
           {t('explore')}
         </button>
+        {/* 매거진 탭 버튼 추가 */}
+        <button 
+          onClick={() => {
+            aura.triggerHaptic(20); // 터치 시 가벼운 진동
+            router.push('/magazine'); // 매거진 페이지로 이동!
+          }}
+          className="px-4 py-1.5 rounded-full text-xs font-bold transition-all text-white/50 hover:text-white"
+        >
+          {t('magazine')}
+        </button>
+
       </div>
 
 
@@ -496,6 +509,7 @@ export default function Home() {
           <Trophy className="h-5 w-5 text-yellow-400" />
         </button>
         */}
+        
 
         {/* 🌟 쇼핑백 버튼 연결부: 클릭 시 해당 Look의 ID로 DB를 찌른 후, 모달을 엽니다! */}
         <button 

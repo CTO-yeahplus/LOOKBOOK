@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown, CreditCard, Mail } from "lucide-react";
+import { Crown, CreditCard, Mail, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, Variants, useScroll, useTransform } from "framer-motion";

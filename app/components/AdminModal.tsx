@@ -2,11 +2,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   X, Crown, Activity, Image as ImageIcon, Heart, 
-  Send, ArrowUpRight, LayoutDashboard, Users, 
+  Send, ArrowUpRight, LayoutDashboard, Users, PenTool, BookOpen,
   UserCheck, Radio, Search, Megaphone, UploadCloud, Sparkles
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -14,9 +15,10 @@ interface AdminModalProps {
   triggerHaptic: (pattern: number | number[]) => void;
 }
 
-type TabType = 'overview' | 'audit' | 'members' | 'broadcast' | 'sponsors';
+type TabType = 'overview' | 'audit' | 'members' | 'broadcast' | 'sponsors' | 'magazine';
 
 export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModalProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [stats, setStats] = useState({ items: 0, saves: 0, users: 0, waitlist: 0 });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -276,6 +278,8 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
                   <NavButton icon={<Users/>} label="Members CRM" active={activeTab === 'members'} onClick={() => setActiveTab('members')} />
                   <NavButton icon={<Radio/>} label="Broadcast" active={activeTab === 'broadcast'} onClick={() => setActiveTab('broadcast')} />
                   <NavButton icon={<Megaphone/>} label="Sponsor Ads" active={activeTab === 'sponsors'} onClick={() => setActiveTab('sponsors')} />
+                  <NavButton icon={<BookOpen/>} label="Magazine Desk" active={activeTab === 'magazine'} onClick={() => setActiveTab('magazine')} />
+
                 </div>
               </div>
               <div className="p-4 border-t border-white/5">
@@ -560,6 +564,40 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
                       </button>
                     </div>
 
+                  </div>
+                )}
+
+                {/* 탭 6: MAGAZINE (매거진 에디터 데스크 게이트웨이) */}
+                {activeTab === 'magazine' && (
+                  <div className="animate-in fade-in flex flex-col items-center justify-center py-16 gap-6">
+                    <div className="relative w-24 h-24 bg-red-600/10 rounded-full flex items-center justify-center mb-2 border border-red-500/30">
+                      <div className="absolute inset-0 rounded-full border border-red-500/10 animate-ping" />
+                      <BookOpen className="w-10 h-10 text-red-500" />
+                    </div>
+                    
+                    <div className="text-center">
+                      <h2 className="text-3xl font-serif italic font-black uppercase tracking-tighter text-white mb-3">
+                        Aura Editorial
+                      </h2>
+                      <p className="font-mono text-xs uppercase tracking-widest text-white/50 max-w-sm leading-relaxed mb-10">
+                        AI 기반 데이터 매거진 발행 및<br/>
+                        CULT 멤버 전용 프리미엄 아카이브 관리.
+                      </p>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        // triggerHaptic이 선언되어 있다면 사용
+                        if (typeof triggerHaptic === 'function') triggerHaptic(20);
+                        onClose(); // 모달 닫기
+                        router.push('/admin/magazine'); // 🌟 매거진 어드민으로 강제 이동!
+                      }}
+                      className="group relative overflow-hidden flex items-center justify-center gap-3 w-full max-w-sm py-5 rounded-2xl bg-gradient-to-r from-red-600 to-[#ff3b30] text-white font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-[0_10px_30px_rgba(255,59,48,0.3)]"
+                    >
+                      <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1s_infinite]" />
+                      <PenTool className="w-5 h-5 transition-transform group-hover:rotate-12" />
+                      Enter Editor Desk
+                    </button>
                   </div>
                 )}
 

@@ -18,6 +18,7 @@
         "switch_account": "SWITCH ACCOUNT",
         "for_you": "FOR YOU",
         "explore": "EXPLORE",
+        "magazine": "MAGAZINE",
         "aura_directive": "AURA DIRECTIVE",
         "mission_desc": "오늘 이 날씨를 완벽하게 정복한 당신의 OOTD를 세상에 증명하십시오.",
         "login_prompt": "Identify yourself to access the archive.",
@@ -99,5 +100,25 @@
         "extracted_dna": "Extracted DNA",
         "curator_pass": "Curator Pass",
         "tap_back": "Tap anywhere to flip back"
-    }
+    },
+    "MagazineDetail": {
+        "back_to_index": "BACK TO INDEX",
+        "published_on": "PUBLISHED",
+        "written_by": "CURATOR",
+        "shop_editorial": "SHOP THE EDITORIAL",
+        "shop_desc": "에디터가 셀렉한 이 룩의 핵심 피스들을 확인하세요.",
+        "get_item": "GET",
+        "article_not_found": "기사를 찾을 수 없습니다.",
+        "cult_only_msg": "이 매거진은 AURA CULT 멤버에게만 허락됩니다.",
+        "cult_only_desc_1": "당신의 룩을 5번 이상 증명(업로드)하고",
+        "cult_only_desc_2": "숨겨진 아카이브의 접근 권한을 획득하십시오.",
+        "go_to_upload": "증명하러 가기 (Upload)",
+        "go_back": "뒤로 가기",
+        "footer": "© 2026 AURA EDITORIAL. ALL RIGHTS RESERVED."
+    },
+    "Magazine": {
+        "editorial_issue": "Editorial Issue",
+        "description": "내일의 날씨와 완벽히 공명하는 하이엔드 아웃핏 저널.",
+        "empty_state": "아직 발행된 기사가 없습니다."
+  }
   }

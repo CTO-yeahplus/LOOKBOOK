@@ -19,6 +19,7 @@
         "switch_account": "SWITCH ACCOUNT",
         "for_you": "FOR YOU",
         "explore": "EXPLORE",
+        "magazine": "MAGAZINE",
         "aura_directive": "AURA DIRECTIVE",
         "mission_desc": "Prove your OOTD that perfectly conquered today's weather.",
         "login_prompt": "Identify yourself to access the archive.",
@@ -98,6 +99,27 @@
         "extracted_dna": "Extracted DNA",
         "curator_pass": "Curator Pass",
         "tap_back": "Tap anywhere to flip back"
+    },
+    
+    "MagazineDetail": {
+        "back_to_index": "BACK TO INDEX",
+        "published_on": "PUBLISHED",
+        "written_by": "CURATOR",
+        "shop_editorial": "SHOP THE EDITORIAL",
+        "shop_desc": "Discover the key pieces selected by our editor.",
+        "get_item": "GET",
+        "article_not_found": "Article not found.",
+        "cult_only_msg": "This editorial is exclusively for AURA CULT members.",
+        "cult_only_desc_1": "Prove your style by uploading at least 5 looks",
+        "cult_only_desc_2": "to unlock access to the hidden archive.",
+        "go_to_upload": "GO TO UPLOAD",
+        "go_back": "GO BACK",
+        "footer": "© 2026 AURA EDITORIAL. ALL RIGHTS RESERVED."
+    },
+    "Magazine": {
+        "editorial_issue": "Editorial Issue",
+        "description": "High-end outfit journal in perfect resonance with tomorrow's weather.",
+        "empty_state": "No issues published yet."
     }
 
   }
