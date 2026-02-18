@@ -40,7 +40,7 @@ export default function BlogAdmin() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);
-    } catch (error) {
+    } catch {
       alert("생성 실패");
     } finally {
       setIsGenerating(false);
