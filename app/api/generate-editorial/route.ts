@@ -48,8 +48,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(editorialData);
 
-  } catch (error: any) {
-    console.error('AI Editorial Generation Error:', error);
-    return NextResponse.json({ error: '원고 작성에 실패했습니다.', details: error.message }, { status: 500 });
+  } catch (error) { // ⭕ 타입을 지우거나 unknown으로 처리
+    console.error("OpenAI Error:", error);
+    // 에러가 Error 객체인지 확인 후 메시지 추출
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

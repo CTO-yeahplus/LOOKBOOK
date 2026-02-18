@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
           {locale === 'ko' ? (
             /* 🇰🇷 한글 개인정보처리방침 */
             <>
-              <p>주식회사 예아플러스("회사")는 AURA 서비스 이용자의 개인정보를 매우 중요하게 생각하며, 관련 법령을 준수하고 있습니다. 본 방침을 통해 회사가 어떤 개인정보를 수집하고 어떻게 보호하는지 안내해 드립니다.</p>
+              <p>주식회사 예아플러스(&quot;회사&quot;)는 AURA 서비스 이용자의 개인정보를 매우 중요하게 생각하며, 관련 법령을 준수하고 있습니다. 본 방침을 통해 회사가 어떤 개인정보를 수집하고 어떻게 보호하는지 안내해 드립니다.</p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">1. 수집하는 개인정보 항목 및 목적</h3>
               <p>
@@ -69,7 +69,7 @@ export default function PrivacyPolicy() {
           ) : (
             /* 🇺🇸 영문 개인정보처리방침 */
             <>
-              <p>YEAHPLUS CO., LTD. ("Company") highly values the personal information of AURA Service Users and complies with relevant laws. This policy informs you of what personal information the Company collects and how it is protected.</p>
+              <p>YEAHPLUS CO., LTD. (&quot;Company&quot;) highly values the personal information of AURA Service Users and complies with relevant laws. This policy informs you of what personal information the Company collects and how it is protected.</p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">1. Items of Personal Information Collected and Purpose</h3>
               <p>
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
                 - Purpose: Style analysis via AI vision engine, providing personalized fashion feeds<br/><br/>
                 <strong>[Weather-synced Curation]</strong><br/>
                 - Items: Connection location data (Latitude/Longitude or access region)<br/>
-                - Purpose: Proposing outfits optimized for real-time weather and temperature in the User's area
+                - Purpose: Proposing outfits optimized for real-time weather and temperature in the User&apos;s area
               </p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">2. Retention and Use Period of Personal Information</h3>
@@ -91,7 +91,7 @@ export default function PrivacyPolicy() {
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">3. Provision and Delegation of Personal Information to Third Parties</h3>
               <p>
-                The Company does not provide personal information to outside parties without the User's consent. However, global partner servers (e.g., Supabase) may be used for AI image analysis and cloud database operation, in which case secure encrypted communication is utilized.
+                The Company does not provide personal information to outside parties without the User&apos;s consent. However, global partner servers (e.g., Supabase) may be used for AI image analysis and cloud database operation, in which case secure encrypted communication is utilized.
               </p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">4. Chief Privacy Officer</h3>

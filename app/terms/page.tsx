@@ -34,7 +34,7 @@ export default function TermsOfService() {
           {locale === 'ko' ? (
             /* 🇰🇷 한글 약관 */
             <>
-              <p>주식회사 예아플러스(이하 "회사")가 제공하는 AURA(이하 "서비스")에 오신 것을 환영합니다. 본 약관은 회원이 서비스에 접속하고 이를 이용함에 있어 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
+              <p>주식회사 예아플러스(이하 &quot;회사&quot;)가 제공하는 AURA(이하 &quot;서비스&quot;)에 오신 것을 환영합니다. 본 약관은 회원이 서비스에 접속하고 이를 이용함에 있어 회사와 회원 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.</p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">제 1 조 (서비스의 핵심 및 AI 분석)</h3>
               <p>
@@ -68,19 +68,19 @@ export default function TermsOfService() {
           ) : (
             /* 🇺🇸 영문 약관 */
             <>
-              <p>Welcome to AURA (hereinafter referred to as the "Service") provided by YEAHPLUS CO., LTD. (hereinafter referred to as the "Company"). These Terms of Service aim to stipulate the rights, obligations, and responsibilities between the Company and the User.</p>
+              <p>Welcome to AURA (hereinafter referred to as the &quot;Service&quot;) provided by YEAHPLUS CO., LTD. (hereinafter referred to as the &quot;Company&quot;). These Terms of Service aim to stipulate the rights, obligations, and responsibilities between the Company and the User.</p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">Article 1 (Core of Service and AI Analysis)</h3>
               <p>
                 1. The Service is a platform where the AI vision engine analyzes style and publishes curated magazines based on fashion photos (Lookbooks), location, and weather data uploaded by Users.<br/>
-                2. Photos uploaded by Users may be used for AURA's AI learning and trend analysis purposes. By uploading a photo, the User is deemed to have consented to this.<br/>
+                2. Photos uploaded by Users may be used for AURA&apos;s AI learning and trend analysis purposes. By uploading a photo, the User is deemed to have consented to this.<br/>
                 3. AI analysis results or weather-based recommendations are algorithmic suggestions, and the Company does not guarantee absolute accuracy.
               </p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">Article 2 (User Privileges & CULT Membership)</h3>
               <p>
-                1. The Company may grant differential access to certain content (CULT ONLY magazines, hidden archives, etc.) based on the User's contribution to the Service (e.g., number of photo uploads).<br/>
-                2. If a User acquires privileges through unfair means, such as system manipulation or theft of another person's photos, the Company may revoke membership and permanently restrict Service use without prior notice.
+                1. The Company may grant differential access to certain content (CULT ONLY magazines, hidden archives, etc.) based on the User&apos;s contribution to the Service (e.g., number of photo uploads).<br/>
+                2. If a User acquires privileges through unfair means, such as system manipulation or theft of another person&apos;s photos, the Company may revoke membership and permanently restrict Service use without prior notice.
               </p>
 
               <h3 className="text-white font-black uppercase mt-12 mb-4">Article 3 (Intellectual Property & Derivative Works)</h3>

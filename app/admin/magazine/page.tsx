@@ -1,10 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import { Sparkles, Upload, FileText, Send, Image as ImageIcon, Loader2, DatabaseZap, Edit3, Trash2, Lock } from "lucide-react";
 import { supabase } from "../../../lib/supabase"; 
 import { useRouter } from "next/navigation"; // 🌟 추가
+
+interface MagazineArticle {
+    id: string;
+    title: string;
+    slug: string;
+    tags: string[] | null; // DB에서 가져올 땐 배열일 수 있음
+    content: string;
+    cover_image_url: string;
+    locale: string;
+    is_premium: boolean;
+    created_at: string;
+    is_published: boolean;
+    author: string;
+  }
 
 export default function MagazineAdmin() {
   const router = useRouter(); // 🌟 라우터 추가
@@ -19,7 +32,7 @@ export default function MagazineAdmin() {
   const [isExtracting, setIsExtracting] = useState(false);
 
   // 🌟 [NEW] 발행된 기사 리스트 & 수정 모드 상태
-  const [savedArticles, setSavedArticles] = useState<any[]>([]);
+  const [savedArticles, setSavedArticles] = useState<MagazineArticle[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [article, setArticle] = useState({
@@ -62,7 +75,7 @@ export default function MagazineAdmin() {
 
     verifyAdmin();
   }, [router]);
-  
+
   // 🌟 [NEW] 검문 중일 때 보여줄 간지나는 로딩 화면 (return 렌더링 시작 부분)
   if (isCheckingAuth) {
     return (
@@ -138,15 +151,16 @@ export default function MagazineAdmin() {
         is_premium: data.is_premuim
       });
 
-    } catch (error: any) {
-      alert("AI 작성 실패: " + error.message);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      alert("작업 실패: " + message);
     } finally {
       setIsGenerating(false);
     }
   };
 
   // 🌟 [NEW] 기사 수정 모드 진입
-  const handleEdit = (item: any) => { /* 🌟 수정됨: is_premium 불러오기 */
+  const handleEdit = (item: MagazineArticle) => { /* 🌟 수정됨: is_premium 불러오기 */
     setEditingId(item.id); setLocale(item.locale); setPreviewUrl(item.cover_image_url); setFile(null); setKeyword("");
     setArticle({ title: item.title, slug: item.slug, tags: item.tags ? item.tags.join(', ') : '', content: item.content, is_premium: item.is_premium || false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -162,8 +176,9 @@ export default function MagazineAdmin() {
       
       alert("삭제되었습니다.");
       fetchArticles(); // 리스트 새로고침
-    } catch (error: any) {
-      alert("삭제 실패: " + error.message);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "알 수 없는 오류";
+        alert("삭제 실패: " + message);
     }
   };
 
@@ -218,9 +233,9 @@ export default function MagazineAdmin() {
       setPreviewUrl(null);
       fetchArticles(); 
       
-    } catch (error: any) {
-      console.error(error);
-      alert("작업 실패: " + error.message);
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "알 수 없는 오류";
+        alert("작업 실패: " + message);
     } finally {
       setIsPublishing(false);
     }
@@ -331,7 +346,7 @@ export default function MagazineAdmin() {
           {/* 🌟 [NEW] CULT ONLY 토글 버튼 */}
           <label className="flex items-center gap-3 cursor-pointer mt-4 border border-red-500/30 bg-red-500/5 p-4 rounded-xl hover:bg-red-500/10 transition-colors">
             <input type="checkbox" checked={!!article.is_premium} onChange={e => setArticle({...article, is_premium: e.target.checked})} className="w-5 h-5 accent-red-600" />
-            <span className="font-mono text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2"><Lock className="w-4 h-4"/> Set as "CULT ONLY" (Premium)</span>
+            <span className="font-mono text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2"><Lock className="w-4 h-4"/> Set as &quot;CULT ONLY&quot; (Premium)</span>
           </label>
 
           <button 
