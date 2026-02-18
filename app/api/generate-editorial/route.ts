@@ -14,8 +14,9 @@ export async function POST(req: NextRequest) {
   try {
     const { keyword, locale } = await req.json();
 
-    // 🌟 AI 모델 선택 (가장 빠르고 성능 좋은 모델)
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+    const modelName = process.env.GEMINI_MODEL_NAME || "gemini-2.5-flash-lite";
+    // 모델 초기화
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     // 🌟 AI에게 부여하는 '수석 에디터' 페르소나 프롬프트
     const prompt = `

@@ -15,7 +15,7 @@ interface AdminModalProps {
   triggerHaptic: (pattern: number | number[]) => void;
 }
 
-type TabType = 'overview' | 'audit' | 'members' | 'broadcast' | 'sponsors' | 'magazine';
+type TabType = 'overview' | 'audit' | 'members' | 'broadcast' | 'sponsors' | 'magazine' | 'blog';
 
 export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModalProps) {
   const router = useRouter();
@@ -220,21 +220,28 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
 
     setIsSending(true);
     try {
-      const { data: subscribers } = await supabase.from('aura_push_subscriptions').select('user_id');
-      if (!subscribers?.length) {
-        alert("푸시를 구독한 유저가 없습니다.");
-        return;
-      }
-      const pushPromises = subscribers.map(sub => 
-        fetch('/api/push', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: sub.user_id, title: "AURA EDITOR", body: pushMessage })
+      // 🌟 [변경] 개별 호출 대신 단일 'broadcast' API를 호출합니다.
+      const response = await fetch('/api/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          title: "AURA EDITOR", 
+          body: pushMessage,
+          url: '/' 
         })
-      );
-      await Promise.all(pushPromises);
-      alert(`[SYSTEM] 총 ${subscribers.length}명에게 푸시 발송 완료!`);
+      });
+
+      if (!response.ok) throw new Error("Broadcast failed");
+
+      const result = await response.json();
+      alert(`[SYSTEM] 총 ${result.count || 0}명에게 푸시 발송 및 로그 기록 완료!`);
       setPushMessage("");
-    } catch { alert("오류 발생"); } finally { setIsSending(false); }
+    } catch (err) { 
+      console.error(err);
+      alert("전송 중 오류 발생"); 
+    } finally { 
+      setIsSending(false); 
+    }
   };
 
   // 🌟 검색 필터링 (안전망 추가)
@@ -279,7 +286,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
                   <NavButton icon={<Radio/>} label="Broadcast" active={activeTab === 'broadcast'} onClick={() => setActiveTab('broadcast')} />
                   <NavButton icon={<Megaphone/>} label="Sponsor Ads" active={activeTab === 'sponsors'} onClick={() => setActiveTab('sponsors')} />
                   <NavButton icon={<BookOpen/>} label="Magazine Desk" active={activeTab === 'magazine'} onClick={() => setActiveTab('magazine')} />
-
+                  <NavButton icon={<BookOpen/>} label="Blog Desk" active={activeTab === 'blog'} onClick={() => setActiveTab('blog')} />
                 </div>
               </div>
               <div className="p-4 border-t border-white/5">
@@ -597,6 +604,23 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
                       <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:animate-[shimmer_1s_infinite]" />
                       <PenTool className="w-5 h-5 transition-transform group-hover:rotate-12" />
                       Enter Editor Desk
+                    </button>
+                  </div>
+                )}
+
+                {/* 탭 7: BLOG (본사에서 활동하는 묵직한 AURA 철학이야기) */}
+                {activeTab === 'blog' && (
+                  <div className="flex flex-col items-center justify-center py-16 gap-6 animate-in fade-in">
+                    <PenTool className="w-10 h-10 text-white mb-2" />
+                    <div className="text-center mb-6">
+                      <h2 className="text-2xl font-black uppercase text-white">Think Tank</h2>
+                      <p className="text-xs text-white/50 uppercase tracking-widest">AI Blog & Newsletter Generator</p>
+                    </div>
+                    <button 
+                      onClick={() => { onClose(); router.push('/admin/blog'); }}
+                      className="w-full max-w-xs py-4 bg-white text-black font-bold uppercase rounded-xl hover:scale-105 transition-transform"
+                    >
+                      Open Generator
                     </button>
                   </div>
                 )}

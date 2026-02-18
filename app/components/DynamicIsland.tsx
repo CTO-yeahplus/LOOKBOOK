@@ -14,7 +14,7 @@ export default function DynamicIsland({ weather }: { weather: WeatherData | null
   return (
     <motion.div 
       initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-      className="absolute top-9 left-0 right-12 z-30 flex justify-center pointer-events-none px-16"
+      className="absolute top-9 left-0 right-16 z-30 flex justify-center pointer-events-none px-16"
     >
       <motion.div whileHover={{ scale: 1.05 }} className="pointer-events-auto flex items-center gap-2 overflow-hidden rounded-full border border-white/15 bg-black/60 pl-2.5 pr-3 py-1.5 shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-2xl transition-all duration-300 hover:bg-black/80 max-w-[260px]">
         <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20">

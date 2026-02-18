@@ -47,7 +47,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       }}
       ref={ref} // 🌟 [중요] 받은 ref를 motion.div에 정확히 달아줍니다!
       // 🌟 스폰서 카드일 경우 테두리에 은은한 플래티넘/골드 글로우 효과를 줍니다.
-      className={`relative bottom-4 z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu transition-all duration-700 ${
+      className={`relative z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu transition-all duration-700 ${
         isSponsored ? 'border-[2px] border-white/40 shadow-[0_0_40px_rgba(255,255,255,0.2)]' : 'border border-white/20'
       }`}
     >

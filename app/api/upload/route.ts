@@ -34,7 +34,9 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // 2. 🌟 Gemini Vision AI 호출 (모든 모드에서 공통 실행)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const modelName = process.env.GEMINI_MODEL_NAME || "gemini-2.5-flash-lite";
+    const model = genAI.getGenerativeModel({ model: modelName });
+
     const prompt = `
       당신은 세계 최고의 패션 디렉터입니다. 사진의 옷을 분석하여 아래 JSON 형식으로만 완벽하게 대답해주세요. 다른 말은 절대 하지마. 마크다운(\`\`\`json 등)은 절대 포함하지 마세요.
         {

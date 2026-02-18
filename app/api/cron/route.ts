@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 webpush.setVapidDetails(
-  'mailto:aura-admin@example.com',
+  'mailto:contact@auraootd.com',
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 );
@@ -23,12 +23,15 @@ export async function GET() {
 
     if (error || !subscriptions) throw error;
 
-    // 2. 아침에 보낼 메시지 작성 (추후 날씨 API를 붙이면 더 완벽해집니다)
-    const payload = JSON.stringify({
-      title: "AURA 모닝 브리핑 🌤️",
-      body: "좋은 아침입니다! 오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.",
-      url: '/'
-    });
+    const title = "AURA 모닝 브리핑 🌤️";
+    const body = "좋은 아침입니다! 오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
+
+    // 2. 모든 유저가 볼 수 있도록 SYSTEM LOGS에 기록 (딱 한 번만 저장)
+    await supabase
+      .from('notifications')
+      .insert([{ title, body, type: 'system', link_url: '/', is_public: true }]);
+
+    const payload = JSON.stringify({ title, body, url: '/' });
 
     // 3. 모든 유저에게 동시다발적으로 알림 쏘기 (Promise.all로 빛의 속도로 처리)
     const sendPromises = subscriptions.map((sub) =>

@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag } from "lucide-react";
+import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag, Bell } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
@@ -30,6 +30,7 @@ import { track } from '@vercel/analytics/react';
 import imageCompression from 'browser-image-compression';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation'; // 🌟 [NEW] 이 줄을 추가하세요!
+import NotificationModal from "../components/NotificationModal"; // 경로 확인!
 
 
 export default function Home() {
@@ -37,6 +38,7 @@ export default function Home() {
   const router = useRouter();
   const aura = useAura();
   const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
+  const [isNotiOpen, setIsNotiOpen] = useState(false);
 
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -93,24 +95,34 @@ export default function Home() {
     }
   }, [aura.user, isApproved]);
 
-  // 🌟 [추가] EXPLORE 탭에 진입할 때마다 AI 매칭 유저를 실시간으로 검색합니다.
-  useEffect(() => {
-    // styleReport가 존재하고, vibeKey가 있을 때만 호출
-    if (viewMode === 'explore' && aura.styleReport?.vibeKey) {
-      aura.loadMatchedUsers(
-        aura.styleReport.vibeKey, // 🌟 '절제미를 아는...' 대신 'MINIMALIST'가 넘어갑니다.
-        aura.user?.id || 'guest-id'
-      );
-    }
-  }, [viewMode, aura.styleReport?.vibeKey, aura]);
-
-  // 🌟 [핵심 로직] EXPLORE 모드로 바뀔 때만 데이터를 새로 가져옵니다.
+  // 🌟 [통합 로직] EXPLORE 모드 진입 시 데이터 동기화 및 햅틱 피드백
   useEffect(() => {
     if (viewMode === 'explore') {
-      aura.fetchTrendingItems(); // 탭을 누르는 순간 호출!
-      aura.triggerHaptic(10);    // 가벼운 진동으로 피드백
+      // 1. 기본 트렌딩 아이템 로드
+      aura.fetchTrendingItems();
+
+      // 2. AI 매칭 유저 실시간 검색 (스타일 리포트가 있을 경우에만)
+      if (aura.styleReport?.vibeKey) {
+        aura.loadMatchedUsers(
+          aura.styleReport.vibeKey, 
+          aura.user?.id || 'guest-id'
+        );
+      }
+
+      // 3. 사용자 경험(UX) 피드백
+      aura.triggerHaptic(10); 
     }
-  }, [viewMode]); // viewMode가 변할 때마다 실행
+  }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
+  // 🌟 의존성에 aura 전체 대신 필요한 값(vibeKey, user.id)만 넣는 것이 메모리 누수 방지에 좋습니다.
+
+
+  // 🌟 [핵심 로직] EXPLORE 모드로 바뀔 때만 데이터를 새로 가져옵니다.
+  //useEffect(() => {
+  //  if (viewMode === 'explore') {
+  //    aura.fetchTrendingItems(); // 탭을 누르는 순간 호출!
+  //    aura.triggerHaptic(10);    // 가벼운 진동으로 피드백
+  //  }
+  //}, [viewMode]); // viewMode가 변할 때마다 실행
 
   // 🌟 현재 카드가 '보관함(Archive)'에 담긴 총 횟수를 긁어옵니다.
   useEffect(() => {
@@ -244,9 +256,12 @@ export default function Home() {
     try {
       const dataUrl = await toPng(targetNode, { 
         quality: 1.0, 
-        pixelRatio: 2, 
+        pixelRatio: 3, 
         cacheBust: true,
-        style: { transform: 'none', transition: 'none' }
+        style: { 
+          transform: 'none', 
+          transition: 'none',
+        }
       });
       const link = document.createElement('a');
       link.download = `AURA_Look_${new Date().getTime()}.png`;
@@ -498,7 +513,7 @@ export default function Home() {
       </div>
 
       {/* 🌟 2. 상단 우측: 버튼 그룹 (랭킹 & 아카이브) */}
-      <div className="absolute right-6 top-8 z-40 flex items-center gap-2 md:right-8 md:top-8">
+      <div className="absolute right-4 top-8 z-40 flex items-center gap-1 md:right-8 md:top-8">
         
         {/* 🏆 랭킹 버튼 (트로피) 
         <button 
@@ -509,7 +524,19 @@ export default function Home() {
           <Trophy className="h-5 w-5 text-yellow-400" />
         </button>
         */}
-        
+        {/* 🌟 [NEW] 시스템 로그 버튼 */}
+        <button 
+          onClick={() => {
+            console.log("Bell Clicked"); // 🌟 디버깅용: 콘솔에 찍히는지 확인
+            setIsNotiOpen(true);
+            aura.triggerHaptic(10); // 햅틱 피드백 추가
+          }}
+          className="h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl relative p-2 rounded-full hover:bg-white/10 transition-colors group"
+        >
+          <Bell className="w-6 h-6 text-white" />
+          {/* 알림 표시용 레드 닷 */}
+          <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
+        </button>
 
         {/* 🌟 쇼핑백 버튼 연결부: 클릭 시 해당 Look의 ID로 DB를 찌른 후, 모달을 엽니다! */}
         <button 
@@ -522,16 +549,15 @@ export default function Home() {
           }}
           className="flex flex-col items-center gap-1 group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-9">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-9">
             <ShoppingBag className="h-5 w-5 text-white" />
           </div>
-          <span className="text-[10px] font-bold text-white/80 drop-shadow-md"></span>
         </button>
 
         {/* 📂 아카이브 버튼 (레이어) */}
         <button 
           onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} 
-          className="relative flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
           title="보관함"
         >
           <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
@@ -729,6 +755,11 @@ export default function Home() {
         onClose={() => setIsReportOpen(false)} 
         report={aura.styleReport} 
         user={aura.user}
+      />
+
+      <NotificationModal 
+        isOpen={isNotiOpen} 
+        onClose={() => setIsNotiOpen(false)} 
       />
       {/* 🌟 강력한 리텐션 유도 컴포넌트들 */}
       <TutorialOverlay />
