@@ -1,13 +1,7 @@
 // app/[username]/page.tsx
-import { createClient } from '@supabase/supabase-js';
 import { Metadata } from 'next';
 import { Heart, Grid3X3, ArrowDownRight, Sparkles } from 'lucide-react';
-
-// Supabase 서버 사이드 연결
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from "@/lib/supabase"; 
 
 interface Props {
   params: { username: string };

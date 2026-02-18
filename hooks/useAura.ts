@@ -24,13 +24,14 @@ export interface FashionItem {
   sponsorMessage?: string;    // 브랜드 메시지
 }
 
-export function useAura() {
-  // 🌟 UI 상태 전용 관리 (모달창 등)
+export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionItem | null }) {
+  const isPaused = options?.isPaused ?? false;
+  const injectedItem = options?.injectedItem ?? null;
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isPushEnabled, setIsPushEnabled] = useState(false);
-
+  
   const triggerHaptic = (pattern: number | number[] = 50) => {
     if (typeof window !== "undefined" && navigator.vibrate) navigator.vibrate(pattern);
   };
@@ -39,8 +40,7 @@ export function useAura() {
   const auth = useAuth();
   const weather = useWeather();
   const social = useSocial(auth.user, () => setIsLoginModalOpen(true), triggerHaptic);
-  const feed = useFeed(weather.localWeather.temp, social.savedItems);
-
+  const feed = useFeed(weather.localWeather.temp, social.savedItems, isPaused, injectedItem);
   // 🌟 기존 UI와 완벽 호환되도록 파라미터 랩핑
   const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
   const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);

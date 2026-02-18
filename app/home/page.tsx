@@ -1,3 +1,5 @@
+// app/home/page.tsx
+
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -29,15 +31,13 @@ import LockModal from "../components/LockModal";
 import { track } from '@vercel/analytics/react';
 import imageCompression from 'browser-image-compression';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation'; // 🌟 [NEW] 이 줄을 추가하세요!
 import NotificationModal from "../components/NotificationModal"; // 경로 확인!
-
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function Home() {
   const t = useTranslations('Home');
   const router = useRouter();
-  const aura = useAura();
-  const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
+  const searchParams = useSearchParams();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
 
   const [isExporting, setIsExporting] = useState(false);
@@ -45,6 +45,7 @@ export default function Home() {
   const [swipeKey, setSwipeKey] = useState(0);
   const [viewMode, setViewMode] = useState<'recommend' | 'explore'>('recommend');
   const [isMissionDismissed, setIsMissionDismissed] = useState(false); // 🌟 미션 배너 닫기 상태
+  const deepLinkItemId = searchParams.get('item_id');
   
   // 🌟 슬라이드 메뉴 상태
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -59,9 +60,7 @@ export default function Home() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [exploreSelectedItem, setExploreSelectedItem] = useState<FashionItem | null>(null);
 
-  // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
-  const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
-  const isAdmin = aura.user?.email === ADMIN_EMAIL;
+
 
   const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
   const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
@@ -72,7 +71,79 @@ export default function Home() {
 
   // 자이로스코프 커스텀 훅 사용
   const { showGyroButton, requestGyroPermission } = useGyroscope(mouseX, mouseY);
+  
+  // 🌟 [핵심] 딥링크 아이템을 '메모리'에 박제하는 저장소
+  // useState가 아닌 useRef를 쓰는 이유: 리렌더링을 유발하지 않고 값을 유지하기 위함
+  const vipItemRef = useRef<any>(null);
+  
+  // 🌟 [상태 잠금] 딥링크 처리 중인지 표시
+  const isProcessingRef = useRef(false);
+  
+  // 1. VIP 아이템 데이터 보관소
+  const [vipItem, setVipItem] = useState<any | null>(null);
+  
+  // 2. 피드 정지 여부 (딥링크가 있으면 true로 시작)
+  const [isFeedPaused, setIsFeedPaused] = useState(!!deepLinkItemId);
+
+  // 🌟 [핵심] 싸우지 말고, 매개변수로 정중하게 부탁합니다.
+  const aura = useAura({ 
+    isPaused: isFeedPaused, 
+    injectedItem: vipItem 
+  });
+  const { isApproved, loading, verifyCode } = useGatekeeper(aura.user?.id);
   const currentItem = aura.fashionItems[aura.currentIndex];
+  // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
+  const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
+  const isAdmin = aura.user?.email === ADMIN_EMAIL;
+
+  useEffect(() => {
+    // 딥링크 ID가 있고, 아직 데이터를 안 가져왔다면 실행
+    if (deepLinkItemId && !vipItem) {
+      const fetchVip = async () => {
+        const { data: dbItem } = await supabase
+          .from('aura_fashion_items')
+          .select('*')
+          .eq('id', deepLinkItemId)
+          .single();
+
+        if (dbItem) {
+          // 데이터 매핑
+          const mappedItem = {
+            id: dbItem.id,
+            imageUrl: dbItem.image_url,
+            weather: dbItem.weather,
+            temperature: dbItem.temperature,
+            tags: dbItem.tags || [],
+            uploaderName: dbItem.uploader_name || 'AURA Editor',
+            uploaderIg: dbItem.uploader_ig,
+            likes: dbItem.likes_count || 0,
+            isSponsored: dbItem.is_sponsored || false,
+            sponsorBrand: dbItem.sponsor_brand,
+            sponsorUrl: dbItem.sponsor_url,
+            colors: dbItem.colors,
+            category: 'daily',
+          };
+
+          // 🌟 상태에 저장 -> useAura가 이걸 감지하고 useFeed에 전달함
+          setVipItem(mappedItem);
+          
+          // 모달 즉시 오픈
+          if (aura.setIsDetailOpen) aura.setIsDetailOpen(true);
+
+          // 🌟 5초 타이머 시작 (7초는 너무 깁니다. 5초 추천)
+          setTimeout(() => {
+            console.log("⏰ 5초 경과: 배경 피드 로딩 시작");
+            setIsFeedPaused(false); // -> useFeed가 깨어나서 배경을 채움 (VIP는 유지됨)
+          }, 5000);
+        }
+      };
+      
+      fetchVip();
+      
+      // 주소창 청소
+      window.history.replaceState({}, '', '/home');
+    }
+  }, [deepLinkItemId]);
 
   // 🌟 [NEW] 오토 패스(Auto-Pass) 엔진
   useEffect(() => {
@@ -113,18 +184,7 @@ export default function Home() {
       aura.triggerHaptic(10); 
     }
   }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
-  // 🌟 의존성에 aura 전체 대신 필요한 값(vibeKey, user.id)만 넣는 것이 메모리 누수 방지에 좋습니다.
 
-
-  // 🌟 [핵심 로직] EXPLORE 모드로 바뀔 때만 데이터를 새로 가져옵니다.
-  //useEffect(() => {
-  //  if (viewMode === 'explore') {
-  //    aura.fetchTrendingItems(); // 탭을 누르는 순간 호출!
-  //    aura.triggerHaptic(10);    // 가벼운 진동으로 피드백
-  //  }
-  //}, [viewMode]); // viewMode가 변할 때마다 실행
-
-  // 🌟 현재 카드가 '보관함(Archive)'에 담긴 총 횟수를 긁어옵니다.
   useEffect(() => {
     if (!currentItem) return;
     const fetchArchiveCount = async () => {
@@ -139,7 +199,6 @@ export default function Home() {
 
   // 🌟 모바일 자이로스코프 (DeviceOrientation) 3D 입체 효과 연동
   useEffect(() => {
-    // 모바일 환경인지 가볍게 체크 (터치 지원 기기)
     const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
     if (!isMobile) return;
 

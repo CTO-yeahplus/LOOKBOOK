@@ -1,12 +1,11 @@
 // app/api/cron/route.ts
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'; // 🌟 createClient 직접 가져오기
 
-// 🌟 [중요] 관리자 권한(SERVICE_ROLE)으로 클라이언트 생성
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! 
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // 👈 이게 핵심입니다! (RLS 우회)
 );
 
 webpush.setVapidDetails(

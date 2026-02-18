@@ -233,9 +233,9 @@ export default function MagazineAdmin() {
       setPreviewUrl(null);
       fetchArticles(); 
       
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "알 수 없는 오류";
-        alert("작업 실패: " + message);
+    } catch (error: any) {
+        console.error(error);
+        alert("작업 실패: " + error.message);
     } finally {
       setIsPublishing(false);
     }

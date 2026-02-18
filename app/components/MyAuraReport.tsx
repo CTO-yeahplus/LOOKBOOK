@@ -1,9 +1,9 @@
+// components/MyAuraReport.tsx
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Share2, Download, Hexagon } from "lucide-react";
 import { toPng } from "html-to-image";
 
-// 🌟 props에 user 추가
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
   const cardRef = useRef<HTMLDivElement>(null);
@@ -11,7 +11,7 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
 
   if (!report) return null;
 
-  // 🌟 인스타 아이디 or 닉네임 추출 로직
+  // 인스타 아이디 or 닉네임 추출 로직
   const igHandle = user?.user_metadata?.instagram;
   const fallbackName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'GUEST';
   const displayId = igHandle ? `@${igHandle}` : `@${fallbackName}`;
@@ -19,32 +19,56 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
   const handleCapture = async (type: 'download' | 'share') => {
     if (!cardRef.current) return;
     setIsProcessing(true);
+
     try {
+      // 렌더링 안정화를 위한 짧은 대기
       await new Promise(resolve => setTimeout(resolve, 100));
+
       const dataUrl = await toPng(cardRef.current, { 
-        quality: 1.0, 
-        pixelRatio: 3, 
+        quality: 0.95, 
+        pixelRatio: 2, // 모바일 안정성
         cacheBust: true,
       });
+
       if (type === 'download') {
         const link = document.createElement('a');
-        link.download = `AURA_EDITORIAL_${report.vibeTitle.replace(/\s/g, '_')}.png`;
+        
+        // 🌟 [핵심 수정] vibeTitle이 없을 때 'STYLE_REPORT'라는 기본값을 씁니다.
+        const safeTitle = report?.vibeTitle 
+          ? report.vibeTitle.replace(/\s/g, '_') 
+          : 'STYLE_REPORT';
+          
+        link.download = `AURA_EDITORIAL_${safeTitle}.png`;
         link.href = dataUrl;
+        
+        // 브라우저 호환성을 위해 body에 붙였다가 클릭 후 제거
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
       } else {
         const blob = await (await fetch(dataUrl)).blob();
         const file = new File([blob], 'AURA_ART.png', { type: 'image/png' });
-        if (navigator.share) await navigator.share({ files: [file] });
+        
+        if (navigator.share) {
+          await navigator.share({ files: [file] });
+        } else {
+          alert("공유하기를 지원하지 않는 브라우저입니다. 이미지 저장을 이용해주세요.");
+        }
       }
-    } catch (err) { console.error(err); } 
-    finally { setIsProcessing(false); }
+    } catch (err) { 
+      console.error("Image generation failed:", err);
+      alert("이미지 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally { 
+      setIsProcessing(false); 
+    }
   };
 
-  // 🌟 [엔진 1] 기하학 레이더 차트 (SVG 폴리곤) 생성기
+  // [엔진 1] 기하학 레이더 차트 (SVG 폴리곤) 생성기
   const renderRadarChart = () => {
-    const tags = report.topTags.slice(0, 5);
+    // report.topTags가 없으면 빈 배열로 처리
+    const tags = (report.topTags || []).slice(0, 5);
     while (tags.length < 5) tags.push(["VAR", 1]); 
-    const maxVal = Math.max(...tags.map((t: [string, number]) => t[1]));
+    const maxVal = Math.max(...tags.map((t: [string, number]) => t[1])) || 1; // 0 나누기 방지
 
     const points = tags.map((t: [string, number], i: number) => {
       const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
@@ -79,7 +103,7 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
     );
   };
 
-  // 🌟 [엔진 2] 시그니처 컬러 팔레트
+  // [엔진 2] 시그니처 컬러 팔레트
   const palettes = [
     { name: "CORE BLACK", hex: "#0F0F0F" },
     { name: "RAW CANVAS", hex: "#EBE6DD" },
@@ -101,10 +125,11 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
               className="relative w-full bg-[#F4F4F2] text-[#0A0A0A] overflow-hidden flex flex-col p-8 shadow-[0_30px_60px_rgba(0,0,0,0.5)]"
               style={{ fontFamily: 'serif', minHeight: '600px' }}
             >
+              {/* 배경 패턴 (외부 이미지) */}
               <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
               <div className="absolute inset-0 pointer-events-none opacity-[0.05] bg-[url('https://www.transparenttextures.com/patterns/graphy.png')]" />
 
-              {/* 🌟 Header & 아이디 표기 (MUSE) */}
+              {/* Header & 아이디 표기 */}
               <div className="relative z-10 flex justify-between items-start border-b-[1px] border-black/20 pb-4 mb-8">
                 <div>
                   <h3 className="text-[12px] font-black tracking-[0.3em] uppercase mb-1">AURA.STYLE</h3>
@@ -112,17 +137,16 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
                 </div>
                 <div className="text-right flex flex-col items-end gap-1.5">
                   <span className="text-[8px] font-mono uppercase bg-black text-white px-2 py-0.5">CONFIDENTIAL</span>
-                  {/* 🌟 여기에 유저 아이디가 들어갑니다! */}
                   <span className="text-[7px] font-mono font-bold tracking-widest uppercase text-black/70">MUSE. {displayId}</span>
                 </div>
               </div>
 
               <div className="relative z-10 mb-6">
-                <span className="text-[8px] p-6font-mono font-bold tracking-[0.4em] text-[#FF3B30] uppercase mb-2 block flex items-center gap-1">
+                <span className="text-[8px] font-mono font-bold tracking-[0.4em] text-[#FF3B30] uppercase mb-2 block flex items-center gap-1">
                   <Hexagon className="w-2 h-2 fill-[#FF3B30]" /> THE ARCHETYPE
                 </span>
                 <p className="text-[34px] font-black italic tracking-tighter leading-[0.9] break-keep uppercase">
-                  {report.vibeTitleKo}<br></br>({report.vibeTitleEn})
+                  {report.vibeTitleKo || "UNKNOWN VIBE"}<br></br>({report.vibeTitleEn || "Unknown"})
                 </p>
               </div>
 
@@ -131,12 +155,14 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
                   {renderRadarChart()}
                 </div>
                 <div className="col-span-1 flex flex-col justify-center space-y-4">
-                {report.topTags.slice(0, 3).map(([tag, count]: [string, number], idx: number) => (
+                {(report.topTags || []).slice(0, 3).map(([tag, count]: [string, number], idx: number) => (
                     <div key={tag} className="border-b-[0.5px] border-black/10 pb-2">
                     <div className="text-[6px] font-mono text-black/40 mb-1">COMP. 0{idx + 1}</div>
                     <div className="flex justify-between items-baseline">
                     <span className="text-[11px] font-black uppercase tracking-tight">{tag}</span>
-                    <span className="text-[11px] font-mono italic text-[#FF3B30]">{Math.round((count / report.totalSaved) * 100)}%</span>
+                    <span className="text-[11px] font-mono italic text-[#FF3B30]">
+                      {report.totalSaved ? Math.round((count / report.totalSaved) * 100) : 0}%
+                    </span>
                     </div>
                 </div>
                 ))}

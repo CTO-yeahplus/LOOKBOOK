@@ -1,19 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js'; 
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    // 키가 없으면 에러 대신 빈 배열을 던져서 앱 크래시 방지
-    if (!supabaseUrl || !supabaseKey) return NextResponse.json([]);
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
     const { data, error } = await supabase
       .from('aura_fashion_items')
       .select('*')
