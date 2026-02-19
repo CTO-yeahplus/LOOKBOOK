@@ -9,12 +9,22 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+export const dynamic = 'force-dynamic';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-
+//const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 export async function POST(req: Request) {
   try {
+    // 🌟 [핵심 2] 환경변수를 런타임에 읽어옵니다.
+    const apiKey = process.env.GEMINI_API_KEY;
+    
+    // 키가 없으면 아예 구글에 요청도 하지 않고 에러를 반환하게 만듭니다.
+    if (!apiKey) {
+      console.error("Vercel 환경변수에 GEMINI_API_KEY가 없습니다!");
+      return NextResponse.json({ success: false, error: "서버 API 키 설정 오류" }, { status: 500 });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    
     const formData = await req.formData();
     const file = formData.get('image') as File;
     
