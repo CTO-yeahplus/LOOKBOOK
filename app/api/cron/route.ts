@@ -32,7 +32,7 @@ async function getCityWeather(lat: number, lon: number) {
 }
 
 // 2. 최적의 옷 찾기 (온도 매칭)
-function findBestMatchItem(items: any[], targetTemp: number) {
+function findBestMatchItem(items: { temperature?: string | number; [key: string]: unknown }[], targetTemp: number) {
   if (!items || items.length === 0) return null;
   return items.reduce((prev, curr) => {
     // DB의 문자열(예: "25°C")에서 숫자만 추출
@@ -62,7 +62,7 @@ export async function GET() {
       return NextResponse.json({ success: true, message: "구독자가 없습니다." });
     }
 
-    const sendPromises: Promise<any>[] = [];
+    const sendPromises: Promise<unknown>[] = [];
 
     // ============================================================
     // [CASE A] 날씨 전략 (최적화: 도시별 그룹핑)

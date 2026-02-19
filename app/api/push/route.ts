@@ -48,9 +48,10 @@ export async function GET() {
     const sendPromises = subscriptions.map(async (sub) => {
       try {
         await webpush.sendNotification(sub.subscription, payload);
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const pushError = e as { statusCode?: number }; // 에러의 형태를 임시로 지정
         // 410(Gone) 또는 404(Not Found) 에러 시 DB에서 해당 유령 구독자 삭제
-        if (e.statusCode === 410 || e.statusCode === 404) {
+        if (pushError.statusCode === 410 || pushError.statusCode === 404) {
           console.log(`🗑️ 유효하지 않은 구독 삭제: ID ${sub.id}`);
           await supabase.from('aura_push_subscriptions').delete().eq('id', sub.id);
         } else {
