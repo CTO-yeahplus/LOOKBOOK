@@ -11,10 +11,13 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+//const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
-  console.log("🔥 GEMINI KEY CHECK:", process.env.GEMINI_API_KEY?.substring(0, 5), "LENGTH:", process.env.GEMINI_API_KEY?.length);
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error("서버에 GEMINI_API_KEY가 설정되지 않았습니다.");
+  }
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   try {
     const formData = await req.formData();
     const file = formData.get('image') as File;
