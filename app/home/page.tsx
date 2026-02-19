@@ -72,15 +72,8 @@ export default function Home() {
   // 자이로스코프 커스텀 훅 사용
   const { showGyroButton, requestGyroPermission } = useGyroscope(mouseX, mouseY);
   
-  // 🌟 [핵심] 딥링크 아이템을 '메모리'에 박제하는 저장소
-  // useState가 아닌 useRef를 쓰는 이유: 리렌더링을 유발하지 않고 값을 유지하기 위함
-  const vipItemRef = useRef<any>(null);
-  
-  // 🌟 [상태 잠금] 딥링크 처리 중인지 표시
-  const isProcessingRef = useRef(false);
-  
   // 1. VIP 아이템 데이터 보관소
-  const [vipItem, setVipItem] = useState<any | null>(null);
+  const [vipItem, setVipItem] = useState<FashionItem | null>(null);
   
   // 2. 피드 정지 여부 (딥링크가 있으면 true로 시작)
   const [isFeedPaused, setIsFeedPaused] = useState(!!deepLinkItemId);

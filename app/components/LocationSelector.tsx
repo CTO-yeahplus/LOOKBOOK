@@ -1,6 +1,6 @@
 // components/LocationSelector.tsx
 import { useState, useEffect } from "react";
-import { Search, MapPin, Loader2, Check } from "lucide-react";
+import { Search, MapPin, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase"; // 경로에 맞게 수정해주세요
 import { User } from "@supabase/supabase-js";
 
