@@ -1,5 +1,6 @@
+
 // app/api/upload/route.ts
-export const maxDuration = 60;
+
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { createClient } from '@supabase/supabase-js';
@@ -9,13 +10,16 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-export const dynamic = 'force-dynamic';
 
-//const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
-    // 🌟 [핵심 2] 환경변수를 런타임에 읽어옵니다.
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY || "비어있음(UNDEFINED)";
+    
+    // 🚨 [엑스레이 진단] 구글에 보내기 전에, Vercel이 들고 있는 키 상태를 강제로 에러로 뱉어냅니다!
+    throw new Error(`[엑스레이 결과] 길이: ${apiKey.length}자 | 앞4글자: ${apiKey.substring(0, 4)} | 뒤3글자: ${apiKey.substring(apiKey.length - 3)}`);
     
     // 키가 없으면 아예 구글에 요청도 하지 않고 에러를 반환하게 만듭니다.
     if (!apiKey) {
@@ -24,7 +28,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    
+
     const formData = await req.formData();
     const file = formData.get('image') as File;
     
