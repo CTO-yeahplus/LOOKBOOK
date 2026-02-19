@@ -10,9 +10,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const TEST_API_KEY = "AIzaSyCCEhnjINaajNEi3c9Wr6Cyrpy86M9nV2Q";
-const genAI = new GoogleGenerativeAI(TEST_API_KEY);
-//const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 
 export async function POST(req: Request) {
