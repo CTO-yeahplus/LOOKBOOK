@@ -14,6 +14,7 @@ const supabase = createClient(
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
+  console.log("🔥 GEMINI KEY CHECK:", process.env.GEMINI_API_KEY?.substring(0, 5), "LENGTH:", process.env.GEMINI_API_KEY?.length);
   try {
     const formData = await req.formData();
     const file = formData.get('image') as File;
