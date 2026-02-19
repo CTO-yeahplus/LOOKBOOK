@@ -2,7 +2,6 @@
 export const maxDuration = 60;
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-
 import { createClient } from '@supabase/supabase-js';
 
 // Supabase 설정
@@ -11,9 +10,20 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+
 //const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
+  // ==========================================================
+  // 🚨 [디버깅] Vercel 서버 콘솔에 찍어보는 팩트 체크
+  // ==========================================================
+  const apiKey = process.env.GEMINI_API_KEY;
+  console.log("==========================================");
+  console.log("🔥 1. API 키 존재 여부:", !!apiKey);
+  console.log("🔥 2. API 키 길이:", apiKey ? apiKey.length : 0);
+  console.log("🔥 3. API 키 앞 5글자:", apiKey ? apiKey.substring(0, 5) : '없음');
+  console.log("🔥 4. 쌍따옴표/홑따옴표 포함 여부:", apiKey ? (apiKey.includes('"') || apiKey.includes("'")) : false);
+  console.log("==========================================");
   if (!process.env.GEMINI_API_KEY) {
     throw new Error("서버에 GEMINI_API_KEY가 설정되지 않았습니다.");
   }
