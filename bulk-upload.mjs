@@ -11,7 +11,7 @@ dotenv.config({ path: '.env.local' });
 // 🔑 환경 변수에서 열쇠를 안전하게 꺼내옵니다.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!GEMINI_API_KEY || !SUPABASE_URL || !SUPABASE_KEY) {
   console.error("🚨 에러: .env.local 파일에 키가 누락되었습니다!");

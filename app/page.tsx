@@ -194,7 +194,7 @@ export default function LandingPage() {
             {/* 📱 Left: Magazine Visual Mockup (매거진 커버 티징) */}
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="relative aspect-[3/4] md:aspect-[4/5] w-full max-w-md mx-auto md:max-w-none rounded-sm overflow-hidden group border border-white/10 shadow-2xl">
               {/* 대표님의 앱 스크린샷 중 하나를 커버로 사용합니다 */}
-              <img src="/images/aura_brand_08.png" alt="Magazine Cover" className="w-full h-full object-cover filter grayscale-[0.3] contrast-125 group-hover:scale-105 transition-transform duration-1000" />
+              <img src="/images/aura_brand_12.png" alt="Magazine Cover" className="w-full h-full object-cover filter grayscale-[0.3] contrast-125 group-hover:scale-105 transition-transform duration-1000" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
               
               {/* 🔒 Cult Only 자물쇠 뱃지 */}

@@ -1,9 +1,15 @@
 // app/api/upload/route.ts
 export const maxDuration = 60;
-import { supabase } from "@/lib/supabase";
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase 설정
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -12,8 +18,8 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const file = formData.get('image') as File;
     
-    // 🌟 [NEW] 모드 스위치 및 스폰서 데이터 받기
-    const mode = formData.get('mode') as string; // 'analyzeOnly'가 들어오면 분석만 함
+    // 모드 스위치 및 스폰서 데이터 받기
+    const mode = formData.get('mode') as string;
     const isSponsored = formData.get('isSponsored') === 'true';
     const sponsorBrand = formData.get('sponsorBrand') as string;
     const sponsorMessage = formData.get('sponsorMessage') as string;
@@ -25,20 +31,30 @@ export async function POST(req: Request) {
 
     if (!file) throw new Error("파일이 없습니다.");
 
+    // 🌟 [추가] 브라우저 쿠키에서 사용자가 설정한 언어(NEXT_LOCALE) 읽어오기
+    const cookieHeader = req.headers.get('cookie') || '';
+    const isEnglish = cookieHeader.includes('NEXT_LOCALE=en');
+    
+    // 언어에 따른 프롬프트 지시문 동적 생성
+    const tagInstruction = isEnglish 
+      ? "반드시 '영어(English)'로 작성해 (예: #Streetwear, #Minimal)" 
+      : "반드시 '한국어'로 작성해 (예: #스트릿룩, #미니멀룩)";
+
     // 1. 이미지를 버퍼로 변환
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 2. 🌟 Gemini Vision AI 호출 (모든 모드에서 공통 실행)
+    // 2. Gemini Vision AI 호출
     const modelName = process.env.GEMINI_MODEL_NAME || "gemini-2.5-flash-lite";
     const model = genAI.getGenerativeModel({ model: modelName });
 
+    // 🌟 [수정] 프롬프트에 동적 언어 지시문(tagInstruction) 삽입
     const prompt = `
       당신은 세계 최고의 패션 디렉터입니다. 사진의 옷을 분석하여 아래 JSON 형식으로만 완벽하게 대답해주세요. 다른 말은 절대 하지마. 마크다운(\`\`\`json 등)은 절대 포함하지 마세요.
         {
           "weather": "어울리는 날씨 이모지 1개 (☀️, ☁️, ☔️, ❄️ 중 택 1)",
           "temperature": "어울리는 온도 (예: 15°C, 28°C 등)",
-          "tags": ["#스타일태그1", "#스타일태그2", "#스타일태그3"],
+          "tags": ["#태그1", "#태그2", "#태그3"], // ${tagInstruction}
           "colors": ["#HexCode1", "#HexCode2", "#HexCode3"]
         }
     `;
@@ -50,7 +66,7 @@ export async function POST(req: Request) {
     const responseText = result.response.text().trim().replace(/```json/g, '').replace(/```/g, '');
     const aiData = JSON.parse(responseText);
 
-    // 🌟 [핵심] 'analyzeOnly' 모드면 여기서 바로 AI 결과만 던져주고 퇴근합니다! (DB 저장 안 함)
+    // 'analyzeOnly' 모드면 여기서 바로 AI 결과만 던져주고 퇴근합니다! (DB 저장 안 함)
     if (mode === 'analyzeOnly') {
       return NextResponse.json({ success: true, ai: aiData });
     }
@@ -66,11 +82,10 @@ export async function POST(req: Request) {
     const { data: { publicUrl } } = supabase.storage.from('aura_images').getPublicUrl(fileName);
 
     // 4. DB 저장
-    // 관리자가 오토필된 데이터를 수정했을 수 있으므로, 폼데이터로 넘어온 값을 우선시합니다.
     const customWeather = formData.get('weather') as string;
     const customTemp = formData.get('temperature') as string;
     const customTags = formData.get('tags') as string;
-    const customColors = formData.get('colors') as string; // JSON string으로 받음
+    const customColors = formData.get('colors') as string;
 
     const finalTags = customTags ? customTags.split(',').map(t => t.trim()) : aiData.tags;
     const finalColors = customColors ? JSON.parse(customColors) : (aiData.colors || ["#111111", "#FFFFFF", "#FF3B30"]);
@@ -88,7 +103,7 @@ export async function POST(req: Request) {
         tags: finalTags || ["#OOTD"],
         colors: finalColors,
         
-        // 🌟 스폰서 전용 데이터 삽입
+        // 스폰서 전용 데이터 삽입
         is_sponsored: isSponsored,
         sponsor_brand: sponsorBrand || null,
         sponsor_message: sponsorMessage || null,

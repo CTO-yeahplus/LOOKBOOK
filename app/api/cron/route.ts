@@ -105,13 +105,25 @@ export async function GET() {
         const targetItem = findBestMatchItem(items, currentTemp);
 
         if (targetItem) {
-          // 페이로드 생성
-          const payload = JSON.stringify({
-            type: 'weather',
-            title: "AURA 모닝 브리핑 🌤️",
-            body: `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`,
-            url: `/home?item_id=${targetItem.id}&source=morning_weather`
-          });
+          // 변수를 밖으로 빼서 푸시와 DB 양쪽에서 쓸 수 있게 함
+          const title = "AURA 모닝 브리핑 🌤️";
+          const body = `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`;
+          const url = `/home?item_id=${targetItem.id}&source=morning_weather`;
+
+          const payload = JSON.stringify({ type: 'weather', title, body, url });
+
+          // 🌟 [추가된 부분 1] 날씨 전략 DB 저장 (도시별로 한 번씩 저장)
+          const { error: dbError } = await supabase
+            .from('notifications')
+            .insert([{ 
+              title, 
+              body, 
+              type: 'system', 
+              link_url: url, // 동적 url 적용
+              is_public: true 
+            }]);
+            
+          if (dbError) console.error(`DB Insert Error (${city}):`, dbError);
 
           // 해당 도시 유저들에게 일괄 발송
           const pushTasks = cityUsers.map(user => 
@@ -154,7 +166,17 @@ export async function GET() {
         }
 
         const payload = JSON.stringify({ type: selectedStrategy, title, body, url });
-
+        // 🌟 [추가된 부분 2] 트렌드 전략 DB 저장 (모두 동일하므로 한 번만 저장)
+        const { error: dbError } = await supabase
+        .from('notifications')
+        .insert([{ 
+          title, 
+          body, 
+          type: 'system', 
+          link_url: url, // 동적 url 적용
+          is_public: true 
+        }]);
+        if (dbError) console.error("DB Insert Error (Trend):", dbError);
         // 전체 발송
         const pushTasks = subscriptions.map(sub => 
           webpush.sendNotification(sub.subscription, payload)
@@ -167,6 +189,7 @@ export async function GET() {
         sendPromises.push(...pushTasks);
       }
     }
+
 
     // 4. 모든 발송 대기
     await Promise.all(sendPromises);
