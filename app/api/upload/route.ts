@@ -10,18 +10,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-export const dynamic = 'force-dynamic';
+const apiKey = process.env.GEMINI_API_KEY || "비어있음(UNDEFINED)";
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  try {
-    const apiKey = process.env.GEMINI_API_KEY || "비어있음(UNDEFINED)";
-    
-    // 🚨 [엑스레이 진단] 구글에 보내기 전에, Vercel이 들고 있는 키 상태를 강제로 에러로 뱉어냅니다!
-    throw new Error(`[엑스레이 결과] 길이: ${apiKey.length}자 | 앞4글자: ${apiKey.substring(0, 4)} | 뒤3글자: ${apiKey.substring(apiKey.length - 3)}`);
-    
-    // 키가 없으면 아예 구글에 요청도 하지 않고 에러를 반환하게 만듭니다.
+  try {    
     if (!apiKey) {
       console.error("Vercel 환경변수에 GEMINI_API_KEY가 없습니다!");
       return NextResponse.json({ success: false, error: "서버 API 키 설정 오류" }, { status: 500 });
