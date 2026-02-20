@@ -462,13 +462,13 @@ export default function Home() {
       <div className="absolute top-20 left-1/2 -translate-x-1/2 z-30 flex bg-white/5 backdrop-blur-xl rounded-full p-1 border border-white/10">
         <button 
           onClick={() => setViewMode('recommend')}
-          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'recommend' ? 'bg-white text-black' : 'text-white/50'}`}
+          className={`px-4 py-1.5 whitespace-nowrap rounded-full text-xs font-bold transition-all ${viewMode === 'recommend' ? 'bg-white text-black' : 'text-white/50'}`}
         >
           {t('for_you')}
         </button>
         <button 
           onClick={() => setViewMode('explore')}
-          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${viewMode === 'explore' ? 'bg-white text-black' : 'text-white/50'}`}
+          className={`px-4 py-1.5 whitespace-nowrap rounded-full text-xs font-bold transition-all ${viewMode === 'explore' ? 'bg-white text-black' : 'text-white/50'}`}
         >
           {t('explore')}
         </button>
@@ -478,7 +478,7 @@ export default function Home() {
             aura.triggerHaptic(20); // 터치 시 가벼운 진동
             router.push('/magazine'); // 매거진 페이지로 이동!
           }}
-          className="px-4 py-1.5 rounded-full text-xs font-bold transition-all text-white/50 hover:text-white"
+          className="px-4 py-1.5 whitespace-nowrap rounded-full text-xs font-bold transition-all text-white/50 hover:text-white"
         >
           {t('magazine')}
         </button>
