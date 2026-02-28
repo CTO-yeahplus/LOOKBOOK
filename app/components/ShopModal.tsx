@@ -78,9 +78,15 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
               )}
             </div>
 
-            <div className="px-6 py-5 border-t border-white/5 flex items-center justify-center gap-2 bg-black/50">
-              <ShieldCheck className="w-4 h-4 text-white/30" />
-              <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{t('verified')}</span>
+            {/* 🌟 수정 후 (대가성 문구 추가) */}
+            <div className="px-6 py-5 border-t border-white/5 flex flex-col items-center justify-center gap-1.5 bg-black/50">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-white/30" />
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{t('verified')}</span>
+              </div>
+              <p className="text-[8px] text-white/20 tracking-tight">
+                *본 링크를 통한 구매 시 AURA는 제휴마케팅 커미션을 지급받습니다.
+              </p>
             </div>
           </motion.div>
         </>

@@ -1,7 +1,7 @@
 // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
+import { X, Bell, BellOff, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
 import { useTranslations, useLocale } from 'next-intl';
@@ -17,9 +17,12 @@ interface ProfileModalProps {
   bestLook?: FashionItem;
   onSaveInstagram: (handle: string) => Promise<void> | void; 
   onOpenReport: () => void;
+  isPushEnabled: boolean;
+  subscribeToPush: () => void;
+  unsubscribeFromPush: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport }: ProfileModalProps) {
+export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport, isPushEnabled, subscribeToPush, unsubscribeFromPush }: ProfileModalProps) {
   const t = useTranslations('Profile');
   const locale = useLocale();
 
@@ -172,8 +175,22 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
               
               <audio ref={audioRef} loop src="/ambient.mp3" />
 
+              {/* 3. 🌟 상단 고정 버튼들에 종(Bell) 버튼 추가*/}
               {/* 상단 고정 버튼들 (캡처 제외) */}
               <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+                
+                {/* 🌟 [NEW] 푸시 알림 토글 버튼 */}
+                <button 
+                  onClick={() => isPushEnabled ? unsubscribeFromPush() : subscribeToPush()} 
+                  className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm"
+                >
+                  {isPushEnabled ? (
+                    <Bell className="w-5 h-5 text-indigo-600 fill-current" />
+                  ) : (
+                    <BellOff className="w-5 h-5 text-black/40" />
+                  )}
+                </button>
+
                 <button onClick={toggleMute} className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm">
                   {isMuted ? <VolumeX className="w-5 h-5 text-black" /> : <Volume2 className="w-5 h-5 text-black" />}
                 </button>

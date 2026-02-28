@@ -121,7 +121,16 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                   <div className="relative w-[90%]">
                     <span className="absolute -top-8 -left-6 text-9xl font-serif text-black/10 pointer-events-none">“</span>
                     <h3 className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-3 font-mono border-b border-black/20 pb-1 w-fit"><ArrowDownRight className="w-3 h-3 text-red-600" /> {t('mood_notes')}</h3>
-                    <p className="text-lg font-serif italic font-bold text-black leading-snug relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50">{t('mood_desc_pre')} <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> {t('mood_desc_post')}</p>
+                    {/* 🌟 수정 후 코드 */}
+                    <p className="text-sm md:text-base font-serif italic font-bold text-black leading-relaxed relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50 whitespace-pre-wrap">
+                      {item.curatorNote ? (
+                        // 새로 올라온 사진: AI가 쓴 명언 노출
+                        item.curatorNote
+                      ) : (
+                        // 과거 사진들: 기존 텍스트 노출
+                        <>{t('mood_desc_pre')} <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> {t('mood_desc_post')}</>
+                      )}
+                    </p>
                   </div>
                   <div className="self-end w-[90%] relative pl-8">
                     <div className="absolute top-0 left-0 w-full h-full border-2 border-dashed border-black/30 transform rotate-3 pointer-events-none" />

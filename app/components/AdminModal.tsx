@@ -148,7 +148,12 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
       });
 
       // 2. 대기자 명단 (Audit)
-      const { data: waitData } = await supabase.from('aura_waitlist').select('*').eq('status', 'pending').order('created_at', { ascending: true });
+      const { data: waitData, error: waitError } = await supabase.from('aura_waitlist').select('*').eq('status', 'pending').order('created_at', { ascending: true });
+      // 🌟 [NEW] 만약 또 DB가 데이터를 숨기면 브라우저 콘솔창(F12)에 범인을 띄워줍니다!
+      if (waitError) {
+        console.error("🚨 Audit Board Fetch Error:", waitError.message);
+      }
+
       if (waitData) setWaitlist(waitData);
 
       // 3. 승인된 멤버 목록 (CRM)

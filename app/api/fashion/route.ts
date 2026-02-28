@@ -26,6 +26,7 @@ export async function GET() {
         temperature: item.temperature || '20°C',
         tags: Array.isArray(item.tags) ? item.tags : [],
         colors: Array.isArray(item.colors) ? item.colors : ["#E5E0D8", "#2C2C2C", "#8A7B6E"],
+        curatorNote: item.curator_note, // 🌟 이 줄 추가!
         uploaderName: item.uploader_name || 'AURA Editor', // 🌟 DB에서 가져온 이름표 세팅 
         uploaderIg: item.uploader_ig, // 🌟 
         likes: item.likes_count || 0, // 🌟

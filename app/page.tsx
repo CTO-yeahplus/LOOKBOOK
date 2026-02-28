@@ -42,7 +42,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // 🌟 [NEW] 제출 함수
+  // 🌟 [NEW] 제출 함수 (중복 에러 메시지 처리 추가)
   const handleWaitlistSubmit = async () => {
     if (!igHandle || !email) return alert("인스타그램 ID와 이메일을 모두 입력해주세요.");
     setIsSubmitting(true);
@@ -52,8 +52,15 @@ export default function LandingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instagram: igHandle, email })
       });
-      if (res.ok) setIsSubmitted(true);
-      else alert("오류가 발생했습니다. 다시 시도해주세요.");
+      
+      const data = await res.json(); // 🌟 서버가 보내는 데이터 추출
+
+      if (res.ok) {
+        setIsSubmitted(true);
+      } else {
+        // 🌟 서버에서 "이미 대기 중이거나..." 에러를 보내면 그걸 띄워줌
+        alert(data.error || "오류가 발생했습니다. 다시 시도해주세요.");
+      }
     } catch {
       alert("네트워크 오류가 발생했습니다.");
     } finally {

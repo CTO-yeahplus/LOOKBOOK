@@ -33,12 +33,15 @@ import imageCompression from 'browser-image-compression';
 import { useTranslations } from 'next-intl';
 import NotificationModal from "../components/NotificationModal"; // 경로 확인!
 import { useSearchParams, useRouter } from 'next/navigation';
+import { generateTrackingLink } from "@/lib/affiliate"; // 🌟 이거 추가!
+import OutlinkConfirmModal from "../components/OutlinkConfirmModal"; // 🌟 방금 만든 모달 불러오기
 
 export default function Home() {
   const t = useTranslations('Home');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isOutlinkModalOpen, setIsOutlinkModalOpen] = useState(false); // 🌟 모달 띄우기 스위치 추가
 
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -384,6 +387,30 @@ export default function Home() {
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>
   );
 
+  // app/home/page.tsx 내부 (const currentItem = ... 아래 쯤에 작성)
+
+  // 1. 하단 도크 쇼핑 버튼 클릭 시 -> 모달만 엽니다.
+  const handleShopNow = () => {
+    setIsOutlinkModalOpen(true);
+  };
+
+  // 2. 모달 안에서 [Proceed] 클릭 시 -> 진짜 W컨셉으로 이동합니다.
+  const executeShopOutlink = () => {
+    setIsOutlinkModalOpen(false); // 모달 닫기
+    
+    if (!currentItem || !currentItem.tags) return;
+    const query = currentItem.tags.map((t: string) => t.replace('#', '')).join(' ');
+    track('Shop_Link_Clicked', { search_query: query, look_id: currentItem.id });
+    
+    const trackingUrl = generateTrackingLink('wconcept', query);
+    window.open(trackingUrl, '_blank');
+  };
+
+  // 🌟 버그 제보 폼 열기
+  const handleBugReport = () => {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSco8ivWlB4bSQ0LpvXRgDIMh77EFxL2hM1CmsBsuZ_p0-MjBg/viewform?usp=header', '_blank');
+  };
+
   const paginate = (newDirection: number) => {
     console.log("🚨 [물리 엔진] 카드가 스와이프 되었습니다! 방향:", newDirection);
     aura.triggerHaptic(40);
@@ -715,7 +742,10 @@ export default function Home() {
         onRequestGyro={requestGyroPermission}
         onUpload={() => setIsUploadModalOpen(true)}
         onExport={exportPhotocard}
-        onOpenMenu={() => setIsActionMenuOpen(true)}
+        // 🌟 아래 3줄 추가
+        onShare={sharePhotocard}
+        onShop={handleShopNow}
+        onBugReport={handleBugReport}
         onOpenAdmin={() => setIsAdminModalOpen(true)}
         isExporting={isExporting}
         isAdmin={isAdmin}
@@ -729,19 +759,12 @@ export default function Home() {
         triggerHaptic={aura.triggerHaptic} 
       />
 
-      {/* 🌟 수정된 모달 호출부 */}
-      {aura.fashionItems.length > 0 && (
-        <ActionMenuModal 
-          isOpen={isActionMenuOpen} 
-          onClose={() => setIsActionMenuOpen(false)} 
-          item={currentItem} 
-          onShare={sharePhotocard} // 🌟 새로 만든 공유 함수 전달
-          subscribeToPush={aura.subscribeToPush || (() => {})}
-          unsubscribeFromPush={aura.unsubscribeFromPush || (() => {})} 
-          sendTestPush={aura.sendTestPush || (() => {})} 
-          isPushEnabled={aura.isPushEnabled} // 🌟 [NEW] 구독 상태 전달!
-        />
-      )}
+      {/* 🌟 [NEW] 아웃링크 컨펌 모달 */}
+      <OutlinkConfirmModal 
+        isOpen={isOutlinkModalOpen}
+        onClose={() => setIsOutlinkModalOpen(false)}
+        onConfirm={executeShopOutlink}
+      />
 
       {/* 🌟 딥다이브(상세보기) 모달 복원 완.벽. */}
       <DeepDiveModal 
@@ -750,6 +773,7 @@ export default function Home() {
           aura.setIsDetailOpen(false);
           setTimeout(() => setExploreSelectedItem(null), 500); 
         }} 
+
         // 🌟 currentItem 뒤에 느낌표(!) 추가
         item={exploreSelectedItem || currentItem!} 
         triggerHaptic={aura.triggerHaptic} 
@@ -765,6 +789,7 @@ export default function Home() {
         isAnalyzing={isAnalyzing} 
         onUpload={handleUploadSubmit} 
       />
+
       {/* 🌟 기존 모달들 아래에 추가 */}
       <AdminModal 
       isOpen={isAdminModalOpen} 
@@ -801,6 +826,9 @@ export default function Home() {
         bestLook={aura.uploadedItems[0]}
         onSaveInstagram={aura.saveInstagram}
         onOpenReport={() => setIsReportOpen(true)}
+        isPushEnabled={aura.isPushEnabled}
+        subscribeToPush={aura.subscribeToPush || (() => {})}
+        unsubscribeFromPush={aura.unsubscribeFromPush || (() => {})}
       />
       <MyAuraReport 
         isOpen={isReportOpen} 

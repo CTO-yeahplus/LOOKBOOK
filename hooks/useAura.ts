@@ -7,6 +7,8 @@ import { useSocial } from "./useSocial";
 import { useFeed } from "./useFeed";
 import { supabase } from "../lib/supabase";
 
+// hooks/useAura.ts (약 13번째 줄 FashionItem 인터페이스 내부)
+
 export interface FashionItem {
   id: string | number;
   imageUrl: string;
@@ -17,11 +19,13 @@ export interface FashionItem {
   uploaderName?: string;
   uploaderIg?: string;
   likes?: number;
-  // 🌟 [NEW] Phase 2: 스폰서십 전용 데이터
-  isSponsored?: boolean;      // 스폰서 카드 여부 (true/false)
-  sponsorBrand?: string;      // 브랜드명 (예: GENTLE MONSTER)
-  sponsorUrl?: string;        // 아웃링크 (컬렉션 구매 페이지)
-  sponsorMessage?: string;    // 브랜드 메시지
+  
+  curatorNote?: string; // 🌟 [NEW] AI가 작성한 큐레이터 노트 추가!
+
+  isSponsored?: boolean;      
+  sponsorBrand?: string;      
+  sponsorUrl?: string;        
+  sponsorMessage?: string;    
 }
 
 export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionItem | null }) {
@@ -100,6 +104,9 @@ export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionIt
         console.error("DB Upsert Error:", error);
         throw error;
       }
+
+      // 🌟 [추가된 핵심 코드] DB 저장까지 성공했다면, UI 상태도 켜짐(true)으로 변경!
+      setIsPushEnabled(true);
       
       triggerHaptic([50, 100, 50]);
       alert("AURA와 주파수 동기화가 시작되었습니다! 🚀");

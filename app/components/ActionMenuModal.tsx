@@ -11,13 +11,13 @@ interface ActionMenuModalProps {
   onClose: () => void;
   item: FashionItem;
   onShare: () => void;
-  subscribeToPush: () => void;
+  //subscribeToPush: () => void;
   sendTestPush: () => void;
-  isPushEnabled: boolean; 
-  unsubscribeFromPush: () => void; 
+  //isPushEnabled: boolean; 
+  //unsubscribeFromPush: () => void; 
 }
 
-export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubscribeFromPush, subscribeToPush, sendTestPush, isPushEnabled }: ActionMenuModalProps) {
+export default function ActionMenuModal({ isOpen, onClose, item, onShare, sendTestPush, }: ActionMenuModalProps) {
   const t = useTranslations('ActionMenu');
   // 🌟 쇼핑몰 검색 이동 함수 (수익화 버전으로 업그레이드)
   const handleShopNow = () => {
@@ -25,11 +25,12 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubs
     // 1. 태그에서 #을 제거하고 검색어 조립 (예: "미니멀 블랙자켓")
     const query = item.tags.map(t => t.replace('#', '')).join(' ');
 
-    // 2. 커스텀 이벤트 추적: 무신사/쇼핑몰로 넘어간 전환율(CTR) 기록!
+    // 2. 커스텀 이벤트 추적: 전환율(CTR) 기록!
     track('Shop_Link_Clicked', { search_query: query, look_id: item.id });
 
-    // 3. 💸 AURA 어필리에이트 라우터를 통해 트래킹 링크 발급!
-    const trackingUrl = generateTrackingLink('musinsa', query);
+    // 🌟 3. [수정됨] 타겟을 wconcept으로 변경합니다!
+    const trackingUrl = generateTrackingLink('wconcept', query);
+    
     // 4. 새 창으로 열기 (여기서부터 구매 발생 시 AURA 계좌로 수수료 적립)
     window.open(trackingUrl, '_blank');
     onClose();
@@ -66,38 +67,6 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubs
                 <div className="flex flex-col items-start">
                   <span className="text-[15px] font-bold">{t('shop_title')}</span>
                   <span className="text-[12px] text-white/50">{t('shop_desc')}</span>
-                </div>
-              </button>
-
-              {/* 🌟 2. 푸시 알림 버튼을 다이내믹하게 교체! */}
-              <button 
-                onClick={() => { 
-                  // 켜져 있으면 끄고, 꺼져 있으면 켭니다!
-                  if (isPushEnabled) {
-                    unsubscribeFromPush();
-                  } else {
-                    subscribeToPush(); 
-                  }
-                  onClose(); 
-                }}
-                className={`flex items-center gap-4 rounded-2xl p-4 transition-all active:scale-95 border ${
-                  isPushEnabled 
-                    ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' // 켜졌을 때 (영롱한 보라색)
-                    : 'bg-white/5 text-white hover:bg-white/10 border-transparent' // 꺼졌을 때 (기본 흰색)
-                }`}
-              >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isPushEnabled ? 'bg-indigo-500/20' : 'bg-white/10'}`}>
-                  <Bell className={`h-5 w-5 ${isPushEnabled ? 'fill-current' : ''}`} />
-                </div>
-                <div className="flex flex-col items-start text-left">
-                  {/* 🌟 힙스터 타이포그래피 적용 (대문자, 자간 넓게, 굵게) */}
-                  <span className="text-[14px] font-black tracking-widest uppercase">
-                    {isPushEnabled ? t('sync_active') : t('sync_off')}
-                  </span>
-                  {/* 🌟 시크한 서브 텍스트 */}
-                  <span className="text-[11px] opacity-70 mt-0.5">
-                    {isPushEnabled ? t('sync_desc_on') : t('sync_desc_off')}
-                  </span>
                 </div>
               </button>
 

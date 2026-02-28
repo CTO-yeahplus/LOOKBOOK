@@ -48,9 +48,10 @@ async function processImages() {
         당신은 세계 최고의 패션 디렉터입니다. 사진의 옷을 분석하여 아래 JSON 형식으로만 완벽하게 대답해주세요. 다른 말은 절대 하지마. 마크다운(\`\`\`json 등)은 절대 포함하지 마세요.
         {
           "weather": "어울리는 날씨 이모지 1개 (☀️, ☁️, ☔️, ❄️ 중 택 1)",
-          "temperature": "어울리는 온도 (예: 15°C, 28°C 등)",
-          "tags": ["#스타일태그1", "#스타일태그2", "#스타일태그3"],
-          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"]
+          "temperature": "이 옷의 소재와 두께를 분석하여 입기 가장 완벽한 온도를 1도 단위로 정밀하게 예측할 것. 절대 5도 단위(예: 15, 20, 25)로 대충 끝내지 마. (예: 12°C, 17°C, 23°C, 28°C 등 불규칙한 숫자로 답변해)",
+          "tags": ["#스타일태그1", "#스타일태그2", "#스타일태그3"], // "반드시 '영어(English)'랑 '한글(Korean)'로 섞어서 작성해 (예: #Streetwear, #Minimal, #꾸안꾸)" 
+          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"],
+          "curatorNote": "이 사진의 스타일(미니멀, 스트릿, 아방가르드 등)을 분석하여, 그와 가장 잘 어울리는 유명 패션 디자이너(마르지엘라, 르메르, 질 샌더, 요지 야마모토 등)의 실제 명언이나 패션 철학을 하나 인용하고,  반드시 줄바꿈(\\n\\n)을 두 번 한 뒤에 이 룩을 평가하는 에디터의 코멘트를 작성해. 명언과 코멘트를 시각적으로 확실히 분리할 것. (예시: '우아함은 거절의 예술이다.' - 코코 샤넬\\n\\n불필요한 레이어드를 걷어내고 떨어지는 캐시미어의 질감만으로 오늘의 서늘한 바람을 완벽하게 통제했습니다.) 영어 또는 한국어로 해줘)"
         }
       `;
       const imagePart = fileToGenerativePart(filePath, "image/jpeg");
@@ -60,7 +61,7 @@ async function processImages() {
       const responseText = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
       const aiData = JSON.parse(responseText);
       
-      console.log(`   ✨ AI 판단 결과: ${aiData.weather} | ${aiData.temperature} | ${(aiData.tags || []).join(', ')}`);
+      console.log(`   ✨ AI 판단 결과: ${aiData.weather} | ${aiData.curator_note} | ${aiData.temperature} | ${(aiData.tags || []).join(', ')}`);
 
       // 🌟 [STEP 2] Supabase 스토리지(창고)에 사진 업로드
       const fileBuffer = fs.readFileSync(filePath);
@@ -91,7 +92,7 @@ async function processImages() {
             temperature: aiData.temperature || "20°C",
             tags: aiData.tags || ["#AURA_PICK"],
             colors: aiData.colors || ["#111111", "#FFFFFF", "#FF3B30"], // 🌟 400 에러 방지용 안전망
-            
+            curator_note: aiData.curatorNote || null, // 🌟 [NEW] AI가 뽑아낸 명언을 DB에 저장!
             // 🌟 AURA 시스템 메타데이터 
             uploader_name: 'AURA Editor', // 에디터 공식 업로드로 표시됨
             likes_count: Math.floor(Math.random() * 40) + 10, // 10~50 사이의 랜덤 좋아요 수 부여 (핫해보이게!)
