@@ -1,6 +1,6 @@
 // components/ActionMenuModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, Bell, Send, ShoppingCart, MessageSquareWarning } from "lucide-react";
+import { Share2, Send, ShoppingCart, MessageSquareWarning } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura";
 import { generateTrackingLink } from "@/lib/affiliate";
 import { track } from '@vercel/analytics/react';

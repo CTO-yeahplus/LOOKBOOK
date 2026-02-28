@@ -9,7 +9,6 @@ import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
 import LoginModal from "../components/LoginModal"; 
-import ActionMenuModal from "../components/ActionMenuModal";
 import UploadModal from "../components/UploadModal";
 import AdminModal from "../components/AdminModal"; 
 import { supabase } from "../../lib/supabase"; 
@@ -51,7 +50,6 @@ export default function Home() {
   const deepLinkItemId = searchParams.get('item_id');
   
   // 🌟 슬라이드 메뉴 상태
-  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
