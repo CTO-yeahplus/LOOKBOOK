@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 // 🌟 [수정] ArrowUpRight 아이콘 import 추가
-import { ArrowLeft, Tag, ShoppingBag, ExternalLink, Lock, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, Tag, ShoppingBag, Lock, ArrowUpRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { supabase } from "../../../lib/supabase"; 
 

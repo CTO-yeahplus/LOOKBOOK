@@ -419,8 +419,8 @@ export default function MagazineAdmin() {
               </h4>
               <ol className="text-[11px] font-mono text-white/60 space-y-2 list-decimal list-inside tracking-tight">
                 <li><strong className="text-white/90">W컨셉</strong>에 접속하여 에디토리얼 무드에 맞는 하이엔드 아이템을 찾습니다.</li>
-                <li>해당 상품 썸네일에 마우스 우클릭 후 <strong className="text-white/90">'이미지 주소 복사'</strong>를 클릭합니다. (Image URL 칸에 붙여넣기)</li>
-                <li>링크프라이스에서 해당 상품의 주소를 <strong className="text-yellow-500/80">'나만의 제휴 링크(Tracking URL)'</strong>로 변환합니다.</li>
+                <li>해당 상품 썸네일에 마우스 우클릭 후 <strong className="text-white/90">&apos이미지 주소 복사&apos</strong>를 클릭합니다. (Image URL 칸에 붙여넣기)</li>
+                <li>링크프라이스에서 해당 상품의 주소를 <strong className="text-yellow-500/80">&apos나만의 제휴 링크(Tracking URL)&apos</strong>로 변환합니다.</li>
                 <li>변환된 링크를 맨 아래 <strong className="text-white/90">Affiliate Tracking URL</strong> 칸에 붙여넣고 발행하면 수익 세팅 완료!</li>
               </ol>
             </div>
@@ -439,7 +439,7 @@ export default function MagazineAdmin() {
                 </div>
               ))}
               {shoppableItems.length === 0 && (
-                <p className="text-[10px] text-white/30 font-mono tracking-widest text-center py-4 border border-dashed border-white/10 rounded-xl">No items added yet. Click 'Add Item' to monetize.</p>
+                <p className="text-[10px] text-white/30 font-mono tracking-widest text-center py-4 border border-dashed border-white/10 rounded-xl">No items added yet. Click &aposAdd Item&apos to monetize.</p>
               )}
             </div>
           </div>
