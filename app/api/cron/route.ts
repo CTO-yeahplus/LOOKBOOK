@@ -1,4 +1,7 @@
 // app/api/cron/route.ts
+export const dynamic = 'force-dynamic'; // 🌟 [핵심] 캐시 절대 금지, 매번 무조건 새로 계산해!
+export const revalidate = 0;            // 🌟 [핵심] 0초 캐싱 (데이터 즉시 폐기)
+
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';

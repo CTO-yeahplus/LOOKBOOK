@@ -10,8 +10,8 @@ self.addEventListener('push', function (event) {
     
     const options = {
       body: data.body,
-      icon: '/icon.png', // 앱 아이콘 경로 (필수)
-      badge: '/icon.png',       // 안드로이드용 작은 아이콘
+      icon: '/push-icon.png', // 앱 아이콘 경로 (필수)
+      badge: '/push-icon.png',       // 안드로이드용 작은 아이콘
       data: { url: data.url }    // 클릭 시 이동할 URL 저장
     };
 

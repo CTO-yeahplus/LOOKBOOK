@@ -173,11 +173,11 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
             {/* 메인 컨테이너 (여기서 ref 제거됨) */}
             <div className="relative w-full max-w-sm bg-[#EBE6DD] text-black shadow-2xl flex flex-col pointer-events-auto overflow-hidden rounded-sm max-h-[85vh]">
               
-              <audio ref={audioRef} loop src="/ambient.mp3" />
+              {/*<audio ref={audioRef} loop src="/ambient.mp3" />*/}
 
               {/* 3. 🌟 상단 고정 버튼들에 종(Bell) 버튼 추가*/}
               {/* 상단 고정 버튼들 (캡처 제외) */}
-              <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+              <div className="absolute top-4 right-4 flex items-center gap-1 z-50">
                 
                 {/* 🌟 [NEW] 푸시 알림 토글 버튼 */}
                 <button 
@@ -190,10 +190,12 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
                     <BellOff className="w-5 h-5 text-black/40" />
                   )}
                 </button>
-
+{/* 
                 <button onClick={toggleMute} className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm">
                   {isMuted ? <VolumeX className="w-5 h-5 text-black" /> : <Volume2 className="w-5 h-5 text-black" />}
                 </button>
+*/}
+
                 <button onClick={onClose} className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm">
                   <X className="w-5 h-5 text-black" />
                 </button>

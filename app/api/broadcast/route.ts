@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     // 🌟 [STEP 1] DB에 로그를 '딱 한 번만' 기록합니다.
     const { error: dbError } = await supabase
       .from('notifications')
-      .insert([{ title, body, type: 'system', link_url: url || '/', is_public: true }]);
+      .insert([{ title, body, type: 'system', link_url: url || '/home', is_public: true }]);
 
     if (dbError) console.error('DB Log Error:', dbError);
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     }
 
     // 🌟 [STEP 3] 모든 유저에게 병렬로 푸시 발송
-    const payload = JSON.stringify({ title, body, url: url || '/' });
+    const payload = JSON.stringify({ title, body, url: url || '/home' });
     const sendPromises = subscriptions.map((sub) =>
       webpush.sendNotification(sub.subscription, payload).catch(e => console.error("발송 실패:", e))
     );
