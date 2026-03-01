@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // 모델 초기화
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    // 🌟 AI에게 부여하는 '수석 에디터' 페르소나 프롬프트
+    // 🌟 AI에게 부여하는 '수석 에디터' 페르소나 및 극강의 감성 프롬프트
     const prompt = `
       You are the Editor-in-Chief of a high-end, minimalist fashion magazine called 'AURA'.
       Write a compelling, poetic, and trendy fashion editorial based on the following keyword: "${keyword}".
@@ -30,12 +30,22 @@ export async function POST(req: NextRequest) {
       - Use rich sensory details (textures, weather, lighting).
       - Do not use generic AI-sounding words. Keep it raw and editorial.
 
+      [🌟 CRITICAL NEW INSTRUCTION: Heritage & Outfit-Centric Praise]
+      - The VERY FIRST LINE of the editorial content MUST be a famous quote or core philosophy from a legendary fashion designer (e.g., Martin Margiela, Yves Saint Laurent, Jil Sander, Yohji Yamamoto, Phoebe Philo, Coco Chanel).
+      - After the quote, leave a blank line (\\n\\n), and then begin the main editorial text.
+      - Beautifully connect this historical philosophy to the featured LOOKS (the outfits themselves, NOT the people wearing them).
+      - NEVER praise the wearer or the person. Focus ALL praise entirely on the FASHION ITSELF.
+      - Treat the ensemble as a standalone masterpiece of modern archiving.
+
+      [🌟 NEW INSTRUCTION: Hashtags in Content]
+      - At the very end of the editorial body, leave a blank line (\\n\\n) and append the relevant English hashtags extracted from the keyword (e.g., #AvantGarde #BlackCoat #Minimalism).
+      
       Output Format (Strictly return a valid JSON object without markdown code blocks):
       {
         "title": "A catchy, high-end editorial title",
         "slug": "url-friendly-slug-in-english-only-like-this",
-        "tags": "3 to 4 comma separated tags, lowercase",
-        "content": "The main editorial body. Use 2-3 short paragraphs. Include newlines (\\n\\n) for formatting."
+        "tags": "Extract 3 to 5 english hashtags from the keyword and context (e.g., #AvantGarde, #BlackCoat). Format as a comma separated string.",
+        "content": "\\"Quote here\\" - Designer Name\\n\\nThe first paragraph beautifully connecting the quote to the outfits...\\n\\nThe second paragraph analyzing the textures, silhouettes, and mood. (NO HASHTAGS AT THE END OF THIS CONTENT)"
       }
     `;
 
@@ -43,14 +53,14 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    // 🌟 마크다운 잔재(```json 등)를 제거하고 순수 JSON 객체로 파싱
+    // 🌟 마크다운 잔재(\`\`\`json 등)를 제거하고 순수 JSON 객체로 파싱
     const cleanJsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     const editorialData = JSON.parse(cleanJsonString);
 
     return NextResponse.json(editorialData);
 
-  } catch (error) { // ⭕ 타입을 지우거나 unknown으로 처리
-    console.error("OpenAI Error:", error);
+  } catch (error) {
+    console.error("Gemini Error:", error);
     // 에러가 Error 객체인지 확인 후 메시지 추출
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json({ error: errorMessage }, { status: 500 });

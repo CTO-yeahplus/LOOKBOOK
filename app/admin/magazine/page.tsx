@@ -1,15 +1,27 @@
+// app/admin/magazine/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Upload, FileText, Send, Image as ImageIcon, Loader2, DatabaseZap, Edit3, Trash2, Lock } from "lucide-react";
+// 🌟 [NEW] Scan 아이콘 추가
+import { Sparkles, ShoppingBag, Plus, X, Upload, FileText, Send, Image as ImageIcon, Loader2, DatabaseZap, Edit3, Trash2, Lock, Scan } from "lucide-react";
 import { supabase } from "../../../lib/supabase"; 
-import { useRouter } from "next/navigation"; // 🌟 추가
+import { useRouter } from "next/navigation"; 
+
+// 🌟 [NEW] 쇼핑 아이템 타입 정의
+interface ShoppableItem {
+  id: string; // UI 렌더링용 고유 키
+  brand: string;
+  name: string;
+  price: string;
+  image_url: string;
+  shop_url: string;
+}
 
 interface MagazineArticle {
     id: string;
     title: string;
     slug: string;
-    tags: string[] | null; // DB에서 가져올 땐 배열일 수 있음
+    tags: string[] | null; 
     content: string;
     cover_image_url: string;
     locale: string;
@@ -17,10 +29,11 @@ interface MagazineArticle {
     created_at: string;
     is_published: boolean;
     author: string;
+    shoppable_items?: ShoppableItem[] | null; // 🌟 DB 컬럼 추가 반영
   }
 
 export default function MagazineAdmin() {
-  const router = useRouter(); // 🌟 라우터 추가
+  const router = useRouter(); 
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -30,8 +43,10 @@ export default function MagazineAdmin() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  
+  // 🌟 [NEW] 이미지 비전 분석 로딩 상태 추가
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
 
-  // 🌟 [NEW] 발행된 기사 리스트 & 수정 모드 상태
   const [savedArticles, setSavedArticles] = useState<MagazineArticle[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -43,9 +58,9 @@ export default function MagazineAdmin() {
     is_premium: false 
   });
 
-  // 🌟 [NEW] 관리자 확인 로딩 상태 추가
+  const [shoppableItems, setShoppableItems] = useState<ShoppableItem[]>([]);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  // 🌟 [NEW] 화면이 켜지면 DB에서 작성된 기사들을 긁어옵니다.
+
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('aura_magazine')
@@ -55,20 +70,16 @@ export default function MagazineAdmin() {
     if (data && !error) setSavedArticles(data);
   };
 
-  // 🌟 [핵심 보안] 화면이 켜지자마자 유저가 누구인지 검사합니다.
   useEffect(() => {
     const verifyAdmin = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // 1. 로그인이 안 되어 있거나
-      // 2. 이메일이 대표님(ADMIN) 계정이 아니라면!
       if (!session?.user || session.user.email !== 'cto@yeahplus.co.kr') {
         alert("🔒 접근 거부: AURA 수석 에디터(Admin) 권한이 필요합니다.");
-        router.replace('/'); // 메인 화면으로 가차 없이 쫓아냅니다.
+        router.replace('/'); 
         return;
       }
 
-      // 무사히 통과했다면 로딩을 풀고 기사 리스트를 불러옵니다.
       setIsCheckingAuth(false);
       fetchArticles();
     };
@@ -76,7 +87,6 @@ export default function MagazineAdmin() {
     verifyAdmin();
   }, [router]);
 
-  // 🌟 [NEW] 검문 중일 때 보여줄 간지나는 로딩 화면 (return 렌더링 시작 부분)
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-red-600 font-mono">
@@ -94,14 +104,42 @@ export default function MagazineAdmin() {
     }
   };
 
-  // 트렌드 추출 (유지)
+  // 🌟 [NEW] 이미지 비전 스캔 함수 추가
+  const handleAnalyzeImage = async () => {
+    if (!file) return alert("먼저 커버 이미지를 업로드해주세요.");
+    
+    setIsAnalyzingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/admin/extract-tags', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      // 기존 키워드와 합치거나 새로 세팅
+      const newTags = data.tags.join(', ');
+      setKeyword(prev => prev ? `${prev}, ${newTags}` : newTags);
+      
+      alert("👁️ AURA VISION: 이미지 아이템 및 무드 추출 완료!");
+    } catch (error) {
+      alert("이미지 분석 실패: " + (error instanceof Error ? error.message : ""));
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  };
+
   const handleExtractTrends = async () => {
     setIsExtracting(true);
     try {
       const { data: topLooks, error } = await supabase
-        .from('aura_fashion_items') // 🌟 대표님이 찾으신 진짜 테이블 이름!
+        .from('aura_fashion_items') 
         .select('tags, weather, temperature')
-        .order('likes_count', { ascending: false }) // 🌟 진짜 컬럼 이름!
+        .order('likes_count', { ascending: false }) 
         .limit(5);
 
       if (error) throw error;
@@ -148,7 +186,7 @@ export default function MagazineAdmin() {
         slug: data.slug,
         tags: data.tags,
         content: data.content,
-        is_premium: data.is_premuim
+        is_premium: data.is_premium
       });
 
     } catch (error) {
@@ -159,30 +197,39 @@ export default function MagazineAdmin() {
     }
   };
 
-  // 🌟 [NEW] 기사 수정 모드 진입
-  const handleEdit = (item: MagazineArticle) => { /* 🌟 수정됨: is_premium 불러오기 */
+  const handleEdit = (item: MagazineArticle) => { 
     setEditingId(item.id); setLocale(item.locale); setPreviewUrl(item.cover_image_url); setFile(null); setKeyword("");
     setArticle({ title: item.title, slug: item.slug, tags: item.tags ? item.tags.join(', ') : '', content: item.content, is_premium: item.is_premium || false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 🌟 [NEW] 기사 삭제 로직
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말로 이 매거진 기사를 삭제하시겠습니까?")) return;
-
     try {
       const { error } = await supabase.from('aura_magazine').delete().eq('id', id);
       if (error) throw error;
-      
       alert("삭제되었습니다.");
-      fetchArticles(); // 리스트 새로고침
+      fetchArticles(); 
     } catch (error) {
         const message = error instanceof Error ? error.message : "알 수 없는 오류";
         alert("삭제 실패: " + message);
     }
   };
 
-  // 🌟 [NEW] 발행 (신규 작성 OR 기존 수정)
+  // 🌟 [NEW] 쇼핑 아이템 컨트롤 함수들
+  const addShoppableItem = () => {
+    setShoppableItems([...shoppableItems, { id: Date.now().toString(), brand: "", name: "", price: "", image_url: "", shop_url: "" }]);
+  };
+
+  const updateShoppableItem = (id: string, field: keyof ShoppableItem, value: string) => {
+    setShoppableItems(items => items.map(item => item.id === id ? { ...item, [field]: value } : item));
+  };
+
+  const removeShoppableItem = (id: string) => {
+    setShoppableItems(items => items.filter(item => item.id !== id));
+  };
+
+  // 🌟 [수정] 발행 시 payload에 shoppable_items 탑재
   const handlePublish = async () => {
     if (!article.title || !article.content) return alert("원고가 비어있습니다.");
     setIsPublishing(true);
@@ -190,14 +237,11 @@ export default function MagazineAdmin() {
     try {
       let cover_image_url = previewUrl || 'https://via.placeholder.com/800x1200'; 
 
-      // 파일이 새로 등록되었다면 (사진을 바꿨다면) 업로드 진행
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
         const { error: uploadError } = await supabase.storage.from('magazine_covers').upload(fileName, file);
         if (uploadError) throw new Error("이미지 클라우드 업로드에 실패했습니다.");
-
         const { data: publicUrlData } = supabase.storage.from('magazine_covers').getPublicUrl(fileName);
         cover_image_url = publicUrlData.publicUrl;
       }
@@ -210,42 +254,38 @@ export default function MagazineAdmin() {
         locale: locale,
         cover_image_url: cover_image_url, 
         is_published: true, 
-        author: 'AURA AI Editor',
-        is_premium: Boolean(article.is_premium)
+        author: 'AURA Chief Editor',
+        is_premium: Boolean(article.is_premium),
+        shoppable_items: shoppableItems // 🌟 DB에 JSON 배열로 통째로 저장!
       };
 
       if (editingId) {
-        // 🌟 수정(Update) 모드
         const { error } = await supabase.from('aura_magazine').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert("🔥 기사가 성공적으로 수정되었습니다!");
+        alert("🔥 기사 및 상품 정보가 성공적으로 수정되었습니다!");
       } else {
-        // 🌟 신규(Insert) 모드
         const { error } = await supabase.from('aura_magazine').insert([payload]);
         if (error) throw error;
-        alert("🔥 매거진 발행 및 이미지 업로드 완료!");
+        alert("🔥 매거진 발행 및 상품 연동 완료!");
       }
       
-      // 초기화 및 리스트 새로고침
       setEditingId(null);
       setArticle({ title: "", slug: "", tags: "", content: "", is_premium:false });
+      setShoppableItems([]); // 🌟 상품 리스트도 초기화
       setFile(null);
       setPreviewUrl(null);
       fetchArticles(); 
       
     } catch (error: unknown) {
-        console.error(error);
         const errorMessage = error instanceof Error ? error.message : "알 수 없는 에러가 발생했습니다.";
         alert("작업 실패: " + errorMessage);
-    } finally {
-      setIsPublishing(false);
-    }
+    } finally { setIsPublishing(false); }
   };
 
-  // 🌟 [NEW] 수정 취소 (신규 작성 모드로 복귀)
   const cancelEdit = () => {
     setEditingId(null);
     setArticle({ title: "", slug: "", tags: "", content: "", is_premium:false  });
+    setShoppableItems([]); // 🌟 상품 리스트도 초기화
     setFile(null);
     setPreviewUrl(null);
   };
@@ -276,10 +316,10 @@ export default function MagazineAdmin() {
         <div className="space-y-8">
           <div className="bg-white/5 border border-white/10 p-6 rounded-2xl relative overflow-hidden group">
             <h2 className="font-mono text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-red-500"/> Cover Image</h2>
-            <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-white/20 hover:border-red-500/50 transition-colors cursor-pointer bg-black/50 relative overflow-hidden">
+            <label className={`flex flex-col items-center justify-center border-2 border-dashed border-white/20 hover:border-red-500/50 transition-colors cursor-pointer bg-black/50 relative overflow-hidden ${previewUrl ? 'p-2 rounded-xl' : 'h-64'}`}>
               <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                <img src={previewUrl} alt="Preview" className="w-full max-h-[600px] object-contain opacity-90 rounded-lg" />
               ) : (
                 <div className="flex flex-col items-center text-white/30 group-hover:text-white/60">
                   <Upload className="w-8 h-8 mb-2" />
@@ -290,21 +330,33 @@ export default function MagazineAdmin() {
           </div>
 
           <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-red-500"/> AI Directive</h2>
-              <button 
-                onClick={handleExtractTrends}
-                disabled={isExtracting}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95"
-              >
-                {isExtracting ? <Loader2 className="w-3 h-3 animate-spin" /> : <DatabaseZap className="w-3 h-3" />}
-                Sync DB Trends
-              </button>
+            {/* 🌟 [NEW] 버튼 레이아웃 변경: Vision Scan 버튼 추가 */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+              <h2 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2 shrink-0"><Sparkles className="w-4 h-4 text-red-500"/> AI Directive</h2>
+              
+              <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                <button 
+                  onClick={handleAnalyzeImage}
+                  disabled={isAnalyzingImage || !file}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-50"
+                >
+                  {isAnalyzingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Scan className="w-3 h-3" />}
+                  Vision Scan
+                </button>
+                <button 
+                  onClick={handleExtractTrends}
+                  disabled={isExtracting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-50"
+                >
+                  {isExtracting ? <Loader2 className="w-3 h-3 animate-spin" /> : <DatabaseZap className="w-3 h-3" />}
+                  Sync DB Trends
+                </button>
+              </div>
             </div>
 
             <input 
               type="text" 
-              placeholder="직접 입력하거나 Sync 버튼으로 데이터를 불러오세요." 
+              placeholder="직접 입력하거나 상단 버튼으로 데이터를 불러오세요." 
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="w-full bg-black/50 border border-white/20 p-4 text-sm font-bold text-white placeholder-white/30 focus:outline-none focus:border-red-500 transition-colors mb-4"
@@ -344,11 +396,53 @@ export default function MagazineAdmin() {
             className="w-full h-80 bg-white/5 border border-white/10 p-4 mt-4 text-sm leading-relaxed focus:outline-none focus:border-white/30 custom-scrollbar resize-none"
           />
 
-          {/* 🌟 [NEW] CULT ONLY 토글 버튼 */}
           <label className="flex items-center gap-3 cursor-pointer mt-4 border border-red-500/30 bg-red-500/5 p-4 rounded-xl hover:bg-red-500/10 transition-colors">
             <input type="checkbox" checked={!!article.is_premium} onChange={e => setArticle({...article, is_premium: e.target.checked})} className="w-5 h-5 accent-red-600" />
             <span className="font-mono text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2"><Lock className="w-4 h-4"/> Set as &quot;CULT ONLY&quot; (Premium)</span>
           </label>
+
+          {/* 🌟 [NEW] 커머스 아이템 추가 섹션 */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-yellow-500">
+                <ShoppingBag className="w-4 h-4"/> Shop The Editorial (Commerce)
+              </h3>
+              <button onClick={addShoppableItem} className="flex items-center gap-1 text-[10px] font-mono tracking-widest uppercase bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md transition-colors">
+                <Plus className="w-3 h-3"/> Add Item
+              </button>
+            </div>
+
+            {/* 🌟 [NEW] 수익 창출 프로세스 가이드 패널 */}
+            <div className="mb-6 p-4 bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl">
+              <h4 className="text-yellow-500 font-bold text-[10px] tracking-widest uppercase mb-3 flex items-center gap-2">
+                <Sparkles className="w-3 h-3" /> Monetization Guide
+              </h4>
+              <ol className="text-[11px] font-mono text-white/60 space-y-2 list-decimal list-inside tracking-tight">
+                <li><strong className="text-white/90">W컨셉</strong>에 접속하여 에디토리얼 무드에 맞는 하이엔드 아이템을 찾습니다.</li>
+                <li>해당 상품 썸네일에 마우스 우클릭 후 <strong className="text-white/90">'이미지 주소 복사'</strong>를 클릭합니다. (Image URL 칸에 붙여넣기)</li>
+                <li>링크프라이스에서 해당 상품의 주소를 <strong className="text-yellow-500/80">'나만의 제휴 링크(Tracking URL)'</strong>로 변환합니다.</li>
+                <li>변환된 링크를 맨 아래 <strong className="text-white/90">Affiliate Tracking URL</strong> 칸에 붙여넣고 발행하면 수익 세팅 완료!</li>
+              </ol>
+            </div>
+
+            <div className="space-y-4">
+              {shoppableItems.map((item) => (
+                <div key={item.id} className="relative bg-black/50 border border-white/10 p-4 rounded-xl flex flex-col gap-3 group">
+                  <button onClick={() => removeShoppableItem(item.id)} className="absolute top-2 right-2 p-1 text-white/30 hover:text-red-500 transition-colors"><X className="w-4 h-4"/></button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" placeholder="Brand (e.g. LEMAIRE)" value={item.brand} onChange={(e) => updateShoppableItem(item.id, 'brand', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-bold outline-none focus:border-yellow-500 placeholder-white/20"/>
+                    <input type="text" placeholder="Price (e.g. ₩450,000)" value={item.price} onChange={(e) => updateShoppableItem(item.id, 'price', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  </div>
+                  <input type="text" placeholder="Item Name (e.g. Twisted Belted Coat)" value={item.name} onChange={(e) => updateShoppableItem(item.id, 'name', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  <input type="text" placeholder="Image URL (W컨셉 썸네일 우클릭 복사)" value={item.image_url} onChange={(e) => updateShoppableItem(item.id, 'image_url', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono text-white/60 outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  <input type="text" placeholder="Affiliate Tracking URL (링크프라이스 변환 링크 필수!)" value={item.shop_url} onChange={(e) => updateShoppableItem(item.id, 'shop_url', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono text-yellow-500/60 outline-none focus:border-yellow-500 placeholder-white/20"/>
+                </div>
+              ))}
+              {shoppableItems.length === 0 && (
+                <p className="text-[10px] text-white/30 font-mono tracking-widest text-center py-4 border border-dashed border-white/10 rounded-xl">No items added yet. Click 'Add Item' to monetize.</p>
+              )}
+            </div>
+          </div>
 
           <button 
             onClick={handlePublish}

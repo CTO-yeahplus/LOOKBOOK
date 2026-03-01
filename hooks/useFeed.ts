@@ -58,10 +58,39 @@ export function useFeed(
     setFashionItems(finalItems);
   }, [rawItems, currentTemp, savedItems.length, isPaused, injectedItem]);
 
-  // 3. 글로벌 랭킹 페칭
+  // 3. 글로벌 랭킹 페칭 (데이터 누락 복구 및 캐싱 최적화)
   const fetchTrendingItems = async () => {
-    const { data } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(50);
-    if (data) setTrendingItems(data.map((d: any) => ({ id: d.id, imageUrl: d.image_url, weather: d.weather, temperature: d.temperature, tags: d.tags, uploaderName: d.uploader_name, uploaderIg: d.uploader_ig, likes: d.likes_count || 0 })));
+    // 🌟 [최적화 1] 이미 랭킹 데이터를 한 번 불러왔다면, 다시 서버를 찌르지 않고 함수를 종료합니다! (불필요한 과금/부하 완벽 차단)
+    // (만약 trendingItems 상태 변수 이름이 다르다면 그 이름에 맞춰주세요)
+    if (trendingItems && trendingItems.length > 0) return; 
+
+    const { data, error } = await supabase
+      .from('aura_fashion_items')
+      .select('*')
+      .order('likes_count', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error("Explore Load Error:", error);
+      return;
+    }
+
+    if (data) {
+      setTrendingItems(data.map((d: any) => ({ 
+        id: d.id, 
+        imageUrl: d.image_url, 
+        weather: d.weather, 
+        temperature: d.temperature, 
+        tags: d.tags, 
+        uploaderName: d.uploader_name, 
+        uploaderIg: d.uploader_ig, 
+        likes: d.likes_count || 0,
+        
+        // 🌟 [핵심 해결] 큐레이터 노트와 컬러칩 누락 복구!
+        curatorNote: d.curator_note, 
+        colors: d.colors 
+      })));
+    }
   };
 
   // 4. 쇼핑 아이템 페칭

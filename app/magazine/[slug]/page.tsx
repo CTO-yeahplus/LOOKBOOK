@@ -1,11 +1,22 @@
+// app/magazine/[slug]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Tag, ShoppingBag, ExternalLink, Lock } from "lucide-react";
+// 🌟 [수정] ArrowUpRight 아이콘 import 추가
+import { ArrowLeft, Tag, ShoppingBag, ExternalLink, Lock, ArrowUpRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { supabase } from "../../../lib/supabase"; 
+
+// 🌟 [NEW] 쇼핑 아이템 규격(Type) 추가
+interface ShoppableItem {
+  brand: string;
+  name: string;
+  price: string;
+  image_url: string;
+  shop_url: string;
+}
 
 interface Article {
   id: string;
@@ -16,12 +27,8 @@ interface Article {
   tags: string[];
   created_at: string;
   is_premium?: boolean;
+  shoppable_items?: ShoppableItem[] | null; // 🌟 [수정] 빨간 줄의 원인 해결!
 }
-
-const mockShoppableItems = [
-  { id: 1, brand: "AURA ARCHIVE", name: "Heavy Weight Oversized Blazer", price: "₩239,000", url: "#" },
-  { id: 2, brand: "SEOUL VIBE", name: "Raw Edge Wide Denim", price: "₩129,000", url: "#" }
-];
 
 export default function MagazineDetailPage() {
   const t = useTranslations('MagazineDetail');
@@ -36,25 +43,25 @@ export default function MagazineDetailPage() {
   const [isCultMember, setIsCultMember] = useState(false);
 
   useEffect(() => {
-  const checkCultStatus = async () => {
-    // 1. 현재 접속한 유저 정보 가져오기 (Supabase Auth 기준)
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return; // 비로그인 유저는 무조건 false
+    const checkCultStatus = async () => {
+      // 1. 현재 접속한 유저 정보 가져오기 (Supabase Auth 기준)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return; // 비로그인 유저는 무조건 false
 
-    // 2. 이 유저가 'aura_fashion_items' 테이블에 올린 옷 개수 세기
-    const { count, error } = await supabase
-    .from('aura_fashion_items') // 🌟 실제 사용 중인 테이블 이름
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', session.user.id); // 🌟 유저를 식별하는 컬럼 이름 (필요시 수정)
+      // 2. 이 유저가 'aura_fashion_items' 테이블에 올린 옷 개수 세기
+      const { count, error } = await supabase
+      .from('aura_fashion_items') 
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', session.user.id); 
 
-    // 3. 5개 이상 올렸다면 CULT 권한 부여!
-    if (!error && count !== null && count >= 5) {
-    setIsCultMember(true);
-    }
-  };
+      // 3. 5개 이상 올렸다면 CULT 권한 부여!
+      if (!error && count !== null && count >= 5) {
+        setIsCultMember(true);
+      }
+    };
 
-checkCultStatus();
-}, []);
+    checkCultStatus();
+  }, []);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -88,7 +95,7 @@ checkCultStatus();
     );
   }
 
-  // 🌟 [NEW] 프리미엄 글 접근 거부 뷰 (다국어 적용 완)
+  // 🌟 프리미엄 글 접근 거부 뷰
   if (article.is_premium && !isCultMember) {
     return (
       <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white px-6 text-center relative overflow-hidden selection:bg-red-600">
@@ -121,7 +128,7 @@ checkCultStatus();
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-red-600 selection:text-white">
       
-      {/* 🌟 1. 헤더 (뒤로가기 & Aura. 마침표 디테일) */}
+      {/* 🌟 1. 헤더 */}
       <header className="fixed top-0 w-full z-50 mix-blend-difference px-6 py-8 flex justify-between items-center">
         <button onClick={() => router.push('/magazine')} className="flex items-center gap-2 group hover:opacity-70 transition-opacity">
           <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-2" />
@@ -192,41 +199,61 @@ checkCultStatus();
         </article>
       </div>
 
-      {/* 🌟 4. [BM 종착지] SHOP THE EDITORIAL */}
-      <div className="max-w-5xl mx-auto px-6 md:px-12 py-24 border-t border-white/10">
-        <div className="flex flex-col items-center mb-16 text-center">
-          <ShoppingBag className="w-8 h-8 text-red-600 mb-4" />
-          <h2 className="text-3xl md:text-5xl font-serif italic font-black uppercase tracking-tighter mb-4">{t('shop_editorial')}</h2>
-          <p className="font-mono text-xs tracking-widest text-white/50">{t('shop_desc')}</p>
+      {/* 🌟 4. [BM 종착지] SHOP THE EDITORIAL 구역 */}
+      {article.shoppable_items && article.shoppable_items.length > 0 && (
+        <div className="max-w-5xl mx-auto px-6 md:px-12 py-24 border-t border-white/10">
+          <div className="flex items-center gap-3 mb-12">
+            <ShoppingBag className="w-5 h-5 text-white/40" />
+            <h2 className="text-xl font-bold uppercase tracking-widest text-white/80">
+              Shop the Editorial
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {article.shoppable_items.map((item: ShoppableItem, idx: number) => (
+              <a 
+                key={idx} 
+                href={item.shop_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group block bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all hover:scale-[1.02]"
+              >
+                <div className="aspect-square bg-white/5 relative overflow-hidden">
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[9px] font-mono tracking-widest uppercase text-white">
+                      Verified
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-white/50">{item.brand}</span>
+                    <span className="text-xs font-mono text-white">{item.price}</span>
+                  </div>
+                  <h3 className="text-sm text-white/80 group-hover:text-white transition-colors mb-6">
+                    {item.name}
+                  </h3>
+                  <div className="w-full py-3 bg-white/5 text-center text-[10px] font-bold tracking-widest uppercase text-white group-hover:bg-white group-hover:text-black transition-colors rounded-xl flex items-center justify-center gap-2">
+                    GET <ArrowUpRight className="w-3 h-3" />
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockShoppableItems.map((item, idx) => (
-            <motion.div 
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.2 }}
-              className="flex items-center gap-6 p-4 bg-white/5 border border-white/10 hover:border-white/30 transition-colors group cursor-pointer"
-            >
-              <div className="w-24 h-32 bg-white/10 overflow-hidden shrink-0 relative">
-                <img src={article.cover_image_url} alt="Item" className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500" />
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="font-mono text-[10px] font-bold text-red-500 tracking-widest mb-1">{item.brand}</span>
-                <h3 className="text-lg font-serif italic font-bold mb-2 group-hover:text-white/80">{item.name}</h3>
-                <span className="font-mono text-sm tracking-wider text-white/60 mb-4">{item.price}</span>
-                <button className="flex items-center gap-2 w-fit bg-white text-black px-4 py-2 font-black text-[10px] tracking-widest uppercase active:scale-95 transition-transform">
-                  {t('get_item')} <ExternalLink className="w-3 h-3" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+      {/* 🌟 [법적 고지 필수] 대가성 문구 안내 바 */}
+      {article.shoppable_items && article.shoppable_items.length > 0 && (
+        <div className="text-center pb-8 opacity-40">
+          <p className="text-[9px] font-mono tracking-widest">
+            *이 포스팅은 제휴마케팅이 포함된 광고로 커미션을 지급받을 수 있습니다.
+          </p>
         </div>
-      </div>
+      )}
       
-      {/* 🌟 5. 푸터 다국어 적용 */}
+      {/* 🌟 5. 푸터 */}
       <footer className="py-12 border-t border-white/10 text-center font-mono text-[10px] tracking-widest uppercase text-white/30">
         {t('footer')}
       </footer>
