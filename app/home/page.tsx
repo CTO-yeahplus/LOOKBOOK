@@ -489,10 +489,17 @@ useEffect(() => {
       className="relative flex h-[100dvh] w-screen flex-col items-center justify-center overflow-hidden bg-black font-sans selection:bg-white/30"
       style={{ perspective: 1000 }}
     >
-      <AnimatePresence mode="popLayout">
-        <motion.div key={`bg-${currentItem.id}-${swipeKey}`} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0 z-0">
+      <AnimatePresence> {/* 🌟 mode="popLayout" 제거, 불필요한 충돌 방지 */}
+        <motion.div 
+          key={`bg-${currentItem.id}`} // 🌟 swipeKey 제거 (아이디만으로 충분)
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 0.5 }} 
+          exit={{ opacity: 0 }} 
+          transition={{ duration: 0.2 }} // 🌟 0.8 -> 0.2초로 단축! (뒤끝 없이 즉시 사라짐)
+          className="absolute inset-0 z-0 pointer-events-none transform-gpu" // 🌟 터치 간섭 금지 + GPU 가속 강제 
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[80px] saturate-150" alt="background blur" />
+          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[60px] saturate-150" alt="background blur" />
         </motion.div>
       </AnimatePresence>
 
@@ -530,7 +537,7 @@ useEffect(() => {
           /* 추천 모드: 기존 3D 카드 */
           <AnimatePresence initial={false} custom={aura.direction} mode="popLayout">
             <FashionCard 
-              key={`card-${currentItem.id}-${swipeKey}`}
+              key={`card-${currentItem.id}`}
               item={currentItem}
               aura={aura}
               ref={cardRef}

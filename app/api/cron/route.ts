@@ -58,7 +58,7 @@ function findBestMatchItem(items: { temperature?: string | number; [key: string]
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // 🌟 1. 한국 시간(KST) 기준 현재 시간 및 요일 파악
     const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
