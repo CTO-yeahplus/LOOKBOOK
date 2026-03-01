@@ -30,8 +30,8 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
   const cardRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  //const [isMuted, setIsMuted] = useState(false);
+  //const audioRef = useRef<HTMLAudioElement>(null);
   const [isIgSaved, setIsIgSaved] = useState(false); 
   
   const [igHandle, setIgHandle] = useState("");
@@ -48,7 +48,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       setIgHandle(user.user_metadata.instagram);
     }
   }, [user]);
-
+{/*
   useEffect(() => {
     if (isOpen && audioRef.current) {
       audioRef.current.volume = 0.3;
@@ -58,6 +58,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       audioRef.current.pause();
     }
   }, [isOpen]);
+  */}
 
   // 🌟 이미지 다운로드 함수 (스크롤 전체 영역 캡처 수정)
   const handleDownload = async () => {
