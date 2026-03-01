@@ -4,6 +4,19 @@ class SensoryManager {
     private currentBGM: HTMLAudioElement | null = null;
     private targetVolume: number = 0.3; // 🌟 배경음악은 은은해야 하므로 최대 볼륨 30%로 제한
   
+    // 🌟 [핵심 1] 탄창(Pool) 준비: 자주 쓰는 효과음을 메모리에 미리 올려둡니다.
+    private sfxPool: Record<string, HTMLAudioElement> = {};
+
+    constructor() {
+        // 앱이 켜질 때 (브라우저 환경일 때만) 무기(SFX)를 미리 장전합니다.
+        if (typeof window !== 'undefined') {
+        this.sfxPool['swipe_pass'] = new Audio('/audio/sfx_pass.mp3');
+        this.sfxPool['swipe_like'] = new Audio('/audio/sfx_like.mp3');
+        this.sfxPool['flip'] = new Audio('/audio/sfx_flip.mp3');
+        this.sfxPool['success'] = new Audio('/audio/sfx_save.mp3'); 
+        // 필요하다면 다른 효과음도 여기에 추가
+        }
+    }
     // ==========================================
     // 📳 1. 하이엔드 햅틱 (진동) 제어기
     // ==========================================
