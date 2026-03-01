@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Terminal, ExternalLink, Clock } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { useRouter } from "next/navigation"; // 🌟 [NEW] 라우터 추가!
 
 interface Notification {
   id: number;
