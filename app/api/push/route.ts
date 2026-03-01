@@ -23,8 +23,8 @@ export async function GET() {
 
     if (error || !subscriptions) throw error;
 
-    const title = "AURA 모닝 브리핑 🌤️";
-    const body = "좋은 아침입니다! 오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
+    const title = "AURA 브리핑 🌤️";
+    const body = "오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
 
     // 🌟 [해결책 1] 푸시 발송 전, SYSTEM LOGS에 기록을 먼저 남깁니다.
     // 루프 밖에서 한 번만 호출하므로 중복 저장이 방지됩니다.
