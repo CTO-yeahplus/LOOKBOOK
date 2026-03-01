@@ -4,15 +4,20 @@ self.addEventListener('install', (event) => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener('push', function (event) {
-  if (!event.data) return;
-  const payload = event.data.json();
-  const options = {
-    body: payload.body,
-    icon: '/icon.png',
-    badge: '/icon.png',
-    data: { url: payload.url || '/' }, // URL 저장
-  };
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  if (event.data) {
+    // 서버에서 보낸 payload (title, body, url) 파싱
+    const data = event.data.json(); 
+    
+    const options = {
+      body: data.body,
+      icon: '/icon.png', // 앱 아이콘 경로 (필수)
+      badge: '/icon.png',       // 안드로이드용 작은 아이콘
+      data: { url: data.url }    // 클릭 시 이동할 URL 저장
+    };
+
+    // 브라우저에 네이티브 알림 띄우기
+    event.waitUntil(self.registration.showNotification(data.title, options));
+  }
 });
 
 self.addEventListener('notificationclick', function(event) {

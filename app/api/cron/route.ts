@@ -15,15 +15,29 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-// 1. 날씨 API 호출 (도시 단위 캐싱 효과)
-async function getCityWeather(lat: number, lon: number) {
+// 🌟 [추가] 하이엔드 패션 거장의 어록 리스트
+const FASHION_QUOTES = [
+  `"단순함은 궁극의 정교함이다." - 질 샌더`,
+  `"침묵은 가장 완벽한 핏이다." - 마틴 마르지엘라`,
+  `"우아함은 거절의 예술이다." - 코코 샤넬`,
+  `"패션은 사라지지만 스타일은 영원하다." - 이브 생 로랑`,
+  `"완벽함은 더 이상 보탤 것이 없을 때가 아니라, 빼낼 것이 없을 때 완성된다." - 앙투안 드 생텍쥐페리`
+];
+
+// 1. 날씨 API 호출 (🌟 isEvening 여부에 따라 오늘 현재기온 or 내일 최고기온 추출)
+async function getCityWeather(lat: number, lon: number, isEvening: boolean) {
   try {
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FSeoul`,
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max&timezone=Asia%2FSeoul`,
       { cache: 'no-store' }
     );
     const data = await res.json();
-    // 소수점 반올림 (예: 12.7 -> 13)
+    
+    // 저녁 알림(내일 준비)일 경우 내일(index 1)의 최고 기온 반환
+    if (isEvening && data.daily?.temperature_2m_max?.[1]) {
+      return Math.round(data.daily.temperature_2m_max[1]);
+    }
+    // 아침 알림일 경우 오늘 현재 기온 반환
     return Math.round(data.current_weather.temperature);
   } catch (e) {
     console.error("Weather API Error:", e);
@@ -35,25 +49,32 @@ async function getCityWeather(lat: number, lon: number) {
 function findBestMatchItem(items: { temperature?: string | number; [key: string]: unknown }[], targetTemp: number) {
   if (!items || items.length === 0) return null;
   return items.reduce((prev, curr) => {
-    // DB의 문자열(예: "25°C")에서 숫자만 추출
     const prevTemp = parseFloat(String(prev.temperature).replace(/[^0-9.-]/g, '')) || 20;
     const currTemp = parseFloat(String(curr.temperature).replace(/[^0-9.-]/g, '')) || 20;
-    
-    // 현재 기온과의 차이가 더 적은 쪽을 선택
     return Math.abs(currTemp - targetTemp) < Math.abs(prevTemp - targetTemp) ? curr : prev;
   });
 }
 
 export async function GET() {
   try {
-    // 1. 오늘의 전략 선정
+    // 🌟 1. 한국 시간(KST) 기준 현재 시간 및 요일 파악
+    const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    const currentHour = kstDate.getHours();
+    const currentDay = kstDate.getDay(); // 0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토
+
+    // 🌟 2. 아침 vs 저녁 모드 판별 (오후 6시 이후면 저녁 모드)
+    const isEvening = currentHour >= 18; 
+    
+    // 🌟 3. 주 2회 (화요일, 목요일) 어록 추가 플래그
+    const shouldAddQuote = (currentDay === 2 || currentDay === 4);
+    const randomQuote = FASHION_QUOTES[Math.floor(Math.random() * FASHION_QUOTES.length)];
+
+    // 4. 오늘의 전략 선정
     const strategies = ['weather', 'trend_tag', 'trend_look'];
     const selectedStrategy = strategies[Math.floor(Math.random() * strategies.length)];
-    // const selectedStrategy = 'weather'; // 테스트 시 주석 해제
 
-    console.log(`🚀 [Cron Start] 전략: ${selectedStrategy}`);
+    console.log(`🚀 [Cron Start] 전략: ${selectedStrategy} | 저녁모드: ${isEvening} | 어록추가: ${shouldAddQuote}`);
 
-    // 2. 구독자 전체 조회
     const { data: subscriptions } = await supabase
       .from('aura_push_subscriptions')
       .select('id, subscription, location_name, latitude, longitude');
@@ -68,64 +89,42 @@ export async function GET() {
     // [CASE A] 날씨 전략 (최적화: 도시별 그룹핑)
     // ============================================================
     if (selectedStrategy === 'weather') {
-      
-      // 1) 도시별 그룹핑 (Grouping)
       const groups: Record<string, typeof subscriptions> = {};
-      
       subscriptions.forEach(sub => {
         const city = sub.location_name || '서울';
         if (!groups[city]) groups[city] = [];
         groups[city].push(sub);
       });
 
-      // 2) 후보 아이템 조회 (인기순 30개)
-      const { data: candidates } = await supabase
-        .from('aura_fashion_items')
-        .select('*')
-        .order('likes_count', { ascending: false })
-        .limit(30);
-
+      const { data: candidates } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(30);
       const items = candidates || [];
-
-      // 3) 도시별 루프 (도시 개수만큼만 API 호출)
       const cityNames = Object.keys(groups);
-      console.log(`🏙️ 총 ${cityNames.length}개 도시 날씨 조회 시작`);
 
       for (const city of cityNames) {
         const cityUsers = groups[city];
-        // 대표 좌표 (모두 같은 도시이므로 0번째 유저 좌표 사용)
         const lat = cityUsers[0].latitude || 37.5665;
         const lon = cityUsers[0].longitude || 126.9780;
 
-        // 🌟 [핵심] API 호출 (1번)
-        const realTemp = await getCityWeather(lat, lon);
-        const currentTemp = realTemp !== null ? realTemp : 20; // 실패 시 20도
-        
-        // 🌟 [핵심] 이 도시에 맞는 옷 선정
+        // 🌟 isEvening 변수를 넘겨서 저녁이면 내일 최고기온을 가져옴
+        const realTemp = await getCityWeather(lat, lon, isEvening);
+        const currentTemp = realTemp !== null ? realTemp : 20; 
         const targetItem = findBestMatchItem(items, currentTemp);
 
         if (targetItem) {
-          // 변수를 밖으로 빼서 푸시와 DB 양쪽에서 쓸 수 있게 함
-          const title = "AURA 모닝 브리핑 🌤️";
-          const body = `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`;
-          const url = `/home?item_id=${targetItem.id}&source=morning_weather`;
+          // 🌟 시간대에 따른 문구 변경 및 어록 추가
+          const title = isEvening ? "내일 뭐 입지? 🌙" : "AURA 모닝 브리핑 🌤️";
+          let body = isEvening 
+            ? `내일 ${city} 최고 ${currentTemp}°C 예상. 미리 준비하는 완벽한 룩.` 
+            : `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`;
+          
+          if (shouldAddQuote) body += `\n\n${randomQuote}`; // 어록 추가
 
+          const url = `/home?item_id=${targetItem.id}&source=${isEvening ? 'evening' : 'morning'}_weather`;
           const payload = JSON.stringify({ type: 'weather', title, body, url });
 
-          // 🌟 [추가된 부분 1] 날씨 전략 DB 저장 (도시별로 한 번씩 저장)
-          const { error: dbError } = await supabase
-            .from('notifications')
-            .insert([{ 
-              title, 
-              body, 
-              type: 'system', 
-              link_url: url, // 동적 url 적용
-              is_public: true 
-            }]);
-            
+          const { error: dbError } = await supabase.from('notifications').insert([{ title, body, type: 'system', link_url: url, is_public: true }]);
           if (dbError) console.error(`DB Insert Error (${city}):`, dbError);
 
-          // 해당 도시 유저들에게 일괄 발송
           const pushTasks = cityUsers.map(user => 
             webpush.sendNotification(user.subscription, payload)
               .catch(async (e) => {
@@ -143,41 +142,30 @@ export async function GET() {
     // [CASE B] 트렌드 전략 (전체 동일 발송)
     // ============================================================
     else {
-      // 1등 아이템 조회
-      const { data: targetItem } = await supabase
-        .from('aura_fashion_items')
-        .select('*')
-        .order('likes_count', { ascending: false })
-        .limit(1)
-        .single();
+      const { data: targetItem } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(1).single();
 
       if (targetItem) {
-        let title = "", body = "", url = "";
+        let title = "", bodyText = "", url = "";
 
+        // 🌟 시간대에 따른 트렌드 문구 변경
         if (selectedStrategy === 'trend_tag') {
           const hotTag = targetItem.tags?.[0] || 'OOTD';
-          title = `오늘의 키워드: #${hotTag}`;
-          body = `#${hotTag} 스타일이 트렌드입니다.`;
+          title = isEvening ? `내일을 위한 키워드: #${hotTag} 🌙` : `오늘의 키워드: #${hotTag} ☀️`;
+          bodyText = `#${hotTag} 스타일이 트렌드입니다.`;
           url = `/home?item_id=${targetItem.id}&tag=${hotTag}`;
         } else {
-          title = `🔥 지금 가장 핫한 룩`;
-          body = `현재 ${targetItem.likes_count}명이 주목하고 있습니다.`;
-          url = `/home?item_id=${targetItem.id}&source=morning_trend`;
+          title = isEvening ? `🌙 내일 주목받을 룩` : `🔥 지금 가장 핫한 룩`;
+          bodyText = `현재 ${targetItem.likes_count}명이 주목하고 있습니다.`;
+          url = `/home?item_id=${targetItem.id}&source=${isEvening ? 'evening' : 'morning'}_trend`;
         }
 
+        if (shouldAddQuote) bodyText += `\n\n${randomQuote}`; // 어록 추가
+        const body = bodyText;
         const payload = JSON.stringify({ type: selectedStrategy, title, body, url });
-        // 🌟 [추가된 부분 2] 트렌드 전략 DB 저장 (모두 동일하므로 한 번만 저장)
-        const { error: dbError } = await supabase
-        .from('notifications')
-        .insert([{ 
-          title, 
-          body, 
-          type: 'system', 
-          link_url: url, // 동적 url 적용
-          is_public: true 
-        }]);
+        
+        const { error: dbError } = await supabase.from('notifications').insert([{ title, body, type: 'system', link_url: url, is_public: true }]);
         if (dbError) console.error("DB Insert Error (Trend):", dbError);
-        // 전체 발송
+
         const pushTasks = subscriptions.map(sub => 
           webpush.sendNotification(sub.subscription, payload)
             .catch(async (e) => {
@@ -190,8 +178,6 @@ export async function GET() {
       }
     }
 
-
-    // 4. 모든 발송 대기
     await Promise.all(sendPromises);
     console.log(`✅ [Cron Finish] 총 ${sendPromises.length}건 처리 완료`);
 

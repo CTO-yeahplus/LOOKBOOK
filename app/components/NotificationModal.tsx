@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Bell, Terminal, ExternalLink, Clock } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation"; // 🌟 [NEW] 라우터 추가!
 
 interface Notification {
   id: number;
@@ -20,6 +21,7 @@ interface NotificationModalProps {
 }
 
 export default function NotificationModal({ isOpen, onClose }: NotificationModalProps) {
+  const router = useRouter(); // 🌟 [NEW] 라우터 변수 선언
   const [logs, setLogs] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -104,7 +106,12 @@ export default function NotificationModal({ isOpen, onClose }: NotificationModal
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="group relative p-5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all active:scale-[0.98]"
-                    onClick={() => log.link_url && window.open(log.link_url, '_blank')}
+                    onClick={() => {
+                      if (log.link_url) {
+                        router.push(log.link_url); // 🌟 [수정] 현재 창에서 부드럽게 이동!
+                        onClose(); // 🌟 [수정] 이동 후 모달창을 닫아줍니다.
+                      }
+                    }}
                   >
                     {/* 날짜 뱃지 */}
                     <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-mono text-white/30 group-hover:text-[#ff3b30] transition-colors">
