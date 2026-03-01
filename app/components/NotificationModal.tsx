@@ -21,7 +21,6 @@ interface NotificationModalProps {
 }
 
 export default function NotificationModal({ isOpen, onClose }: NotificationModalProps) {
-  const router = useRouter(); // 🌟 [NEW] 라우터 변수 선언
   const [logs, setLogs] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
 
