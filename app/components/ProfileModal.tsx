@@ -1,7 +1,7 @@
 // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Bell, BellOff, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
+import { X, Bell, BellOff, LogOut, Share2, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
 import { useTranslations, useLocale } from 'next-intl';
@@ -102,13 +102,14 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       setIsProcessing(false); 
     }
   };
-
+{/*
   const toggleMute = () => {
     if (!audioRef.current) return;
     if (isMuted) audioRef.current.play();
     else audioRef.current.pause();
     setIsMuted(!isMuted);
   };
+  */}
 
   const toggleLanguage = (newLocale: string) => {
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000;`;

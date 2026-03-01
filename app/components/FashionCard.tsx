@@ -33,7 +33,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
   return (
     <motion.div
       id="aura-main-card" // 🌟 [추가] 메인 카드 이름표
-      style={{ x, rotateX, rotateY }}
+      style={{ x, rotateX, rotateY,transformStyle: "preserve-3d", }}
       drag={isExporting ? false : "x"}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.7}
@@ -75,7 +75,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       )}
 
       {/* 하단 정보 영역 */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
+      <div style={{ transform: "translateZ(30px)" }} className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className={`whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur-md transition-all duration-500 ${
             item.uploaderName === 'AURA Editor' ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : archiveCount >= 10 ? 'border-indigo-400/40 bg-indigo-500/20 text-indigo-300' : 'border-white/10 bg-white/10 text-white/80'

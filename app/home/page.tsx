@@ -576,92 +576,73 @@ useEffect(() => {
       </main>
 
 
-      {/* 상단 좌측: 프로필/로그인 버튼 */}
-      <div className="absolute left-6 top-8 z-40 md:left-8 md:top-8">
-        {aura.user ? (
-          // 🌟 로그인 된 경우: 내 프로필 버튼 (아바타 스타일)
-          <button 
-            onClick={() => { 
-              //aura.triggerHaptic(20);
-              auraSensory.triggerHaptic('success');
-              auraSensory.playSFX('login'); 
-              setIsProfileOpen(true); 
-            }}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-            >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold shadow-inner border border-white/10">
-              {aura.user.email?.[0].toUpperCase()}
-            </div>
-          </button>
-        ) : (
-          // 🌟 로그인 안 된 경우: 기존 로그인 유도 버튼
-          <button 
-          onClick={() => { 
-            console.log("Login Clicked!"); // 👈 테스트용 로그: 브라우저 콘솔(F12)에 찍히는지 확인하세요.
-            setIsLoginModalOpen(true); 
-          }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          >
-          <User />
-          </button>
-        )}
-      </div>
-
-      {/* 🌟 2. 상단 우측: 버튼 그룹 (랭킹 & 아카이브) */}
-      <div className="absolute right-4 top-8 z-40 flex items-center gap-1 md:right-8 md:top-8">
+      {/* 🌟 [NEW] 중앙 기준 상단 헤더 바 (투명막 제거, 3D 마우스 간섭 제로!) */}
+      <div className="absolute top-8 left-1/2 z-40 flex w-full max-w-[480px] -translate-x-1/2 items-center justify-between px-6 md:px-8">
         
-        {/* 🏆 랭킹 버튼 (트로피) 
-        <button 
-          onClick={() => { aura.triggerHaptic(30); setIsRankingOpen(true); }} 
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          title="명예의 전당"
-        >
-          <Trophy className="h-5 w-5 text-yellow-400" />
-        </button>
-        */}
-        {/* 🌟 [NEW] 시스템 로그 버튼 */}
-        <button 
-          onClick={() => {
-            console.log("Bell Clicked"); // 🌟 디버깅용: 콘솔에 찍히는지 확인
-            setIsNotiOpen(true);
-            aura.triggerHaptic(10); // 햅틱 피드백 추가
-          }}
-          className="h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl relative p-2 rounded-full hover:bg-white/10 transition-colors group"
-        >
-          <Bell className="w-6 h-6 text-white" />
-          {/* 알림 표시용 레드 닷 */}
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
-        </button>
-
-        {/* 🌟 쇼핑백 버튼 연결부: 클릭 시 해당 Look의 ID로 DB를 찌른 후, 모달을 엽니다! */}
-        <button 
-          onClick={() => {
-            // 🌟 이미 선언해두신 currentItem을 바로 가져다 씁니다!
-            if (currentItem?.id) {
-              aura.loadShoppableItems(Number(currentItem.id));
-            }
-            setIsShopModalOpen(true);
-          }}
-          className="flex flex-col items-center gap-1 group"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-9">
-            <ShoppingBag className="h-5 w-5 text-white" />
-          </div>
-        </button>
-
-        {/* 📂 아카이브 버튼 (레이어) */}
-        <button 
-          onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} 
-          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          title="보관함"
-        >
-          <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
-          {aura.savedItems.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-black shadow-lg">
-              {aura.savedItems.length}
-            </span>
+        {/* 1. 상단 좌측: 프로필/로그인 버튼 */}
+        <div>
+          {aura.user ? (
+            <button 
+              onClick={() => { 
+                auraSensory.triggerHaptic('success');
+                auraSensory.playSFX('login'); 
+                setIsProfileOpen(true); 
+              }}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold shadow-inner border border-white/10">
+                {aura.user.email?.[0].toUpperCase()}
+              </div>
+            </button>
+          ) : (
+            <button 
+              onClick={() => { setIsLoginModalOpen(true); }}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            >
+              <User />
+            </button>
           )}
-        </button>
+        </div>
+
+        {/* 2. 상단 우측: 버튼 그룹 */}
+        <div className="flex items-center gap-1">
+          {/* 시스템 로그 버튼 */}
+          <button 
+            onClick={() => { setIsNotiOpen(true); aura.triggerHaptic(10); }}
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl relative transition-all hover:bg-white/20 active:scale-95 group"
+          >
+            <Bell className="w-5 h-5 text-white" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
+          </button>
+
+          {/* 쇼핑백 버튼 */}
+          <button 
+            onClick={() => {
+              if (currentItem?.id) {
+                aura.loadShoppableItems(Number(currentItem.id));
+              }
+              setIsShopModalOpen(true);
+            }}
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95 group"
+          >
+            <ShoppingBag className="h-4 w-4 text-white" />
+          </button>
+
+          {/* 아카이브 버튼 (레이어) */}
+          <button 
+            onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} 
+            className="relative h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            title="보관함"
+          >
+            <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
+            {aura.savedItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-black shadow-lg">
+                {aura.savedItems.length}
+              </span>
+            )}
+          </button>
+        </div>
+
       </div>
 
       <DynamicIsland weather={aura.localWeather} />
