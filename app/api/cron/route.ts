@@ -60,6 +60,7 @@ function findBestMatchItem(items: { temperature?: string | number; [key: string]
 
 export async function GET(request: Request) {
   try {
+    console.log(`📡 [Cron Triggered] Request URL: ${request.url}`);
     // 🌟 1. 한국 시간(KST) 기준 현재 시간 및 요일 파악
     const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
     const currentHour = kstDate.getHours();

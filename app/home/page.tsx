@@ -45,7 +45,7 @@ export default function Home() {
 
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [swipeKey, setSwipeKey] = useState(0);
+  //const [swipeKey, setSwipeKey] = useState(0);
   const [viewMode, setViewMode] = useState<'recommend' | 'explore'>('recommend');
   const [isMissionDismissed, setIsMissionDismissed] = useState(false); // 🌟 미션 배너 닫기 상태
   const deepLinkItemId = searchParams.get('item_id');
@@ -62,14 +62,10 @@ export default function Home() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [exploreSelectedItem, setExploreSelectedItem] = useState<FashionItem | null>(null);
 
-
-
   const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
   const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
   const rotateX = useTransform(mouseY, [0, typeof window !== "undefined" ? window.innerHeight : 1000], [10, -10]);
   const rotateY = useTransform(mouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [-10, 10]);
-  const x = useMotionValue(0);
-  const imageX = useTransform(x, [-200, 200], [20, -20]);
 
   // 자이로스코프 커스텀 훅 사용
   const { showGyroButton, requestGyroPermission } = useGyroscope(mouseX, mouseY);
@@ -90,6 +86,25 @@ export default function Home() {
   // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
   const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
   const isAdmin = aura.user?.email === ADMIN_EMAIL;
+
+  // 🌟 [핵심 수술] 탄창 미리 채우기 (Image Preloading)
+  // 유저가 현재 카드를 보고 있을 때, 몰래 다음 2장의 이미지를 브라우저 메모리에 다운받아 둡니다!
+  useEffect(() => {
+    if (!aura.fashionItems || aura.fashionItems.length === 0) return;
+
+    const preloadImage = (indexOffset: number) => {
+      const targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
+      const targetItem = aura.fashionItems[targetIndex];
+      if (targetItem?.imageUrl) {
+        const img = new Image();
+        img.src = targetItem.imageUrl; // 브라우저가 몰래 다운로드 시작
+      }
+    };
+
+    // 바로 다음 카드(+1)와 다다음 카드(+2)를 미리 장전합니다.
+    preloadImage(1);
+    preloadImage(2);
+  }, [aura.currentIndex, aura.fashionItems]);
 
   useEffect(() => {
     // 딥링크 ID가 있고, 아직 데이터를 안 가져왔다면 실행
@@ -427,8 +442,7 @@ useEffect(() => {
     auraSensory.playSFX('swipe_pass');
     aura.setDirection(newDirection);
     aura.setCurrentIndex((prev) => (prev + newDirection + aura.fashionItems.length) % aura.fashionItems.length);
-    setSwipeKey(prev => prev + 1);
-    x.set(0);
+    //setSwipeKey(prev => prev + 1);
   };
 
   // 1. 시스템 로딩 중에는 검은 배경 유지
@@ -543,10 +557,8 @@ useEffect(() => {
               ref={cardRef}
               rotateX={rotateX}
               rotateY={rotateY}
-              imageX={imageX}
               isExporting={isExporting}
               archiveCount={archiveCount}
-              x={x}
               paginate={paginate}
               onToggleSave={() => {
                 const isCurrentlySaved = aura.savedItems.some(i => String(i.id) === String(currentItem.id));
