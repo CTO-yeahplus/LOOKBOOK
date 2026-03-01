@@ -4,6 +4,7 @@ import { motion, AnimatePresence, Transition } from "framer-motion"; // 🌟 Tra
 import { X, Volume2, Palette, Instagram, ArrowDownRight, Ticket, Heart, RefreshCw } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura"; 
 import { useTranslations } from 'next-intl'; // 🌟 추가
+import { auraSensory } from "../../lib/sensory";
 
 interface DeepDiveModalProps {
   isOpen: boolean;
@@ -56,7 +57,9 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
             onClick={(e) => { 
               e.stopPropagation(); 
               setIsFlipped(!isFlipped); 
-              triggerHaptic(15);
+              //triggerHaptic(15);
+              auraSensory.triggerHaptic('flip');
+              auraSensory.playSFX('flip');
             }}
             initial={{ scale: 0.95, y: 20, opacity: 0 }} 
             animate={{ rotateY: isFlipped ? 180 : 0, scale: 1, y: 0, opacity: 1 }} 
@@ -102,7 +105,13 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                   <div className="flex gap-3 relative z-10 items-center mb-2">
                     <Volume2 className="w-5 h-5 text-black animate-pulse" />
                     <button 
-                      onClick={(e) => { e.stopPropagation(); triggerHaptic(20); onClose(); }} 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        //triggerHaptic(20);
+                        auraSensory.triggerHaptic('flip');
+                        auraSensory.playSFX('flip'); 
+                        onClose(); 
+                      }} 
                       className="group relative p-1 z-50 hover:scale-110 transition-transform"
                     >
                       <div className="absolute inset-0 bg-black transform rotate-6 group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_rgba(0,0,0,0.3)]" />

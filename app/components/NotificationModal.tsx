@@ -108,7 +108,9 @@ export default function NotificationModal({ isOpen, onClose }: NotificationModal
                     className="group relative p-5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all active:scale-[0.98]"
                     onClick={() => {
                       if (log.link_url) {
-                        router.push(log.link_url); // 🌟 [수정] 현재 창에서 부드럽게 이동!
+                        //router.push(log.link_url); // 🌟 [수정] 현재 창에서 부드럽게 이동!
+                        // 🌟 대표님의 아이디어 적용: 빠르고 확실한 강제 새로고침 이동!
+                        window.location.href = log.link_url;
                         onClose(); // 🌟 [수정] 이동 후 모달창을 닫아줍니다.
                       }
                     }}

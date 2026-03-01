@@ -34,6 +34,7 @@ import NotificationModal from "../components/NotificationModal"; // 경로 확�
 import { useSearchParams, useRouter } from 'next/navigation';
 import { generateTrackingLink } from "@/lib/affiliate"; // 🌟 이거 추가!
 import OutlinkConfirmModal from "../components/OutlinkConfirmModal"; // 🌟 방금 만든 모달 불러오기
+import { auraSensory } from "@/lib/sensory";
 
 export default function Home() {
   const t = useTranslations('Home');
@@ -179,6 +180,12 @@ export default function Home() {
     }
   }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
 
+  // 탭이 바뀔 때마다 BGM 알아서 크로스페이드 됨!
+useEffect(() => {
+  if (viewMode === 'recommend') auraSensory.playBGM('foryou');
+  if (viewMode === 'explore') auraSensory.playBGM('explore');
+}, [viewMode]);
+
   useEffect(() => {
     if (!currentItem) return;
     const fetchArchiveCount = async () => {
@@ -272,7 +279,9 @@ export default function Home() {
         
         // 🌟 업로드 성공 후 처리
         setIsUploadModalOpen(false); // 모달 닫기
-        aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+        //aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+        auraSensory.triggerHaptic('success');
+        auraSensory.playSFX('upload');
         
         // (선택) 방금 올린 아이템을 내 피드 맨 앞에 즉시 추가하여 화면 갱신
         if (aura.setUploadedItems) {
@@ -300,7 +309,9 @@ export default function Home() {
     const targetNode = getCaptureElement();
     if (!targetNode) return alert("캡처할 수 있는 카드를 찾을 수 없습니다. (새로고침 후 다시 시도해주세요)");
 
-    aura.triggerHaptic([50, 100, 50]);
+    //aura.triggerHaptic([50, 100, 50]);
+    auraSensory.triggerHaptic('success');
+    auraSensory.playSFX('save');
     setIsExporting(true); // 버튼 숨김 처리
 
     // 🌟 다운로드는 시간이 넉넉하므로 폰트/레이아웃이 자리 잡을 때까지 0.15초 대기
@@ -411,7 +422,9 @@ export default function Home() {
 
   const paginate = (newDirection: number) => {
     console.log("🚨 [물리 엔진] 카드가 스와이프 되었습니다! 방향:", newDirection);
-    aura.triggerHaptic(40);
+    //aura.triggerHaptic(40);
+    auraSensory.triggerHaptic('heavy');
+    auraSensory.playSFX('swipe_pass');
     aura.setDirection(newDirection);
     aura.setCurrentIndex((prev) => (prev + newDirection + aura.fashionItems.length) % aura.fashionItems.length);
     setSwipeKey(prev => prev + 1);
@@ -568,7 +581,12 @@ export default function Home() {
         {aura.user ? (
           // 🌟 로그인 된 경우: 내 프로필 버튼 (아바타 스타일)
           <button 
-            onClick={() => { aura.triggerHaptic(20); setIsProfileOpen(true); }}
+            onClick={() => { 
+              //aura.triggerHaptic(20);
+              auraSensory.triggerHaptic('success');
+              auraSensory.playSFX('login'); 
+              setIsProfileOpen(true); 
+            }}
             className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
             >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold shadow-inner border border-white/10">

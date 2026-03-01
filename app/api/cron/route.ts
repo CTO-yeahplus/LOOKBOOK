@@ -180,6 +180,15 @@ export async function GET() {
 
     await Promise.all(sendPromises);
     console.log(`✅ [Cron Finish] 총 ${sendPromises.length}건 처리 완료`);
+    // 🌟 [추가] 7일이 지난 휘발성 시스템 로그(알림) 자동 파기
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: deleteError } = await supabase
+      .from('notifications')
+      .delete()
+      .lt('created_at', sevenDaysAgo);
+      
+    if (deleteError) console.error("오래된 알림 자동 파기 실패:", deleteError);
+    else console.log("🧹 7일 경과 알림 자동 파기 완료");
 
     return NextResponse.json({ success: true, strategy: selectedStrategy });
 

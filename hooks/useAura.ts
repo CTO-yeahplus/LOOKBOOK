@@ -6,6 +6,7 @@ import { useWeather } from "./useWeather";
 import { useSocial } from "./useSocial";
 import { useFeed } from "./useFeed";
 import { supabase } from "../lib/supabase";
+import { auraSensory } from "../lib/sensory";
 
 // hooks/useAura.ts (약 13번째 줄 FashionItem 인터페이스 내부)
 
@@ -46,9 +47,16 @@ export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionIt
   const social = useSocial(auth.user, () => setIsLoginModalOpen(true), triggerHaptic);
   const feed = useFeed(weather.localWeather.temp, social.savedItems, isPaused, injectedItem);
   // 🌟 기존 UI와 완벽 호환되도록 파라미터 랩핑
-  const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
-  const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
-
+  const toggleArchiveWrapper = (lookId: string) => {
+    social.toggleArchive(lookId, feed.fashionItems);
+    auraSensory.triggerHaptic('like');
+    auraSensory.playSFX('swipe_like');
+  }
+  const toggleLikeWrapper = (lookId: string, currentLikes: number) => {
+    social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
+    auraSensory.triggerHaptic('like');
+    auraSensory.playSFX('swipe_like');
+  }
     // 🌟 2. useEffect들이 모여있는 곳에 구독 상태 체크 로직 추가
   useEffect(() => {
     const checkPushStatus = async () => {

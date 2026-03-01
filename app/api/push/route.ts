@@ -42,7 +42,7 @@ export async function GET() {
     else console.log('✅ SYSTEM LOGS 기록 성공');
 
     // 2. 푸시 메시지 설정
-    const payload = JSON.stringify({ title, body, url: '/' });
+    const payload = JSON.stringify({ title, body, url: '/home' });
 
     // 🌟 [해결책 2] 발송 및 만료된(410) 구독 정보 자동 삭제 (자가 치유)
     const sendPromises = subscriptions.map(async (sub) => {
