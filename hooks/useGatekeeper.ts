@@ -46,7 +46,9 @@ export function useGatekeeper(userId: string | undefined) {
     if (!userId) {
       return { success: false, message: "구글 로그인이 먼저 필요합니다." };
     }
+    
     try {
+      // 1. 초대 코드 유효성 검사
       const { data: codeData, error: codeError } = await supabase
         .from('invite_codes')
         .select('*')
@@ -57,31 +59,59 @@ export function useGatekeeper(userId: string | undefined) {
         return { success: false, message: "유효하지 않거나 만료된 코드입니다." };
       }
 
-      const { error: updateError } = await supabase
+      // =================================================================
+      // 🌟 [핵심 수술] 409 에러(충돌)를 완벽하게 차단하는 스마트 업데이트 엔진
+      // =================================================================
+      const { data: existingProfile } = await supabase
         .from('aura_user_profiles')
-        .upsert({ 
-          id: userId, 
-          is_approved: true, 
-          used_invite_code: code.toUpperCase() 
-        });
+        .select('id')
+        .eq('id', userId)
+        .single();
 
-      if (updateError) return { success: false, message: "승인 처리 중 오류 발생" };
+      let profileError;
 
-      // 🌟 [핵심 수술] 에러를 반환받도록 수정합니다.
+      if (existingProfile) {
+        // (A) 트리거 덕분에 이미 DB에 자리가 있다면? -> 조용히 Update(수정)만 합니다.
+        const { error } = await supabase
+          .from('aura_user_profiles')
+          .update({ is_approved: true, used_invite_code: code.toUpperCase() })
+          .eq('id', userId);
+        profileError = error;
+      } else {
+        // (B) 예전에 가입해서 DB에 자리가 없는 '유령 유저'라면? -> 이메일 긁어와서 안전하게 Insert(생성) 합니다!
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase
+          .from('aura_user_profiles')
+          .insert({ 
+            id: userId, 
+            email: user?.email,
+            display_name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'AURA_MUSE',
+            is_approved: true, 
+            used_invite_code: code.toUpperCase() 
+          });
+        profileError = error;
+      }
+
+      if (profileError) {
+        console.error("🚨 프로필 갱신 실패:", profileError);
+        return { success: false, message: "승인 처리 중 오류 발생" };
+      }
+      // =================================================================
+
+      // 3. 초대 코드 사용 횟수(used_count) 1 증가
       const { error: countUpdateError } = await supabase
         .from('invite_codes')
         .update({ used_count: codeData.used_count + 1 })
         .eq('code', code.toUpperCase());
 
-        // 만약 업데이트가 차단(RLS 에러)되면 콘솔에 경고를 띄웁니다!
       if (countUpdateError) {
         console.error("🚨 초대 코드 카운트 업데이트 차단됨 (RLS 문제):", countUpdateError);
-        // (선택) 여기서 실패 처리할 수도 있지만, 일단 유저 승인은 진행시킵니다.
       }
 
       setIsApproved(true);
       return { success: true };
     } catch (e) {
+      console.error("시스템 에러:", e);
       return { success: false, message: "시스템 오류가 발생했습니다." };
     }
   };
