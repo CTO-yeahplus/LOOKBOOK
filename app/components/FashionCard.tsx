@@ -37,7 +37,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       style={{ y, rotateX, rotateY, transformStyle: "preserve-3d", willChange: "transform" }} 
       drag={isExporting ? false : "y"} 
       dragConstraints={{ top: 0, bottom: 0 }} 
-      dragElastic={0.7}
+      dragElastic={0.2}
       onDragEnd={(e, { offset, velocity }) => {
         const swipe = swipePower(offset.y, velocity.y); 
         if (swipe < -swipeConfidenceThreshold) paginate(1);
@@ -48,32 +48,30 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
         enter: (direction: number) => ({
           y: direction > 0 ? "100%" : "-100%", 
           opacity: 1, 
-          scale: 1.05, 
-          // 🚨 filter: "brightness(1.5)" 삭제!
+          scale: 1.1, 
+          filter: "brightness(1.8)"
         }),
         center: { 
           zIndex: 1, 
           y: 0, 
           opacity: 1, 
           scale: 1, 
-          // 🚨 filter: "brightness(1)" 삭제!
+          filter: "brightness(1)"
         },
         exit: (direction: number) => ({
           zIndex: 0,
-          y: direction < 0 ? "120%" : "-120%", 
+          y: direction < 0 ? "100%" : "-100%", 
           opacity: 0, 
           scale: 0.9, 
-          // 🚨 filter: "brightness(0.5)" 삭제!
+          filter: "brightness(0.5)"
         })
       }}
       initial="enter"
       animate="center"
       exit="exit"
       transition={{
-        y: { type: "spring", stiffness: 400, damping: 35, mass: 0.8 }, 
-        opacity: { duration: 0.15 },
-        scale: { duration: 0.15 },
-        // 🚨 filter: { duration: 0.15 } 삭제!
+        y: { type: "tween", duration: 0.35, ease: [0.25, 1, 0.5, 1] },
+        filter: { duration: 0.30 }
       }}
       ref={ref} 
       // 🌟 [수정 2] className 맨 앞의 relative를 'absolute'로 바꿉니다! (popLayout 없이도 카드가 완벽하게 겹치게 만듭니다)

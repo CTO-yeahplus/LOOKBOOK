@@ -104,27 +104,30 @@ export default function Home() {
     setIsBgmOn(!isBgmOn);
   };
 
-  // 🌟 [핵심 수술] 탄창 미리 채우기 (CORS 캐시 미스 완벽 해결)
+  // 다음 이미지 다운로드 역시 스와이프가 끝난 직후(0.4초 후)에 백그라운드에서 조용히 실행합니다.
   useEffect(() => {
     if (!aura.fashionItems || aura.fashionItems.length === 0) return;
 
-    const preloadImage = (indexOffset: number) => {
-      let targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
-      if (targetIndex < 0) targetIndex += aura.fashionItems.length; // 뒤로 가기 대비
+    const timer = setTimeout(() => {
+      const preloadImage = (indexOffset: number) => {
+        let targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
+        if (targetIndex < 0) targetIndex += aura.fashionItems.length; 
 
-      const targetItem = aura.fashionItems[targetIndex];
-      if (targetItem?.imageUrl) {
-        const img = new Image();
-        // 🌟 [핵심] 실제 카드와 동일한 보안(CORS) 규격을 달아주어야 브라우저가 캐시를 버리지 않습니다!
-        img.crossOrigin = "anonymous"; 
-        img.src = targetItem.imageUrl;
-      }
-    };
+        const targetItem = aura.fashionItems[targetIndex];
+        if (targetItem?.imageUrl) {
+          const img = new Image();
+          img.crossOrigin = "anonymous"; 
+          img.src = targetItem.imageUrl;
+        }
+      };
 
-    // 다음 2장, 이전 1장을 넉넉하게 장전합니다.
-    preloadImage(1);
-    preloadImage(2);
-    preloadImage(-1);
+      preloadImage(1);
+      preloadImage(2);
+      preloadImage(-1);
+    }, 400); // 🌟 0.4초 대기
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aura.currentIndex, aura.fashionItems]);
 
   useEffect(() => {
@@ -220,21 +223,27 @@ export default function Home() {
   }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
 
   // 탭이 바뀔 때마다 BGM 알아서 크로스페이드 됨!
-useEffect(() => {
-  if (viewMode === 'recommend') auraSensory.playBGM('foryou');
-  if (viewMode === 'explore') auraSensory.playBGM('explore');
-}, [viewMode]);
+  useEffect(() => {
+    if (viewMode === 'recommend') auraSensory.playBGM('foryou');
+    if (viewMode === 'explore') auraSensory.playBGM('explore');
+  }, [viewMode]);
 
   useEffect(() => {
     if (!currentItem) return;
-    const fetchArchiveCount = async () => {
+    let isMounted = true;
+
+    const timer = setTimeout(async () => {
       const { count } = await supabase
-        .from('aura_saved_looks') // 맞습니다! 아카이브 테이블에서 세어야 합니다.
+        .from('aura_saved_looks')
         .select('*', { count: 'exact', head: true })
         .eq('look_id', currentItem.id);
-      setArchiveCount(count || 0);
+      if (isMounted) setArchiveCount(count || 0);
+    }, 350); // 🌟 0.35초 대기
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
     };
-    fetchArchiveCount();
   }, [currentItem]);
 
   // 🌟 모바일 자이로스코프 (DeviceOrientation) 3D 입체 효과 연동
