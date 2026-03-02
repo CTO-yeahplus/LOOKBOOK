@@ -48,14 +48,15 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
         enter: (direction: number) => ({
           y: direction > 0 ? "100%" : "-100%", 
           opacity: 1, 
-          scale: 2.0, 
-          //filter: "brightness(1.1)"
+          scale: 1.3, 
+          filter: "blur(32)"
         }),
         center: { 
           zIndex: 1, 
           y: 0, 
           opacity: 1, 
-          scale: 1, 
+          scale: 1,
+          filter: "blur(0)" 
           //filter: "brightness(1)"
         },
         exit: (direction: number) => ({
