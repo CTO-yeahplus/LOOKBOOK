@@ -1,23 +1,23 @@
 // app/components/FloatingDock.tsx
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Download, Share2, ShoppingCart, MessageSquareWarning, Crown, Smartphone } from "lucide-react";
+import { Plus, Share2, ShoppingCart, ArrowDown, MessageSquareWarning, Crown, Smartphone } from "lucide-react"; // Download 삭제
 
 interface FloatingDockProps {
   showGyroButton: boolean;
   onRequestGyro: () => void;
   onUpload: () => void;
-  onExport: () => void;
-  onShare: () => void;       // 🌟 추가
-  onShop: () => void;        // 🌟 추가
-  onBugReport: () => void;   // 🌟 추가
+  onShare: () => void;       
+  onShop: () => void;        
+  onBugReport: () => void;   
   onOpenAdmin: () => void;
   isExporting: boolean;
   isAdmin: boolean;
+  isMobile: boolean; // 🌟 추가
 }
 
 export default function FloatingDock({ 
-  showGyroButton, onRequestGyro, onUpload, onExport, onShare, onShop, onBugReport, onOpenAdmin, isExporting, isAdmin 
+  showGyroButton, onRequestGyro, onUpload, onShare, onShop, onBugReport, onOpenAdmin, isExporting, isAdmin 
 }: FloatingDockProps) {
   return (
     <>
@@ -40,30 +40,24 @@ export default function FloatingDock({
         </button>
         <div className="h-6 w-[1px] bg-white/15" />
         
-        {/* 2. 다운로드 */}
-        <button onClick={onExport} disabled={isExporting} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95 disabled:opacity-50">
-          {isExporting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" /> : <Download className="h-4 w-4" />}
-        </button>
-        <div className="h-6 w-[1px] bg-white/15" />
-        
-        {/* 🌟 3. 공유하기 */}
-        <button onClick={onShare} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
-          <Share2 className="h-4 w-4" />
+        {/* 🌟 2. 공유하기 (다운로드 삭제 후 여기에 로딩 스피너 연동!) */}
+        <button onClick={onShare} disabled={isExporting} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95 disabled:opacity-50">
+          {isExporting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" /> : <ArrowDown className="h-4 w-4" />}
         </button>
         <div className="h-6 w-[1px] bg-white/15" />
 
-        {/* 🌟 4. 쇼핑하기 (W컨셉) */}
+        {/* 3. 쇼핑하기 (W컨셉) */}
         <button onClick={onShop} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
           <ShoppingCart className="h-4 w-4" />
         </button>
         <div className="h-6 w-[1px] bg-white/15" />
 
-        {/* 🌟 5. 버그 제보 */}
+        {/* 4. 버그 제보 */}
         <button onClick={onBugReport} className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-400 transition-all hover:bg-red-500/20 active:scale-95 border border-red-500/20">
           <MessageSquareWarning className="h-4 w-4" />
         </button>
 
-        {/* 6. 관리자 데스크 (대표님 전용) */}
+        {/* 5. 관리자 데스크 */}
         {isAdmin && (
           <>
             <div className="h-6 w-[1px] bg-white/15" />

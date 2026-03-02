@@ -65,6 +65,13 @@ class SensoryManager {
         });
       });
     }
+
+    stopBGM() {
+      if (this.currentBGM) {
+        this.currentBGM.pause();
+        this.currentBGM = null; // 메모리 해제
+      }
+    }
   
     // 부드럽게 소리가 줄어드는 효과 (Fade Out)
     private fadeOutAndStop(callback: () => void) {

@@ -4,7 +4,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Layers, Target, Camera, X, Smartphone, User, ShoppingBag, Bell } from "lucide-react";
+import { Layers, Volume2, VolumeX, Target, Camera, X, Smartphone, User, ShoppingBag, Bell } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
@@ -87,23 +87,44 @@ export default function Home() {
   const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
   const isAdmin = aura.user?.email === ADMIN_EMAIL;
 
-  // 🌟 [핵심 수술] 탄창 미리 채우기 (Image Preloading)
-  // 유저가 현재 카드를 보고 있을 때, 몰래 다음 2장의 이미지를 브라우저 메모리에 다운받아 둡니다!
+  // 2. Home 컴포넌트 최상단에 상태 추가
+  const [isBgmOn, setIsBgmOn] = useState(true);
+  // 🌟 [NEW] 기기 판별 상태 추가
+  const [isMobile, setIsMobile] = useState(true);
+  useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+  }, []);
+
+  const toggleBgm = () => {
+    if (isBgmOn) {
+      auraSensory.stopBGM();
+    } else {
+      auraSensory.playBGM(viewMode === 'recommend' ? 'foryou' : 'explore');
+    }
+    setIsBgmOn(!isBgmOn);
+  };
+
+  // 🌟 [핵심 수술] 탄창 미리 채우기 (CORS 캐시 미스 완벽 해결)
   useEffect(() => {
     if (!aura.fashionItems || aura.fashionItems.length === 0) return;
 
     const preloadImage = (indexOffset: number) => {
-      const targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
+      let targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
+      if (targetIndex < 0) targetIndex += aura.fashionItems.length; // 뒤로 가기 대비
+
       const targetItem = aura.fashionItems[targetIndex];
       if (targetItem?.imageUrl) {
         const img = new Image();
-        img.src = targetItem.imageUrl; // 브라우저가 몰래 다운로드 시작
+        // 🌟 [핵심] 실제 카드와 동일한 보안(CORS) 규격을 달아주어야 브라우저가 캐시를 버리지 않습니다!
+        img.crossOrigin = "anonymous"; 
+        img.src = targetItem.imageUrl;
       }
     };
 
-    // 바로 다음 카드(+1)와 다다음 카드(+2)를 미리 장전합니다.
+    // 다음 2장, 이전 1장을 넉넉하게 장전합니다.
     preloadImage(1);
     preloadImage(2);
+    preloadImage(-1);
   }, [aura.currentIndex, aura.fashionItems]);
 
   useEffect(() => {
@@ -319,18 +340,16 @@ useEffect(() => {
   };
   // 🌟 1. 다운로드 버튼용: 텍스트 밀림 방지 + 스마트 타겟팅
   const exportPhotocard = async () => {
-    // 🌟 커스텀 이벤트 추적: 누가 어떤 옷(ID)을 다운받았는지 기록!
     track('Download_Photocard', { look_id: currentItem?.id || 'unknown' });
     const targetNode = getCaptureElement();
-    if (!targetNode) return alert("캡처할 수 있는 카드를 찾을 수 없습니다. (새로고침 후 다시 시도해주세요)");
+    if (!targetNode) return alert("캡처 대상을 찾을 수 없습니다.");
 
-    //aura.triggerHaptic([50, 100, 50]);
     auraSensory.triggerHaptic('success');
     auraSensory.playSFX('save');
-    setIsExporting(true); // 버튼 숨김 처리
+    setIsExporting(true);
 
-    // 🌟 다운로드는 시간이 넉넉하므로 폰트/레이아웃이 자리 잡을 때까지 0.15초 대기
-    await new Promise(resolve => setTimeout(resolve, 150));
+    // 🌟 [밀림 방지 1] 스프링 바운스가 완전히 가라앉고 위치(Y=0)가 잡힐 때까지 충분히 대기 (0.3초)
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     try {
       const dataUrl = await toPng(targetNode, { 
@@ -338,17 +357,37 @@ useEffect(() => {
         pixelRatio: 3, 
         cacheBust: true,
         style: { 
-          transform: 'none', 
-          transition: 'none',
+          // 🌟 [밀림 방지 2] 캡처 순간 카드의 Y축 이동과 3D 회전을 강제로 0으로 리셋!
+          transform: 'translate3d(0px, 0px, 0px) scale(1) rotate(0deg) !important', 
+          transition: 'none !important',
+          animation: 'none !important',
         }
       });
-      const link = document.createElement('a');
-      link.download = `AURA_Look_${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
+
+      // 🌟 [iOS .data 다운로드 버그 해결] 기기 판별 엔진
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+      // 🌟 [핵심 수술] 타입스크립트의 잔소리를 차단하는 마법의 키워드 (as any)를 씌워줍니다.
+      if (isIOS && (navigator as any).canShare) {
+        const blob = await (await fetch(dataUrl)).blob();
+        const file = new File([blob], `AURA_Look_${Date.now()}.png`, { type: 'image/png' });
+        
+        await navigator.share({
+          files: [file],
+          title: 'AURA Archive'
+        });
+      } else {
+        // 🤖 Android / PC: 정상적으로 다운로드 진행
+        const link = document.createElement('a');
+        link.download = `AURA_Look_${Date.now()}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (error) { 
       console.error(error);
-      alert('포토카드 캡처 실패. 네트워크나 이미지 정책을 확인해주세요.'); 
+      alert('포토카드 저장에 실패했습니다.'); 
     } finally { 
       setIsExporting(false); 
     }
@@ -366,40 +405,70 @@ useEffect(() => {
   };
 
   // 🌟 2. 공유 버튼용: 브라우저 타임아웃 차단 우회 엔진
+  // 🌟 [통합 완료] 캡처 + 공유 + 취소 에러 무시가 완벽히 적용된 마스터 공유 엔진
+  // 🌟 [통합 완료] 위치 밀림 방지 + Mac/PC 강제 다운로드 적용
   const sharePhotocard = async () => {
-    // 🌟 커스텀 이벤트 추적: 어떤 옷이 제일 많이 공유되는지 기록!
     track('Share_Look', { look_id: currentItem?.id || 'unknown' });
     const targetNode = getCaptureElement();
     if (!targetNode) return alert("공유할 수 있는 카드를 찾을 수 없습니다.");
 
-    aura.triggerHaptic(50);
+    auraSensory.triggerHaptic('success');
+    auraSensory.playSFX('save');
     setIsExporting(true);
 
-    // 🌟 [핵심 보수] 모바일 브라우저의 '공유 차단'을 막기 위해 대기 시간을 10ms로 극단적 단축!
-    await new Promise(resolve => setTimeout(resolve, 10));
+    // 🌟 [밀림 방지 1] 스프링 바운스가 완전히 가라앉을 때까지 대기
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     try {
       const dataUrl = await toPng(targetNode, { 
-        quality: 0.8, // 🌟 캡처 속도를 올리기 위해 화질을 살짝만 타협
+        quality: 0.9, 
         pixelRatio: 2, 
         cacheBust: true,
-        style: { transform: 'none', transition: 'none' }
+        // 🌟 [밀림 방지 2 핵심] 캡처하는 순간 absolute를 relative로 강제 변환하고, 
+        // 화면 중앙에 위치하던 좌표를 0,0으로 강제 초기화하여 프레임 이탈을 완벽 차단합니다!
+        style: { 
+          transform: 'none', 
+          position: 'relative',
+          margin: '0',
+          top: '0',
+          left: '0',
+          bottom: 'auto',
+          right: 'auto',
+          transition: 'none !important',
+          animation: 'none !important',
+        }
       });
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], 'AURA_Look.png', { type: 'image/png' });
 
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      const blob = await (await fetch(dataUrl)).blob();
+      const file = new File([blob], `AURA_Look_${Date.now()}.png`, { type: 'image/png' });
+
+      // 🌟 [PC/Mac 예외 처리 핵심] 이 기기가 스마트폰/태블릿인지 명확히 판별합니다.
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+      // 모바일이고 공유창(canShare)을 지원할 때만 시스템 공유창을 띄웁니다.
+      if (isMobile && (navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
         await navigator.share({
           title: 'AURA: 오늘의 추천 룩 🌤️',
           text: 'AURA가 추천하는 날씨 맞춤 룩을 확인해보세요!',
           files: [file],
         });
       } else {
-        throw new Error("Device does not support file sharing");
+        // 💻 Mac, Windows PC이거나 공유를 지원하지 않으면 무조건 '즉시 파일 다운로드'를 실행합니다.
+        const link = document.createElement('a');
+        link.download = `AURA_Look_${Date.now()}.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
-    } catch (err) {
-      console.log("공유 시스템 에러(주소 복사로 대체):", err);
-      // 공유 창 띄우기에 실패하면 즉시 주소 복사로 대체
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      // 유저가 공유 창을 그냥 닫은 경우 조용히 넘어감
+      if (err.name === 'AbortError') {
+        console.log("사용자가 공유를 취소했습니다.");
+        return;
+      }
+      console.error("공유 실패:", err);
       navigator.clipboard.writeText(window.location.href);
       alert(t('share_link_copied'));
     } finally {
@@ -503,17 +572,20 @@ useEffect(() => {
       className="relative flex h-[100dvh] w-screen flex-col items-center justify-center overflow-hidden bg-black font-sans selection:bg-white/30"
       style={{ perspective: 1000 }}
     >
-      <AnimatePresence> {/* 🌟 mode="popLayout" 제거, 불필요한 충돌 방지 */}
+      {/* 🌟 렉의 주범이었던 배경 이미지 최적화 */}
+      <AnimatePresence>
         <motion.div 
-          key={`bg-${currentItem.id}`} // 🌟 swipeKey 제거 (아이디만으로 충분)
+          key={`bg-${currentItem.id}`} 
           initial={{ opacity: 0 }} 
-          animate={{ opacity: 0.5 }} 
+          animate={{ opacity: 0.3 }} // 🌟 투명도를 0.5 -> 0.3으로 낮춰 블렌딩 연산 최소화
           exit={{ opacity: 0 }} 
-          transition={{ duration: 0.2 }} // 🌟 0.8 -> 0.2초로 단축! (뒤끝 없이 즉시 사라짐)
-          className="absolute inset-0 z-0 pointer-events-none transform-gpu" // 🌟 터치 간섭 금지 + GPU 가속 강제 
+          transition={{ duration: 0.3 }} // 🌟 지속시간 단축 (오래 겹쳐있으면 렉 발생)
+          className="absolute inset-0 z-0 pointer-events-none transform-gpu"
         >
+          {/* 🌟 blur 60px을 20px로 확 줄이고, 부족한 어둠은 밑의 div 오버레이로 채웁니다. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[60px] saturate-150" alt="background blur" />
+          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[20px] saturate-150" alt="background blur" />
+          <div className="absolute inset-0 bg-black/60" /> {/* 이걸로 어두움을 커버 */}
         </motion.div>
       </AnimatePresence>
 
@@ -625,6 +697,13 @@ useEffect(() => {
 
         {/* 2. 상단 우측: 버튼 그룹 */}
         <div className="flex items-center gap-1">
+          {/* 🌟 [NEW] BGM 토글 버튼 */}
+            <button 
+              onClick={() => { toggleBgm(); aura.triggerHaptic(10); }}
+              className="h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95"
+            >
+              {isBgmOn ? <Volume2 className="w-4 h-4 text-white" /> : <VolumeX className="w-4 h-4 text-white/40" />}
+            </button>
           {/* 시스템 로그 버튼 */}
           <button 
             onClick={() => { setIsNotiOpen(true); aura.triggerHaptic(10); }}
@@ -757,14 +836,13 @@ useEffect(() => {
         showGyroButton={showGyroButton}
         onRequestGyro={requestGyroPermission}
         onUpload={() => setIsUploadModalOpen(true)}
-        onExport={exportPhotocard}
-        // 🌟 아래 3줄 추가
         onShare={sharePhotocard}
         onShop={handleShopNow}
         onBugReport={handleBugReport}
         onOpenAdmin={() => setIsAdminModalOpen(true)}
         isExporting={isExporting}
         isAdmin={isAdmin}
+        isMobile={isMobile} // 🌟 [NEW] 기기 정보 전달!
       />
 
       <ArchiveModal 
