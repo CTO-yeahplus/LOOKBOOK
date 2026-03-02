@@ -59,6 +59,33 @@ export default function LoginModal({ isOpen, onClose, onSignIn, onSignInWithEmai
 
             <div className="flex flex-col gap-3">
               {/* =================================================== */}
+
+              {/* Google */}
+              <button onClick={() => onSignIn('google')} className="flex items-center justify-center gap-3 rounded-xl bg-white p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
+                <GoogleIcon /><span>{t('continue_google')}</span>
+              </button>
+              {/* GitHub */}
+              <button onClick={() => onSignIn('github')} className="flex items-center justify-center gap-3 rounded-xl bg-[#24292E] p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/10">
+                <GithubIcon /><span>{t('continue_github')}</span>
+              </button>
+              {/* Kakao 
+              <button onClick={() => onSignIn('kakao')} className="flex items-center justify-center gap-3 rounded-xl bg-[#FEE500] p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
+              <KakaoIcon /><span>{t('continue_kakao')}</span>
+              </button>
+
+              <button onClick={() => onSignIn('twitter')} className="flex items-center justify-center gap-3 rounded-xl bg-black p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/20">
+               <XIcon /><span>{t('continue_x')}</span>
+              </button>
+              */}
+
+              {/* 구분선 */}
+              <div className="flex items-center gap-3 mb-2 opacity-40">
+                <div className="h-[1px] flex-1 bg-white"></div>
+                <span className="text-[10px] font-mono tracking-widest uppercase text-white">OR</span>
+                <div className="h-[1px] flex-1 bg-white"></div>
+              </div>
+              
+              {/* =================================================== */}
               {/* 🌟 [NEW] 이메일 로그인 폼 (Magic Link) */}
               {/* =================================================== */}
               {!isSent ? (
@@ -87,32 +114,6 @@ export default function LoginModal({ isOpen, onClose, onSignIn, onSignInWithEmai
                   <p className="text-xs text-green-400/70 mt-1">이메일함을 확인하고 링크를 클릭하세요.</p>
                 </div>
               )}
-
-              {/* 구분선 */}
-              <div className="flex items-center gap-3 mb-2 opacity-40">
-                <div className="h-[1px] flex-1 bg-white"></div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-white">OR</span>
-                <div className="h-[1px] flex-1 bg-white"></div>
-              </div>
-              {/* =================================================== */}
-
-              {/* Google */}
-              <button onClick={() => onSignIn('google')} className="flex items-center justify-center gap-3 rounded-xl bg-white p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
-                <GoogleIcon /><span>{t('continue_google')}</span>
-              </button>
-              {/* GitHub */}
-              <button onClick={() => onSignIn('github')} className="flex items-center justify-center gap-3 rounded-xl bg-[#24292E] p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/10">
-                <GithubIcon /><span>{t('continue_github')}</span>
-              </button>
-              {/* Kakao 
-              <button onClick={() => onSignIn('kakao')} className="flex items-center justify-center gap-3 rounded-xl bg-[#FEE500] p-4 text-sm font-bold text-black transition-transform hover:scale-[1.02] active:scale-95">
-              <KakaoIcon /><span>{t('continue_kakao')}</span>
-              </button>
-
-              <button onClick={() => onSignIn('twitter')} className="flex items-center justify-center gap-3 rounded-xl bg-black p-4 text-sm font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 border border-white/20">
-               <XIcon /><span>{t('continue_x')}</span>
-              </button>
-              */}
             </div>
           </motion.div>
         </motion.div>
