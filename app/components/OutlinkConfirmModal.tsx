@@ -1,6 +1,6 @@
 // app/components/OutlinkConfirmModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, ExternalLink, ShieldAlert } from "lucide-react";
+import { ShoppingBag, ExternalLink, ShieldAlert } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
@@ -32,7 +32,7 @@ export default function OutlinkConfirmModal({ isOpen, onClose, onConfirm }: Prop
 
             <div className="relative z-10 p-8 text-center">
               <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <ShoppingCart className="w-6 h-6 text-white" />
+                <ShoppingBag className="w-6 h-6 text-white" />
               </div>
               
               <h3 className="text-3xl font-serif italic font-black text-white mb-2 uppercase tracking-tighter">

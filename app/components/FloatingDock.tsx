@@ -1,7 +1,7 @@
 // app/components/FloatingDock.tsx
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ShoppingCart, ArrowDown, MessageSquareWarning, Crown, Smartphone } from "lucide-react"; // Download 삭제
+import { Plus,  ShoppingBag, ArrowDown, MessageSquareWarning, Crown, Smartphone } from "lucide-react"; // Download 삭제
 
 interface FloatingDockProps {
   showGyroButton: boolean;
@@ -48,7 +48,7 @@ export default function FloatingDock({
 
         {/* 3. 쇼핑하기 (W컨셉) */}
         <button onClick={onShop} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
-          <ShoppingCart className="h-4 w-4" />
+          <ShoppingBag className="h-4 w-4" />
         </button>
         <div className="h-6 w-[1px] bg-white/15" />
 

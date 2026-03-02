@@ -32,6 +32,21 @@ export function useAuth() {
     });
   };
 
+  // 🌟 [NEW] 이메일 매직 링크 발송 엔진
+  const signInWithEmail = async (email: string) => {
+    const redirectUrl = typeof window !== "undefined" 
+      ? `${window.location.origin}/home` 
+      : "http://localhost:3000/home";
+
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { 
+        emailRedirectTo: redirectUrl 
+      }
+    });
+    return { data, error };
+  };
+
   const signOut = async () => { await supabase.auth.signOut(); };
 
   const saveInstagram = async (handle: string) => {
@@ -45,5 +60,6 @@ export function useAuth() {
     }
   };
 
-  return { user, setUser, signIn, signOut, login: signIn, logout: signOut, saveInstagram };
+  // 🌟 반환 객체에 signInWithEmail 추가
+  return { user, setUser, signIn, signInWithEmail, signOut, login: signIn, logout: signOut, saveInstagram };
 }

@@ -4,7 +4,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
-import { Layers, Volume2, VolumeX, Target, Camera, X, Smartphone, User, ShoppingBag, Bell } from "lucide-react";
+import { Layers, Volume2, VolumeX, Target, Camera, X, Smartphone, User,  Bell } from "lucide-react";
 import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
@@ -504,6 +504,8 @@ export default function Home() {
             aura.signIn(provider);
             aura.setIsLoginModalOpen(false);
           }} 
+          // 🌟 이 줄을 반드시 추가해주세요!
+          onSignInWithEmail={async (email) => await aura.signInWithEmail(email)}
         />
       </main>
     );
@@ -672,7 +674,7 @@ export default function Home() {
             <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
           </button>
 
-          {/* 쇼핑백 버튼 */}
+          {/* 쇼핑백 버튼 - 아직 협찬이 안들어와서 그러니 숨겨놓을까? ShoppingBag으로 했지만 나중에 다른 방식으로 진행하자
           <button 
             onClick={() => {
               if (currentItem?.id) {
@@ -684,6 +686,7 @@ export default function Home() {
           >
             <ShoppingBag className="h-4 w-4 text-white" />
           </button>
+          */}
 
           {/* 아카이브 버튼 (레이어) */}
           <button 
@@ -854,13 +857,16 @@ export default function Home() {
       onClose={() => setIsRankingOpen(false)} 
       items={aura.fashionItems}
       />
+
       <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)} 
+        isOpen={aura.isLoginModalOpen} 
+        onClose={() => aura.setIsLoginModalOpen(false)} 
         onSignIn={(provider) => {
           aura.signIn(provider);
-          setIsLoginModalOpen(false); // 로그인 시도 후 모달 닫기
+          aura.setIsLoginModalOpen(false);
         }} 
+        // 🌟 이 줄을 반드시 추가해주세요!
+        onSignInWithEmail={async (email) => await aura.signInWithEmail(email)}
       />
 
       <ShopModal 

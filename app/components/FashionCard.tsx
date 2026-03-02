@@ -64,6 +64,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
           y: direction < 0 ? "100%" : "-100%", 
           opacity: 0, 
           scale: 0.9, 
+          filter: "blur(0)" 
           //filter: "brightness(0.5)"
         })
       }}
@@ -72,7 +73,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       exit="exit"
       transition={{
         y: { type: "tween", duration: 0.35, ease: [0.25, 1, 0.5, 1] },
-        //filter: { duration: 0.30 }
+        filter: { duration: 0.15 }
       }}
       ref={ref} 
       // 🌟 [수정 2] className 맨 앞의 relative를 'absolute'로 바꿉니다! (popLayout 없이도 카드가 완벽하게 겹치게 만듭니다)
