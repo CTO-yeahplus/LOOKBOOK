@@ -174,6 +174,7 @@ export default function Home() {
       // 주소창 청소
       window.history.replaceState({}, '', '/home');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deepLinkItemId]);
 
   // 🌟 [NEW] 오토 패스(Auto-Pass) 엔진
@@ -338,61 +339,7 @@ useEffect(() => {
       setIsAnalyzing(false); // AI 로딩 화면 끄기
     }
   };
-  // 🌟 1. 다운로드 버튼용: 텍스트 밀림 방지 + 스마트 타겟팅
-  const exportPhotocard = async () => {
-    track('Download_Photocard', { look_id: currentItem?.id || 'unknown' });
-    const targetNode = getCaptureElement();
-    if (!targetNode) return alert("캡처 대상을 찾을 수 없습니다.");
-
-    auraSensory.triggerHaptic('success');
-    auraSensory.playSFX('save');
-    setIsExporting(true);
-
-    // 🌟 [밀림 방지 1] 스프링 바운스가 완전히 가라앉고 위치(Y=0)가 잡힐 때까지 충분히 대기 (0.3초)
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    try {
-      const dataUrl = await toPng(targetNode, { 
-        quality: 1.0, 
-        pixelRatio: 3, 
-        cacheBust: true,
-        style: { 
-          // 🌟 [밀림 방지 2] 캡처 순간 카드의 Y축 이동과 3D 회전을 강제로 0으로 리셋!
-          transform: 'translate3d(0px, 0px, 0px) scale(1) rotate(0deg) !important', 
-          transition: 'none !important',
-          animation: 'none !important',
-        }
-      });
-
-      // 🌟 [iOS .data 다운로드 버그 해결] 기기 판별 엔진
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-
-      // 🌟 [핵심 수술] 타입스크립트의 잔소리를 차단하는 마법의 키워드 (as any)를 씌워줍니다.
-      if (isIOS && (navigator as any).canShare) {
-        const blob = await (await fetch(dataUrl)).blob();
-        const file = new File([blob], `AURA_Look_${Date.now()}.png`, { type: 'image/png' });
-        
-        await navigator.share({
-          files: [file],
-          title: 'AURA Archive'
-        });
-      } else {
-        // 🤖 Android / PC: 정상적으로 다운로드 진행
-        const link = document.createElement('a');
-        link.download = `AURA_Look_${Date.now()}.png`;
-        link.href = dataUrl;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (error) { 
-      console.error(error);
-      alert('포토카드 저장에 실패했습니다.'); 
-    } finally { 
-      setIsExporting(false); 
-    }
-  };
-
+  
   // 🌟 [NEW] 캡처 대상을 스마트하게 찾는 레이더 함수
   const getCaptureElement = () => {
     // 1순위: 딥다이브 모달이 열려있다면 '현재 보고 있는 면(앞/뒤)'을 정밀 타겟팅
@@ -446,6 +393,7 @@ useEffect(() => {
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       // 모바일이고 공유창(canShare)을 지원할 때만 시스템 공유창을 띄웁니다.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (isMobile && (navigator as any).canShare && (navigator as any).canShare({ files: [file] })) {
         await navigator.share({
           title: 'AURA: 오늘의 추천 룩 🌤️',
@@ -462,13 +410,13 @@ useEffect(() => {
         document.body.removeChild(link);
       }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      // 유저가 공유 창을 그냥 닫은 경우 조용히 넘어감
-      if (err.name === 'AbortError') {
+    } catch (err: unknown) {
+      const error = err as Error;
+      if (error.name === 'AbortError') {
         console.log("사용자가 공유를 취소했습니다.");
         return;
       }
-      console.error("공유 실패:", err);
+      console.error("공유 실패:", error);
       navigator.clipboard.writeText(window.location.href);
       alert(t('share_link_copied'));
     } finally {
