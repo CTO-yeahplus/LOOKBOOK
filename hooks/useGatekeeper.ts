@@ -1,5 +1,15 @@
+// hooks/useGatekeeper.ts
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+//import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
+
+// 🌟 [핵심 해결책] 일반 유저용(Anon) 키가 아닌, 시스템 최상위 권한(Service Role) 키를 사용해 관리자 전용 클라이언트를 만듭니다.
+//const supabase = createClient(
+//  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//  process.env.SUPABASE_SERVICE_ROLE_KEY! // 이 키는 RLS 보안 정책을 모두 무시하는 God Mode 키입니다.
+//);
 
 export interface VerifyResult {
   success: boolean;
@@ -49,15 +59,25 @@ export function useGatekeeper(userId: string | undefined) {
 
       const { error: updateError } = await supabase
         .from('aura_user_profiles')
-        .update({ is_approved: true, used_invite_code: code.toUpperCase() })
-        .eq('id', userId);
+        .upsert({ 
+          id: userId, 
+          is_approved: true, 
+          used_invite_code: code.toUpperCase() 
+        });
 
       if (updateError) return { success: false, message: "승인 처리 중 오류 발생" };
 
-      await supabase
+      // 🌟 [핵심 수술] 에러를 반환받도록 수정합니다.
+      const { error: countUpdateError } = await supabase
         .from('invite_codes')
         .update({ used_count: codeData.used_count + 1 })
         .eq('code', code.toUpperCase());
+
+        // 만약 업데이트가 차단(RLS 에러)되면 콘솔에 경고를 띄웁니다!
+      if (countUpdateError) {
+        console.error("🚨 초대 코드 카운트 업데이트 차단됨 (RLS 문제):", countUpdateError);
+        // (선택) 여기서 실패 처리할 수도 있지만, 일단 유저 승인은 진행시킵니다.
+      }
 
       setIsApproved(true);
       return { success: true };

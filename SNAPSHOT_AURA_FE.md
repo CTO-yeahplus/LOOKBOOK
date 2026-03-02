@@ -1,6 +1,6 @@
 # 🧠 Deep Context Snapshot
 
-**Generated at:** 2026-02-28 20:05:17
+**Generated at:** 2026-03-02 22:00:25
 **Project:** aura-v2 (0.1.0)
 **Tech Stack:** Next.js, React, Tailwind CSS, Supabase, Framer Motion
 
@@ -14,7 +14,7 @@
 ---
 
 ## 🗺️ File Map
-**Total Files Scanned:** 70
+**Total Files Scanned:** 75
 
 ```text
 .
@@ -42,6 +42,8 @@
 │   │   terms/
 │   │   │   ├── page.tsx
 │   │   admin/
+│   │   │   distribution/
+│   │   │   │   ├── page.tsx
 │   │   │   blog/
 │   │   │   │   ├── page.tsx
 │   │   │   magazine/
@@ -56,6 +58,7 @@
 │   │   │   ├── NotificationModal.tsx
 │   │   │   ├── ArchiveModal.tsx
 │   │   │   ├── DeepDiveModal.tsx
+│   │   │   ├── OutlinkConfirmModal.tsx
 │   │   │   ├── LocationSelector.tsx
 │   │   │   ├── ActionMenuModal.tsx
 │   │   │   ├── StampEditor.tsx
@@ -84,6 +87,8 @@
 │   │   │   │   │   ├── page.tsx
 │   │   │   │   approve/
 │   │   │   │   │   ├── route.ts
+│   │   │   │   extract-tags/
+│   │   │   │   │   ├── route.ts
 │   │   │   fashion/
 │   │   │   │   ├── route.ts
 │   │   │   generate-editorial/
@@ -98,6 +103,8 @@
 │   │   │   │   ├── route.ts
 │   │   │   cron/
 │   │   │   │   ├── route.ts
+│   │   │   │   auto-pilot/
+│   │   │   │   │   ├── route.ts
 │   │   fonts/
 │   │   [username]/
 │   │   │   ├── page.tsx
@@ -106,6 +113,7 @@
 │   │   ├── manifest.json
 │   │   ├── sw.js
 │   │   images/
+│   │   audio/
 │   hooks/
 │   │   ├── useAura.ts
 │   │   ├── useSocial.ts
@@ -117,6 +125,7 @@
 │   lib/
 │   │   ├── affiliate.ts
 │   │   ├── recommendation.ts
+│   │   ├── sensory.ts
 │   │   ├── constants.ts
 │   │   ├── supabase.ts
 │   services/
@@ -137,6 +146,14 @@
       {
         "path": "/api/cron",
         "schedule": "0 22 * * *"
+      },
+      {
+        "path": "/api/cron",
+        "schedule": "0 11 * * *"
+      },
+      {
+        "path": "/api/cron/auto-pilot",
+        "schedule": "0 0 * * *" 
       }
     ]
   }
@@ -5957,7 +5974,7 @@ export default config;
         "share_title": "Share this Look",
         "share_desc": "Send lookbook image to Kakao/Instagram",
         "shop_title": "Shop this Style",
-        "shop_desc": "Search similar items on Musinsa",
+        "shop_desc": "Search premium items on W Concept",
         "sync_active": "AURA SYNC : ACTIVE",
         "sync_off": "SYNC WITH AURA",
         "sync_desc_on": "Frequency synced. Awaiting tomorrow's inspiration.",
@@ -6160,7 +6177,7 @@ export default config;
         "share_title": "이 룩 공유하기",
         "share_desc": "룩북 이미지를 카카오톡/인스타로 전송",
         "shop_title": "이 스타일 쇼핑하기",
-        "shop_desc": "무신사에서 비슷한 옷 검색",
+        "shop_desc": "W컨셉에서 프리미엄 아이템 검색",
         "sync_active": "AURA SYNC : ACTIVE",
         "sync_off": "SYNC WITH AURA",
         "sync_desc_on": "주파수 동기화 완료. 내일의 영감을 대기 중입니다.",
@@ -6414,7 +6431,7 @@ export default async function RootLayout({
         > **Context Summary**
         * 🔗 **Imports:** `lucide-react, next/link, react, framer-motion, next-intl`
 * 🧩 **Component (Default):** `LandingPage`
-* ww **Hooks:** `useTransform, useRef, useState, useScroll, useEffect, useTranslations`
+* ww **Hooks:** `useState, useTranslations, useTransform, useEffect, useScroll, useRef`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
@@ -6462,7 +6479,7 @@ export default function LandingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // 🌟 [NEW] 제출 함수
+  // 🌟 [NEW] 제출 함수 (중복 에러 메시지 처리 추가)
   const handleWaitlistSubmit = async () => {
     if (!igHandle || !email) return alert("인스타그램 ID와 이메일을 모두 입력해주세요.");
     setIsSubmitting(true);
@@ -6472,8 +6489,15 @@ export default function LandingPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instagram: igHandle, email })
       });
-      if (res.ok) setIsSubmitted(true);
-      else alert("오류가 발생했습니다. 다시 시도해주세요.");
+      
+      const data = await res.json(); // 🌟 서버가 보내는 데이터 추출
+
+      if (res.ok) {
+        setIsSubmitted(true);
+      } else {
+        // 🌟 서버에서 "이미 대기 중이거나..." 에러를 보내면 그걸 띄워줌
+        alert(data.error || "오류가 발생했습니다. 다시 시도해주세요.");
+      }
     } catch {
       alert("네트워크 오류가 발생했습니다.");
     } finally {
@@ -6880,7 +6904,7 @@ body {
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react, html-to-image, @/hooks/useGatekeeper`...
 * 🧩 **Component (Default):** `Home`
-* ww **Hooks:** `useTransform, useState, useMotionValue, useGatekeeper, useRouter, useGyroscope, useSearchParams`
+* ww **Hooks:** `useState, useSearchParams, useTranslations, useMotionValue, useGatekeeper, useTransform, useAura`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
@@ -6895,7 +6919,6 @@ import { toPng } from "html-to-image";
 import { useAura, FashionItem } from "../../hooks/useAura";
 import ArchiveModal from "../components/ArchiveModal";
 import LoginModal from "../components/LoginModal"; 
-import ActionMenuModal from "../components/ActionMenuModal";
 import UploadModal from "../components/UploadModal";
 import AdminModal from "../components/AdminModal"; 
 import { supabase } from "../../lib/supabase"; 
@@ -6919,22 +6942,25 @@ import imageCompression from 'browser-image-compression';
 import { useTranslations } from 'next-intl';
 import NotificationModal from "../components/NotificationModal"; // 경로 확인!
 import { useSearchParams, useRouter } from 'next/navigation';
+import { generateTrackingLink } from "@/lib/affiliate"; // 🌟 이거 추가!
+import OutlinkConfirmModal from "../components/OutlinkConfirmModal"; // 🌟 방금 만든 모달 불러오기
+import { auraSensory } from "@/lib/sensory";
 
 export default function Home() {
   const t = useTranslations('Home');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isNotiOpen, setIsNotiOpen] = useState(false);
+  const [isOutlinkModalOpen, setIsOutlinkModalOpen] = useState(false); // 🌟 모달 띄우기 스위치 추가
 
   const [isExporting, setIsExporting] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const [swipeKey, setSwipeKey] = useState(0);
+  //const [swipeKey, setSwipeKey] = useState(0);
   const [viewMode, setViewMode] = useState<'recommend' | 'explore'>('recommend');
   const [isMissionDismissed, setIsMissionDismissed] = useState(false); // 🌟 미션 배너 닫기 상태
   const deepLinkItemId = searchParams.get('item_id');
   
   // 🌟 슬라이드 메뉴 상태
-  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
@@ -6946,14 +6972,10 @@ export default function Home() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [exploreSelectedItem, setExploreSelectedItem] = useState<FashionItem | null>(null);
 
-
-
   const mouseX = useMotionValue(typeof window !== "undefined" ? window.innerWidth / 2 : 0);
   const mouseY = useMotionValue(typeof window !== "undefined" ? window.innerHeight / 2 : 0);
   const rotateX = useTransform(mouseY, [0, typeof window !== "undefined" ? window.innerHeight : 1000], [10, -10]);
   const rotateY = useTransform(mouseX, [0, typeof window !== "undefined" ? window.innerWidth : 1000], [-10, 10]);
-  const x = useMotionValue(0);
-  const imageX = useTransform(x, [-200, 200], [20, -20]);
 
   // 자이로스코프 커스텀 훅 사용
   const { showGyroButton, requestGyroPermission } = useGyroscope(mouseX, mouseY);
@@ -6974,6 +6996,25 @@ export default function Home() {
   // 🌟 (매우 중요) 여기에 당신의 구글 로그인 이메일을 정확히 입력하십시오!
   const ADMIN_EMAIL = "cto@yeahplus.co.kr"; 
   const isAdmin = aura.user?.email === ADMIN_EMAIL;
+
+  // 🌟 [핵심 수술] 탄창 미리 채우기 (Image Preloading)
+  // 유저가 현재 카드를 보고 있을 때, 몰래 다음 2장의 이미지를 브라우저 메모리에 다운받아 둡니다!
+  useEffect(() => {
+    if (!aura.fashionItems || aura.fashionItems.length === 0) return;
+
+    const preloadImage = (indexOffset: number) => {
+      const targetIndex = (aura.currentIndex + indexOffset) % aura.fashionItems.length;
+      const targetItem = aura.fashionItems[targetIndex];
+      if (targetItem?.imageUrl) {
+        const img = new Image();
+        img.src = targetItem.imageUrl; // 브라우저가 몰래 다운로드 시작
+      }
+    };
+
+    // 바로 다음 카드(+1)와 다다음 카드(+2)를 미리 장전합니다.
+    preloadImage(1);
+    preloadImage(2);
+  }, [aura.currentIndex, aura.fashionItems]);
 
   useEffect(() => {
     // 딥링크 ID가 있고, 아직 데이터를 안 가져왔다면 실행
@@ -7063,6 +7104,12 @@ export default function Home() {
       aura.triggerHaptic(10); 
     }
   }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
+
+  // 탭이 바뀔 때마다 BGM 알아서 크로스페이드 됨!
+useEffect(() => {
+  if (viewMode === 'recommend') auraSensory.playBGM('foryou');
+  if (viewMode === 'explore') auraSensory.playBGM('explore');
+}, [viewMode]);
 
   useEffect(() => {
     if (!currentItem) return;
@@ -7157,7 +7204,9 @@ export default function Home() {
         
         // 🌟 업로드 성공 후 처리
         setIsUploadModalOpen(false); // 모달 닫기
-        aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+        //aura.triggerHaptic([50, 100, 50]); // 성공 진동!
+        auraSensory.triggerHaptic('success');
+        auraSensory.playSFX('upload');
         
         // (선택) 방금 올린 아이템을 내 피드 맨 앞에 즉시 추가하여 화면 갱신
         if (aura.setUploadedItems) {
@@ -7185,7 +7234,9 @@ export default function Home() {
     const targetNode = getCaptureElement();
     if (!targetNode) return alert("캡처할 수 있는 카드를 찾을 수 없습니다. (새로고침 후 다시 시도해주세요)");
 
-    aura.triggerHaptic([50, 100, 50]);
+    //aura.triggerHaptic([50, 100, 50]);
+    auraSensory.triggerHaptic('success');
+    auraSensory.playSFX('save');
     setIsExporting(true); // 버튼 숨김 처리
 
     // 🌟 다운로드는 시간이 넉넉하므로 폰트/레이아웃이 자리 잡을 때까지 0.15초 대기
@@ -7270,13 +7321,38 @@ export default function Home() {
     <div className="flex h-[100dvh] w-screen items-center justify-center bg-black"><div className="h-6 w-6 animate-spin rounded-full border-[3px] border-white/20 border-t-white" /></div>
   );
 
+  // app/home/page.tsx 내부 (const currentItem = ... 아래 쯤에 작성)
+
+  // 1. 하단 도크 쇼핑 버튼 클릭 시 -> 모달만 엽니다.
+  const handleShopNow = () => {
+    setIsOutlinkModalOpen(true);
+  };
+
+  // 2. 모달 안에서 [Proceed] 클릭 시 -> 진짜 W컨셉으로 이동합니다.
+  const executeShopOutlink = () => {
+    setIsOutlinkModalOpen(false); // 모달 닫기
+    
+    if (!currentItem || !currentItem.tags) return;
+    const query = currentItem.tags.map((t: string) => t.replace('#', '')).join(' ');
+    track('Shop_Link_Clicked', { search_query: query, look_id: currentItem.id });
+    
+    const trackingUrl = generateTrackingLink('wconcept', query);
+    window.open(trackingUrl, '_blank');
+  };
+
+  // 🌟 버그 제보 폼 열기
+  const handleBugReport = () => {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSco8ivWlB4bSQ0LpvXRgDIMh77EFxL2hM1CmsBsuZ_p0-MjBg/viewform?usp=header', '_blank');
+  };
+
   const paginate = (newDirection: number) => {
     console.log("🚨 [물리 엔진] 카드가 스와이프 되었습니다! 방향:", newDirection);
-    aura.triggerHaptic(40);
+    //aura.triggerHaptic(40);
+    auraSensory.triggerHaptic('heavy');
+    auraSensory.playSFX('swipe_pass');
     aura.setDirection(newDirection);
     aura.setCurrentIndex((prev) => (prev + newDirection + aura.fashionItems.length) % aura.fashionItems.length);
-    setSwipeKey(prev => prev + 1);
-    x.set(0);
+    //setSwipeKey(prev => prev + 1);
   };
 
   // 1. 시스템 로딩 중에는 검은 배경 유지
@@ -7337,10 +7413,17 @@ export default function Home() {
       className="relative flex h-[100dvh] w-screen flex-col items-center justify-center overflow-hidden bg-black font-sans selection:bg-white/30"
       style={{ perspective: 1000 }}
     >
-      <AnimatePresence mode="popLayout">
-        <motion.div key={`bg-${currentItem.id}-${swipeKey}`} initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="absolute inset-0 z-0">
+      <AnimatePresence> {/* 🌟 mode="popLayout" 제거, 불필요한 충돌 방지 */}
+        <motion.div 
+          key={`bg-${currentItem.id}`} // 🌟 swipeKey 제거 (아이디만으로 충분)
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 0.5 }} 
+          exit={{ opacity: 0 }} 
+          transition={{ duration: 0.2 }} // 🌟 0.8 -> 0.2초로 단축! (뒤끝 없이 즉시 사라짐)
+          className="absolute inset-0 z-0 pointer-events-none transform-gpu" // 🌟 터치 간섭 금지 + GPU 가속 강제 
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[80px] saturate-150" alt="background blur" />
+          <img src={currentItem.imageUrl} crossOrigin="anonymous" className="h-full w-full object-cover blur-[60px] saturate-150" alt="background blur" />
         </motion.div>
       </AnimatePresence>
 
@@ -7378,16 +7461,14 @@ export default function Home() {
           /* 추천 모드: 기존 3D 카드 */
           <AnimatePresence initial={false} custom={aura.direction} mode="popLayout">
             <FashionCard 
-              key={`card-${currentItem.id}-${swipeKey}`}
+              key={`card-${currentItem.id}`}
               item={currentItem}
               aura={aura}
               ref={cardRef}
               rotateX={rotateX}
               rotateY={rotateY}
-              imageX={imageX}
               isExporting={isExporting}
               archiveCount={archiveCount}
-              x={x}
               paginate={paginate}
               onToggleSave={() => {
                 const isCurrentlySaved = aura.savedItems.some(i => String(i.id) === String(currentItem.id));
@@ -7424,87 +7505,73 @@ export default function Home() {
       </main>
 
 
-      {/* 상단 좌측: 프로필/로그인 버튼 */}
-      <div className="absolute left-6 top-8 z-40 md:left-8 md:top-8">
-        {aura.user ? (
-          // 🌟 로그인 된 경우: 내 프로필 버튼 (아바타 스타일)
-          <button 
-            onClick={() => { aura.triggerHaptic(20); setIsProfileOpen(true); }}
-            className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-            >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold shadow-inner border border-white/10">
-              {aura.user.email?.[0].toUpperCase()}
-            </div>
-          </button>
-        ) : (
-          // 🌟 로그인 안 된 경우: 기존 로그인 유도 버튼
-          <button 
-          onClick={() => { 
-            console.log("Login Clicked!"); // 👈 테스트용 로그: 브라우저 콘솔(F12)에 찍히는지 확인하세요.
-            setIsLoginModalOpen(true); 
-          }}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          >
-          <User />
-          </button>
-        )}
-      </div>
-
-      {/* 🌟 2. 상단 우측: 버튼 그룹 (랭킹 & 아카이브) */}
-      <div className="absolute right-4 top-8 z-40 flex items-center gap-1 md:right-8 md:top-8">
+      {/* 🌟 [NEW] 중앙 기준 상단 헤더 바 (투명막 제거, 3D 마우스 간섭 제로!) */}
+      <div className="absolute top-8 left-1/2 z-40 flex w-full max-w-[480px] -translate-x-1/2 items-center justify-between px-6 md:px-8">
         
-        {/* 🏆 랭킹 버튼 (트로피) 
-        <button 
-          onClick={() => { aura.triggerHaptic(30); setIsRankingOpen(true); }} 
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          title="명예의 전당"
-        >
-          <Trophy className="h-5 w-5 text-yellow-400" />
-        </button>
-        */}
-        {/* 🌟 [NEW] 시스템 로그 버튼 */}
-        <button 
-          onClick={() => {
-            console.log("Bell Clicked"); // 🌟 디버깅용: 콘솔에 찍히는지 확인
-            setIsNotiOpen(true);
-            aura.triggerHaptic(10); // 햅틱 피드백 추가
-          }}
-          className="h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl relative p-2 rounded-full hover:bg-white/10 transition-colors group"
-        >
-          <Bell className="w-6 h-6 text-white" />
-          {/* 알림 표시용 레드 닷 */}
-          <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
-        </button>
-
-        {/* 🌟 쇼핑백 버튼 연결부: 클릭 시 해당 Look의 ID로 DB를 찌른 후, 모달을 엽니다! */}
-        <button 
-          onClick={() => {
-            // 🌟 이미 선언해두신 currentItem을 바로 가져다 씁니다!
-            if (currentItem?.id) {
-              aura.loadShoppableItems(Number(currentItem.id));
-            }
-            setIsShopModalOpen(true);
-          }}
-          className="flex flex-col items-center gap-1 group"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-9">
-            <ShoppingBag className="h-5 w-5 text-white" />
-          </div>
-        </button>
-
-        {/* 📂 아카이브 버튼 (레이어) */}
-        <button 
-          onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} 
-          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
-          title="보관함"
-        >
-          <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
-          {aura.savedItems.length > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-black shadow-lg">
-              {aura.savedItems.length}
-            </span>
+        {/* 1. 상단 좌측: 프로필/로그인 버튼 */}
+        <div>
+          {aura.user ? (
+            <button 
+              onClick={() => { 
+                auraSensory.triggerHaptic('success');
+                auraSensory.playSFX('login'); 
+                setIsProfileOpen(true); 
+              }}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 text-xs font-bold shadow-inner border border-white/10">
+                {aura.user.email?.[0].toUpperCase()}
+              </div>
+            </button>
+          ) : (
+            <button 
+              onClick={() => { setIsLoginModalOpen(true); }}
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            >
+              <User />
+            </button>
           )}
-        </button>
+        </div>
+
+        {/* 2. 상단 우측: 버튼 그룹 */}
+        <div className="flex items-center gap-1">
+          {/* 시스템 로그 버튼 */}
+          <button 
+            onClick={() => { setIsNotiOpen(true); aura.triggerHaptic(10); }}
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl relative transition-all hover:bg-white/20 active:scale-95 group"
+          >
+            <Bell className="w-5 h-5 text-white" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-[#ff3b30] rounded-full border border-black" />
+          </button>
+
+          {/* 쇼핑백 버튼 */}
+          <button 
+            onClick={() => {
+              if (currentItem?.id) {
+                aura.loadShoppableItems(Number(currentItem.id));
+              }
+              setIsShopModalOpen(true);
+            }}
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95 group"
+          >
+            <ShoppingBag className="h-4 w-4 text-white" />
+          </button>
+
+          {/* 아카이브 버튼 (레이어) */}
+          <button 
+            onClick={() => { aura.triggerHaptic(30); aura.setIsModalOpen(true); }} 
+            className="relative h-10 w-10 flex items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
+            title="보관함"
+          >
+            <Layers className="h-5 w-5 opacity-80" strokeWidth={2} />
+            {aura.savedItems.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-bold text-black shadow-lg">
+                {aura.savedItems.length}
+              </span>
+            )}
+          </button>
+        </div>
+
       </div>
 
       <DynamicIsland weather={aura.localWeather} />
@@ -7601,7 +7668,10 @@ export default function Home() {
         onRequestGyro={requestGyroPermission}
         onUpload={() => setIsUploadModalOpen(true)}
         onExport={exportPhotocard}
-        onOpenMenu={() => setIsActionMenuOpen(true)}
+        // 🌟 아래 3줄 추가
+        onShare={sharePhotocard}
+        onShop={handleShopNow}
+        onBugReport={handleBugReport}
         onOpenAdmin={() => setIsAdminModalOpen(true)}
         isExporting={isExporting}
         isAdmin={isAdmin}
@@ -7615,19 +7685,12 @@ export default function Home() {
         triggerHaptic={aura.triggerHaptic} 
       />
 
-      {/* 🌟 수정된 모달 호출부 */}
-      {aura.fashionItems.length > 0 && (
-        <ActionMenuModal 
-          isOpen={isActionMenuOpen} 
-          onClose={() => setIsActionMenuOpen(false)} 
-          item={currentItem} 
-          onShare={sharePhotocard} // 🌟 새로 만든 공유 함수 전달
-          subscribeToPush={aura.subscribeToPush || (() => {})}
-          unsubscribeFromPush={aura.unsubscribeFromPush || (() => {})} 
-          sendTestPush={aura.sendTestPush || (() => {})} 
-          isPushEnabled={aura.isPushEnabled} // 🌟 [NEW] 구독 상태 전달!
-        />
-      )}
+      {/* 🌟 [NEW] 아웃링크 컨펌 모달 */}
+      <OutlinkConfirmModal 
+        isOpen={isOutlinkModalOpen}
+        onClose={() => setIsOutlinkModalOpen(false)}
+        onConfirm={executeShopOutlink}
+      />
 
       {/* 🌟 딥다이브(상세보기) 모달 복원 완.벽. */}
       <DeepDiveModal 
@@ -7636,6 +7699,7 @@ export default function Home() {
           aura.setIsDetailOpen(false);
           setTimeout(() => setExploreSelectedItem(null), 500); 
         }} 
+
         // 🌟 currentItem 뒤에 느낌표(!) 추가
         item={exploreSelectedItem || currentItem!} 
         triggerHaptic={aura.triggerHaptic} 
@@ -7651,6 +7715,7 @@ export default function Home() {
         isAnalyzing={isAnalyzing} 
         onUpload={handleUploadSubmit} 
       />
+
       {/* 🌟 기존 모달들 아래에 추가 */}
       <AdminModal 
       isOpen={isAdminModalOpen} 
@@ -7687,6 +7752,9 @@ export default function Home() {
         bestLook={aura.uploadedItems[0]}
         onSaveInstagram={aura.saveInstagram}
         onOpenReport={() => setIsReportOpen(true)}
+        isPushEnabled={aura.isPushEnabled}
+        subscribeToPush={aura.subscribeToPush || (() => {})}
+        unsubscribeFromPush={aura.unsubscribeFromPush || (() => {})}
       />
       <MyAuraReport 
         isOpen={isReportOpen} 
@@ -8193,11 +8261,274 @@ export default function TermsOfService() {
     </main>
   );
 }
+        ### 📄 app/admin/distribution/page.tsx
+        > **Context Summary**
+        * 🔗 **Imports:** `react, framer-motion, lucide-react, next/navigation`
+* 🧩 **Component (Default):** `DistributionAdmin`
+* ww **Hooks:** `useState, useEffect, useRouter`
+
+        ```typescript
+        // app/admin/distribution/page.tsx
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Activity, Power, Twitter, Mail, FileText, 
+  Clock, CheckCircle2, Send, Loader2, RefreshCw, Plus
+} from "lucide-react";
+import { supabase } from "../../../lib/supabase";
+import { useRouter } from "next/navigation";
+
+interface PipelineItem {
+  id: string;
+  platform: string;
+  publish_date: string | null;
+  content: string;
+  status: 'draft' | 'scheduled' | 'published';
+  created_at: string;
+}
+
+export default function DistributionAdmin() {
+  const router = useRouter();
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [autoPilot, setAutoPilot] = useState(false);
+  const [pipeline, setPipeline] = useState<PipelineItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 🌟 관리자 인증 및 데이터 로드
+  useEffect(() => {
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || session.user.email !== 'cto@yeahplus.co.kr') {
+        alert("🔒 접근 거부: AURA 수석 에디터 권한이 필요합니다.");
+        router.replace('/');
+        return;
+      }
+      setIsCheckingAuth(false);
+      fetchData();
+    };
+    init();
+  }, [router]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      // 1. 오토파일럿 상태 가져오기
+      const { data: settingsData } = await supabase
+        .from('aura_system_settings')
+        .select('auto_pilot_enabled')
+        .single();
+      
+      if (settingsData) setAutoPilot(settingsData.auto_pilot_enabled);
+
+      // 2. 파이프라인 데이터 가져오기
+      const { data: pipelineData } = await supabase
+        .from('aura_content_pipeline')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (pipelineData) setPipeline(pipelineData as PipelineItem[]);
+    } catch (error) {
+      console.error("데이터 로드 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 🌟 오토파일럿 메인 스위치 토글
+  const toggleAutoPilot = async () => {
+    const newState = !autoPilot;
+    setAutoPilot(newState); // UI 즉각 반영 (Optimistic UI)
+
+    const { error } = await supabase
+      .from('aura_system_settings')
+      .update({ auto_pilot_enabled: newState })
+      .eq('id', 1); // 최초 생성된 ID가 1이라고 가정
+
+    if (error) {
+      alert("시스템 스위치 조작에 실패했습니다.");
+      setAutoPilot(!newState); // 롤백
+    }
+  };
+
+  // 🌟 상태 변경 (Draft -> Scheduled -> Published)
+  const updateStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('aura_content_pipeline')
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (!error) {
+      fetchData(); // 성공 시 리스트 새로고침
+    }
+  };
+
+  // 🌟 즉시 테스트용 강제 초안 생성 (플랫폼별 톤앤매너 완벽 분리)
+  const generateTestDraft = async (platform: string) => {
+    let dummyContent = '';
+    
+    if (platform === 'X') {
+      dummyContent = `[AURA Insight]\n"침묵은 가장 완벽한 핏이다." - 마틴 마르지엘라\n\n오늘 AURA 아카이브에 포착된 서늘한 미니멀리즘. 로고의 과시를 거부하고 오직 실루엣과 텍스처만으로 압도하는 룩을 확인하십시오.\n\n#AURA #HighEnd #Minimalism #OOTD`;
+    } 
+    else if (platform === 'Substack') {
+      dummyContent = `[AURA CULT EXCLUSIVE] 주간 아카이브 리포트\n\n친애하는 컬트 멤버 여러분, 이번 주 AURA 시스템이 포착한 가장 완벽한 텍스처와 무드를 공유합니다. 남들과 다른 길을 걷는 오리지널들을 위한 프라이빗 에디토리얼과 큐레이션 아이템들을 지금 확인하십시오. 오직 여러분에게만 열려있습니다.`;
+    } 
+    else if (platform === 'Medium') {
+      dummyContent = `[Tech & Philosophy] AURA의 AI 비전 분석은 어떻게 패션을 해체하는가.\n\n우리의 시스템은 단순히 옷의 종류를 인식하는 데 그치지 않습니다. 픽셀 단위로 텍스처를 스캔하고, 실루엣의 무드를 읽어내며, 과거 거장들의 패션 철학을 현대의 스트릿 씬과 교차 분석합니다. 기술이 개인의 데일리룩을 어떻게 하이엔드 예술로 격상시키는지에 대한 기술적, 철학적 딥 다이브 리포트.`;
+    }
+
+    const { error } = await supabase
+      .from('aura_content_pipeline')
+      .insert([{ platform, content: dummyContent, status: 'draft' }]);
+    
+    if (!error) fetchData();
+  };
+
+  if (isCheckingAuth) {
+    return <div className="min-h-screen bg-[#050505] flex justify-center items-center"><Loader2 className="w-10 h-10 animate-spin text-red-600"/></div>;
+  }
+
+  // 플랫폼별 아이콘 매핑
+  const PlatformIcon = ({ platform, className }: { platform: string, className?: string }) => {
+    if (platform === 'X') return <Twitter className={className} />;
+    if (platform === 'Substack') return <Mail className={className} />;
+    return <FileText className={className} />;
+  };
+
+  // 칸반 컬럼 렌더링 함수
+  const renderColumn = (status: 'draft' | 'scheduled' | 'published', title: string, icon: React.ReactNode, borderColor: string) => {
+    const items = pipeline.filter(item => item.status === status);
+    
+    return (
+      <div className="flex-1 flex flex-col h-[70vh] bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+        {/* 컬럼 헤더 */}
+        <div className={`p-4 border-b ${borderColor} bg-black/40 flex items-center justify-between`}>
+          <div className="flex items-center gap-2">
+            {icon}
+            <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-white">{title}</h3>
+          </div>
+          <span className="bg-white/10 text-white/50 px-2 py-0.5 rounded text-[10px] font-bold">{items.length}</span>
+        </div>
+        
+        {/* 카드 리스트 */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+          <AnimatePresence>
+            {items.map(item => (
+              <motion.div 
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-black/60 border border-white/10 p-4 rounded-xl flex flex-col gap-3 group hover:border-white/30 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-white/10 rounded text-[9px] font-mono tracking-widest uppercase">
+                    <PlatformIcon platform={item.platform} className="w-3 h-3" />
+                    {item.platform}
+                  </div>
+                  <span className="text-[9px] font-mono text-white/40">{new Date(item.created_at).toLocaleDateString()}</span>
+                </div>
+                
+                <p className="text-xs text-white/80 line-clamp-4 leading-relaxed font-serif">
+                  {item.content}
+                </p>
+
+                {/* 상태별 액션 버튼 */}
+                <div className="mt-2 pt-3 border-t border-white/10 flex justify-end gap-2">
+                  {status === 'draft' && (
+                    <button onClick={() => updateStatus(item.id, 'scheduled')} className="flex items-center gap-1 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
+                      <Clock className="w-3 h-3"/> Schedule
+                    </button>
+                  )}
+                  {status === 'scheduled' && (
+                    <button onClick={() => updateStatus(item.id, 'published')} className="flex items-center gap-1 bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
+                      <Send className="w-3 h-3"/> Mark Published
+                    </button>
+                  )}
+                  {status === 'published' && (
+                    <span className="flex items-center gap-1 text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                      <CheckCircle2 className="w-3 h-3"/> Done
+                    </span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {items.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-white/20 font-mono text-[10px] uppercase tracking-widest">
+              No items in {title}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white p-8 md:p-12 font-sans selection:bg-red-600">
+      {/* 🌟 1. 헤더 & 마스터 스위치 */}
+      <header className="mb-10 pb-8 border-b border-white/10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h1 className="text-4xl font-serif italic font-black uppercase tracking-tighter text-red-600 flex items-center gap-3">
+            <Activity className="w-8 h-8" /> Distribution Center
+          </h1>
+          <p className="font-mono text-[10px] tracking-widest text-white/50 uppercase mt-2">
+            AI Auto-Pilot & Global Publishing Pipeline
+          </p>
+        </div>
+
+        {/* 🌟 마스터 스위치 UI */}
+        <div className={`flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-500 ${autoPilot ? 'bg-red-600/10 border-red-500/50 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : 'bg-white/5 border-white/10'}`}>
+          <div className="flex flex-col text-right">
+            <span className="font-mono text-[10px] tracking-widest uppercase text-white/50">System Status</span>
+            <span className={`font-black uppercase tracking-widest text-lg ${autoPilot ? 'text-red-500' : 'text-white/30'}`}>
+              {autoPilot ? 'Auto-Pilot Engaged' : 'Manual Mode'}
+            </span>
+          </div>
+          <button onClick={toggleAutoPilot} className="relative outline-none">
+            {autoPilot ? (
+              <Power className="w-12 h-12 text-red-500 drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] transition-all" />
+            ) : (
+              <Power className="w-12 h-12 text-white/20 hover:text-white/40 transition-all" />
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* 🌟 2. 툴바 (수동 테스트 & 새로고침) */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex gap-2">
+          <button onClick={() => generateTestDraft('X')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
+            <Plus className="w-3 h-3"/> Draft X
+          </button>
+          <button onClick={() => generateTestDraft('Substack')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
+            <Plus className="w-3 h-3"/> Draft Substack
+          </button>
+          {/* 🌟 Medium 초안 생성 버튼 추가 */}
+          <button onClick={() => generateTestDraft('Medium')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
+            <Plus className="w-3 h-3"/> Draft Medium
+          </button>
+        </div>
+        <button onClick={fetchData} className="flex items-center gap-1.5 text-white/50 hover:text-white text-[10px] font-mono tracking-widest uppercase transition-colors">
+          <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} /> Sync DB
+        </button>
+      </div>
+
+      {/* 🌟 3. 3단 칸반 보드 (Pipeline) */}
+      <div className="flex flex-col md:flex-row gap-6">
+        {renderColumn('draft', 'AI Drafts (초안)', <FileText className="w-4 h-4 text-white/50"/>, 'border-white/10')}
+        {renderColumn('scheduled', 'Scheduled (발행 대기)', <Clock className="w-4 h-4 text-yellow-500"/>, 'border-yellow-500/30')}
+        {renderColumn('published', 'Published (발행 완료)', <CheckCircle2 className="w-4 h-4 text-green-500"/>, 'border-green-500/30')}
+      </div>
+
+    </div>
+  );
+}
         ### 📄 app/admin/blog/page.tsx
         > **Context Summary**
         * 🔗 **Imports:** `react, next/navigation, lucide-react, @/lib/supabase`
 * 🧩 **Component (Default):** `BlogAdmin`
-* ww **Hooks:** `useEffect, useRouter, useState`
+* ww **Hooks:** `useState, useEffect, useRouter`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
@@ -8340,22 +8671,34 @@ export default function BlogAdmin() {
         > **Context Summary**
         * 🔗 **Imports:** `react, lucide-react, next/navigation`
 * 🧩 **Component (Default):** `MagazineAdmin`
-* ww **Hooks:** `useEffect, useRouter, useState`
+* ww **Hooks:** `useState, useEffect, useRouter`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
-        "use client";
+        // app/admin/magazine/page.tsx
+"use client";
 
 import { useState, useEffect } from "react";
-import { Sparkles, Upload, FileText, Send, Image as ImageIcon, Loader2, DatabaseZap, Edit3, Trash2, Lock } from "lucide-react";
+// 🌟 [NEW] Scan 아이콘 추가
+import { Sparkles, ShoppingBag, Plus, X, Upload, FileText, Send, Image as ImageIcon, Loader2, DatabaseZap, Edit3, Trash2, Lock, Scan } from "lucide-react";
 import { supabase } from "../../../lib/supabase"; 
-import { useRouter } from "next/navigation"; // 🌟 추가
+import { useRouter } from "next/navigation"; 
+
+// 🌟 [NEW] 쇼핑 아이템 타입 정의
+interface ShoppableItem {
+  id: string; // UI 렌더링용 고유 키
+  brand: string;
+  name: string;
+  price: string;
+  image_url: string;
+  shop_url: string;
+}
 
 interface MagazineArticle {
     id: string;
     title: string;
     slug: string;
-    tags: string[] | null; // DB에서 가져올 땐 배열일 수 있음
+    tags: string[] | null; 
     content: string;
     cover_image_url: string;
     locale: string;
@@ -8363,10 +8706,11 @@ interface MagazineArticle {
     created_at: string;
     is_published: boolean;
     author: string;
+    shoppable_items?: ShoppableItem[] | null; // 🌟 DB 컬럼 추가 반영
   }
 
 export default function MagazineAdmin() {
-  const router = useRouter(); // 🌟 라우터 추가
+  const router = useRouter(); 
   
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -8376,8 +8720,10 @@ export default function MagazineAdmin() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
+  
+  // 🌟 [NEW] 이미지 비전 분석 로딩 상태 추가
+  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
 
-  // 🌟 [NEW] 발행된 기사 리스트 & 수정 모드 상태
   const [savedArticles, setSavedArticles] = useState<MagazineArticle[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -8389,9 +8735,9 @@ export default function MagazineAdmin() {
     is_premium: false 
   });
 
-  // 🌟 [NEW] 관리자 확인 로딩 상태 추가
+  const [shoppableItems, setShoppableItems] = useState<ShoppableItem[]>([]);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  // 🌟 [NEW] 화면이 켜지면 DB에서 작성된 기사들을 긁어옵니다.
+
   const fetchArticles = async () => {
     const { data, error } = await supabase
       .from('aura_magazine')
@@ -8401,20 +8747,16 @@ export default function MagazineAdmin() {
     if (data && !error) setSavedArticles(data);
   };
 
-  // 🌟 [핵심 보안] 화면이 켜지자마자 유저가 누구인지 검사합니다.
   useEffect(() => {
     const verifyAdmin = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
-      // 1. 로그인이 안 되어 있거나
-      // 2. 이메일이 대표님(ADMIN) 계정이 아니라면!
       if (!session?.user || session.user.email !== 'cto@yeahplus.co.kr') {
         alert("🔒 접근 거부: AURA 수석 에디터(Admin) 권한이 필요합니다.");
-        router.replace('/'); // 메인 화면으로 가차 없이 쫓아냅니다.
+        router.replace('/'); 
         return;
       }
 
-      // 무사히 통과했다면 로딩을 풀고 기사 리스트를 불러옵니다.
       setIsCheckingAuth(false);
       fetchArticles();
     };
@@ -8422,7 +8764,6 @@ export default function MagazineAdmin() {
     verifyAdmin();
   }, [router]);
 
-  // 🌟 [NEW] 검문 중일 때 보여줄 간지나는 로딩 화면 (return 렌더링 시작 부분)
   if (isCheckingAuth) {
     return (
       <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-red-600 font-mono">
@@ -8440,14 +8781,42 @@ export default function MagazineAdmin() {
     }
   };
 
-  // 트렌드 추출 (유지)
+  // 🌟 [NEW] 이미지 비전 스캔 함수 추가
+  const handleAnalyzeImage = async () => {
+    if (!file) return alert("먼저 커버 이미지를 업로드해주세요.");
+    
+    setIsAnalyzingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/admin/extract-tags', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      // 기존 키워드와 합치거나 새로 세팅
+      const newTags = data.tags.join(', ');
+      setKeyword(prev => prev ? `${prev}, ${newTags}` : newTags);
+      
+      alert("👁️ AURA VISION: 이미지 아이템 및 무드 추출 완료!");
+    } catch (error) {
+      alert("이미지 분석 실패: " + (error instanceof Error ? error.message : ""));
+    } finally {
+      setIsAnalyzingImage(false);
+    }
+  };
+
   const handleExtractTrends = async () => {
     setIsExtracting(true);
     try {
       const { data: topLooks, error } = await supabase
-        .from('aura_fashion_items') // 🌟 대표님이 찾으신 진짜 테이블 이름!
+        .from('aura_fashion_items') 
         .select('tags, weather, temperature')
-        .order('likes_count', { ascending: false }) // 🌟 진짜 컬럼 이름!
+        .order('likes_count', { ascending: false }) 
         .limit(5);
 
       if (error) throw error;
@@ -8494,7 +8863,7 @@ export default function MagazineAdmin() {
         slug: data.slug,
         tags: data.tags,
         content: data.content,
-        is_premium: data.is_premuim
+        is_premium: data.is_premium
       });
 
     } catch (error) {
@@ -8505,30 +8874,39 @@ export default function MagazineAdmin() {
     }
   };
 
-  // 🌟 [NEW] 기사 수정 모드 진입
-  const handleEdit = (item: MagazineArticle) => { /* 🌟 수정됨: is_premium 불러오기 */
+  const handleEdit = (item: MagazineArticle) => { 
     setEditingId(item.id); setLocale(item.locale); setPreviewUrl(item.cover_image_url); setFile(null); setKeyword("");
     setArticle({ title: item.title, slug: item.slug, tags: item.tags ? item.tags.join(', ') : '', content: item.content, is_premium: item.is_premium || false });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 🌟 [NEW] 기사 삭제 로직
   const handleDelete = async (id: string) => {
     if (!window.confirm("정말로 이 매거진 기사를 삭제하시겠습니까?")) return;
-
     try {
       const { error } = await supabase.from('aura_magazine').delete().eq('id', id);
       if (error) throw error;
-      
       alert("삭제되었습니다.");
-      fetchArticles(); // 리스트 새로고침
+      fetchArticles(); 
     } catch (error) {
         const message = error instanceof Error ? error.message : "알 수 없는 오류";
         alert("삭제 실패: " + message);
     }
   };
 
-  // 🌟 [NEW] 발행 (신규 작성 OR 기존 수정)
+  // 🌟 [NEW] 쇼핑 아이템 컨트롤 함수들
+  const addShoppableItem = () => {
+    setShoppableItems([...shoppableItems, { id: Date.now().toString(), brand: "", name: "", price: "", image_url: "", shop_url: "" }]);
+  };
+
+  const updateShoppableItem = (id: string, field: keyof ShoppableItem, value: string) => {
+    setShoppableItems(items => items.map(item => item.id === id ? { ...item, [field]: value } : item));
+  };
+
+  const removeShoppableItem = (id: string) => {
+    setShoppableItems(items => items.filter(item => item.id !== id));
+  };
+
+  // 🌟 [수정] 발행 시 payload에 shoppable_items 탑재
   const handlePublish = async () => {
     if (!article.title || !article.content) return alert("원고가 비어있습니다.");
     setIsPublishing(true);
@@ -8536,14 +8914,11 @@ export default function MagazineAdmin() {
     try {
       let cover_image_url = previewUrl || 'https://via.placeholder.com/800x1200'; 
 
-      // 파일이 새로 등록되었다면 (사진을 바꿨다면) 업로드 진행
       if (file) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
         const { error: uploadError } = await supabase.storage.from('magazine_covers').upload(fileName, file);
         if (uploadError) throw new Error("이미지 클라우드 업로드에 실패했습니다.");
-
         const { data: publicUrlData } = supabase.storage.from('magazine_covers').getPublicUrl(fileName);
         cover_image_url = publicUrlData.publicUrl;
       }
@@ -8556,42 +8931,38 @@ export default function MagazineAdmin() {
         locale: locale,
         cover_image_url: cover_image_url, 
         is_published: true, 
-        author: 'AURA AI Editor',
-        is_premium: Boolean(article.is_premium)
+        author: 'AURA Chief Editor',
+        is_premium: Boolean(article.is_premium),
+        shoppable_items: shoppableItems // 🌟 DB에 JSON 배열로 통째로 저장!
       };
 
       if (editingId) {
-        // 🌟 수정(Update) 모드
         const { error } = await supabase.from('aura_magazine').update(payload).eq('id', editingId);
         if (error) throw error;
-        alert("🔥 기사가 성공적으로 수정되었습니다!");
+        alert("🔥 기사 및 상품 정보가 성공적으로 수정되었습니다!");
       } else {
-        // 🌟 신규(Insert) 모드
         const { error } = await supabase.from('aura_magazine').insert([payload]);
         if (error) throw error;
-        alert("🔥 매거진 발행 및 이미지 업로드 완료!");
+        alert("🔥 매거진 발행 및 상품 연동 완료!");
       }
       
-      // 초기화 및 리스트 새로고침
       setEditingId(null);
       setArticle({ title: "", slug: "", tags: "", content: "", is_premium:false });
+      setShoppableItems([]); // 🌟 상품 리스트도 초기화
       setFile(null);
       setPreviewUrl(null);
       fetchArticles(); 
       
     } catch (error: unknown) {
-        console.error(error);
         const errorMessage = error instanceof Error ? error.message : "알 수 없는 에러가 발생했습니다.";
         alert("작업 실패: " + errorMessage);
-    } finally {
-      setIsPublishing(false);
-    }
+    } finally { setIsPublishing(false); }
   };
 
-  // 🌟 [NEW] 수정 취소 (신규 작성 모드로 복귀)
   const cancelEdit = () => {
     setEditingId(null);
     setArticle({ title: "", slug: "", tags: "", content: "", is_premium:false  });
+    setShoppableItems([]); // 🌟 상품 리스트도 초기화
     setFile(null);
     setPreviewUrl(null);
   };
@@ -8622,10 +8993,10 @@ export default function MagazineAdmin() {
         <div className="space-y-8">
           <div className="bg-white/5 border border-white/10 p-6 rounded-2xl relative overflow-hidden group">
             <h2 className="font-mono text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2"><ImageIcon className="w-4 h-4 text-red-500"/> Cover Image</h2>
-            <label className="flex flex-col items-center justify-center h-64 border-2 border-dashed border-white/20 hover:border-red-500/50 transition-colors cursor-pointer bg-black/50 relative overflow-hidden">
+            <label className={`flex flex-col items-center justify-center border-2 border-dashed border-white/20 hover:border-red-500/50 transition-colors cursor-pointer bg-black/50 relative overflow-hidden ${previewUrl ? 'p-2 rounded-xl' : 'h-64'}`}>
               <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+                <img src={previewUrl} alt="Preview" className="w-full max-h-[600px] object-contain opacity-90 rounded-lg" />
               ) : (
                 <div className="flex flex-col items-center text-white/30 group-hover:text-white/60">
                   <Upload className="w-8 h-8 mb-2" />
@@ -8636,21 +9007,33 @@ export default function MagazineAdmin() {
           </div>
 
           <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Sparkles className="w-4 h-4 text-red-500"/> AI Directive</h2>
-              <button 
-                onClick={handleExtractTrends}
-                disabled={isExtracting}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95"
-              >
-                {isExtracting ? <Loader2 className="w-3 h-3 animate-spin" /> : <DatabaseZap className="w-3 h-3" />}
-                Sync DB Trends
-              </button>
+            {/* 🌟 [NEW] 버튼 레이아웃 변경: Vision Scan 버튼 추가 */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+              <h2 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2 shrink-0"><Sparkles className="w-4 h-4 text-red-500"/> AI Directive</h2>
+              
+              <div className="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+                <button 
+                  onClick={handleAnalyzeImage}
+                  disabled={isAnalyzingImage || !file}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-50"
+                >
+                  {isAnalyzingImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Scan className="w-3 h-3" />}
+                  Vision Scan
+                </button>
+                <button 
+                  onClick={handleExtractTrends}
+                  disabled={isExtracting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-md font-mono text-[9px] uppercase tracking-widest transition-colors active:scale-95 disabled:opacity-50"
+                >
+                  {isExtracting ? <Loader2 className="w-3 h-3 animate-spin" /> : <DatabaseZap className="w-3 h-3" />}
+                  Sync DB Trends
+                </button>
+              </div>
             </div>
 
             <input 
               type="text" 
-              placeholder="직접 입력하거나 Sync 버튼으로 데이터를 불러오세요." 
+              placeholder="직접 입력하거나 상단 버튼으로 데이터를 불러오세요." 
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="w-full bg-black/50 border border-white/20 p-4 text-sm font-bold text-white placeholder-white/30 focus:outline-none focus:border-red-500 transition-colors mb-4"
@@ -8690,11 +9073,53 @@ export default function MagazineAdmin() {
             className="w-full h-80 bg-white/5 border border-white/10 p-4 mt-4 text-sm leading-relaxed focus:outline-none focus:border-white/30 custom-scrollbar resize-none"
           />
 
-          {/* 🌟 [NEW] CULT ONLY 토글 버튼 */}
           <label className="flex items-center gap-3 cursor-pointer mt-4 border border-red-500/30 bg-red-500/5 p-4 rounded-xl hover:bg-red-500/10 transition-colors">
             <input type="checkbox" checked={!!article.is_premium} onChange={e => setArticle({...article, is_premium: e.target.checked})} className="w-5 h-5 accent-red-600" />
             <span className="font-mono text-xs font-bold uppercase tracking-widest text-red-400 flex items-center gap-2"><Lock className="w-4 h-4"/> Set as &quot;CULT ONLY&quot; (Premium)</span>
           </label>
+
+          {/* 🌟 [NEW] 커머스 아이템 추가 섹션 */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-mono text-xs font-bold uppercase tracking-widest flex items-center gap-2 text-yellow-500">
+                <ShoppingBag className="w-4 h-4"/> Shop The Editorial (Commerce)
+              </h3>
+              <button onClick={addShoppableItem} className="flex items-center gap-1 text-[10px] font-mono tracking-widest uppercase bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-md transition-colors">
+                <Plus className="w-3 h-3"/> Add Item
+              </button>
+            </div>
+
+            {/* 🌟 [NEW] 수익 창출 프로세스 가이드 패널 */}
+            <div className="mb-6 p-4 bg-gradient-to-br from-yellow-500/10 to-transparent border border-yellow-500/20 rounded-xl">
+              <h4 className="text-yellow-500 font-bold text-[10px] tracking-widest uppercase mb-3 flex items-center gap-2">
+                <Sparkles className="w-3 h-3" /> Monetization Guide
+              </h4>
+              <ol className="text-[11px] font-mono text-white/60 space-y-2 list-decimal list-inside tracking-tight">
+                <li><strong className="text-white/90">W컨셉</strong>에 접속하여 에디토리얼 무드에 맞는 하이엔드 아이템을 찾습니다.</li>
+                <li>해당 상품 썸네일에 마우스 우클릭 후 <strong className="text-white/90">&apos이미지 주소 복사&apos</strong>를 클릭합니다. (Image URL 칸에 붙여넣기)</li>
+                <li>링크프라이스에서 해당 상품의 주소를 <strong className="text-yellow-500/80">&apos나만의 제휴 링크(Tracking URL)&apos</strong>로 변환합니다.</li>
+                <li>변환된 링크를 맨 아래 <strong className="text-white/90">Affiliate Tracking URL</strong> 칸에 붙여넣고 발행하면 수익 세팅 완료!</li>
+              </ol>
+            </div>
+
+            <div className="space-y-4">
+              {shoppableItems.map((item) => (
+                <div key={item.id} className="relative bg-black/50 border border-white/10 p-4 rounded-xl flex flex-col gap-3 group">
+                  <button onClick={() => removeShoppableItem(item.id)} className="absolute top-2 right-2 p-1 text-white/30 hover:text-red-500 transition-colors"><X className="w-4 h-4"/></button>
+                  <div className="grid grid-cols-2 gap-3">
+                    <input type="text" placeholder="Brand (e.g. LEMAIRE)" value={item.brand} onChange={(e) => updateShoppableItem(item.id, 'brand', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-bold outline-none focus:border-yellow-500 placeholder-white/20"/>
+                    <input type="text" placeholder="Price (e.g. ₩450,000)" value={item.price} onChange={(e) => updateShoppableItem(item.id, 'price', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  </div>
+                  <input type="text" placeholder="Item Name (e.g. Twisted Belted Coat)" value={item.name} onChange={(e) => updateShoppableItem(item.id, 'name', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  <input type="text" placeholder="Image URL (W컨셉 썸네일 우클릭 복사)" value={item.image_url} onChange={(e) => updateShoppableItem(item.id, 'image_url', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono text-white/60 outline-none focus:border-yellow-500 placeholder-white/20"/>
+                  <input type="text" placeholder="Affiliate Tracking URL (링크프라이스 변환 링크 필수!)" value={item.shop_url} onChange={(e) => updateShoppableItem(item.id, 'shop_url', e.target.value)} className="bg-transparent border-b border-white/20 py-1 text-xs font-mono text-yellow-500/60 outline-none focus:border-yellow-500 placeholder-white/20"/>
+                </div>
+              ))}
+              {shoppableItems.length === 0 && (
+                <p className="text-[10px] text-white/30 font-mono tracking-widest text-center py-4 border border-dashed border-white/10 rounded-xl">No items added yet. Click &aposAdd Item&apos to monetize.</p>
+              )}
+            </div>
+          </div>
 
           <button 
             onClick={handlePublish}
@@ -9245,7 +9670,7 @@ export default function MyAuraReport({ isOpen, onClose, report, user }: any) {
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react`
 * 🧩 **Component (Default):** `NotificationModal`
-* ww **Hooks:** `useEffect, useState`
+* ww **Hooks:** `useState, useEffect`
 
         ```typescript
         "use client";
@@ -9354,7 +9779,14 @@ export default function NotificationModal({ isOpen, onClose }: NotificationModal
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="group relative p-5 rounded-xl bg-white/5 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all active:scale-[0.98]"
-                    onClick={() => log.link_url && window.open(log.link_url, '_blank')}
+                    onClick={() => {
+                      if (log.link_url) {
+                        //router.push(log.link_url); // 🌟 [수정] 현재 창에서 부드럽게 이동!
+                        // 🌟 대표님의 아이디어 적용: 빠르고 확실한 강제 새로고침 이동!
+                        window.location.href = log.link_url;
+                        onClose(); // 🌟 [수정] 이동 후 모달창을 닫아줍니다.
+                      }
+                    }}
                   >
                     {/* 날짜 뱃지 */}
                     <div className="absolute top-4 right-4 flex items-center gap-1 text-[10px] font-mono text-white/30 group-hover:text-[#ff3b30] transition-colors">
@@ -9514,6 +9946,7 @@ import { motion, AnimatePresence, Transition } from "framer-motion"; // 🌟 Tra
 import { X, Volume2, Palette, Instagram, ArrowDownRight, Ticket, Heart, RefreshCw } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura"; 
 import { useTranslations } from 'next-intl'; // 🌟 추가
+import { auraSensory } from "../../lib/sensory";
 
 interface DeepDiveModalProps {
   isOpen: boolean;
@@ -9566,7 +9999,9 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
             onClick={(e) => { 
               e.stopPropagation(); 
               setIsFlipped(!isFlipped); 
-              triggerHaptic(15);
+              //triggerHaptic(15);
+              auraSensory.triggerHaptic('flip');
+              auraSensory.playSFX('flip');
             }}
             initial={{ scale: 0.95, y: 20, opacity: 0 }} 
             animate={{ rotateY: isFlipped ? 180 : 0, scale: 1, y: 0, opacity: 1 }} 
@@ -9612,7 +10047,13 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                   <div className="flex gap-3 relative z-10 items-center mb-2">
                     <Volume2 className="w-5 h-5 text-black animate-pulse" />
                     <button 
-                      onClick={(e) => { e.stopPropagation(); triggerHaptic(20); onClose(); }} 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        //triggerHaptic(20);
+                        auraSensory.triggerHaptic('flip');
+                        auraSensory.playSFX('flip'); 
+                        onClose(); 
+                      }} 
                       className="group relative p-1 z-50 hover:scale-110 transition-transform"
                     >
                       <div className="absolute inset-0 bg-black transform rotate-6 group-hover:rotate-12 transition-transform shadow-[2px_2px_0px_rgba(0,0,0,0.3)]" />
@@ -9631,7 +10072,16 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
                   <div className="relative w-[90%]">
                     <span className="absolute -top-8 -left-6 text-9xl font-serif text-black/10 pointer-events-none">“</span>
                     <h3 className="flex items-center gap-2 text-[10px] font-bold text-black uppercase tracking-widest mb-3 font-mono border-b border-black/20 pb-1 w-fit"><ArrowDownRight className="w-3 h-3 text-red-600" /> {t('mood_notes')}</h3>
-                    <p className="text-lg font-serif italic font-bold text-black leading-snug relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50">{t('mood_desc_pre')} <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> {t('mood_desc_post')}</p>
+                    {/* 🌟 수정 후 코드 */}
+                    <p className="text-sm md:text-base font-serif italic font-bold text-black leading-relaxed relative z-10 mix-blend-multiply pl-4 border-l-4 border-red-600/50 whitespace-pre-wrap">
+                      {item.curatorNote ? (
+                        // 새로 올라온 사진: AI가 쓴 명언 노출
+                        item.curatorNote
+                      ) : (
+                        // 과거 사진들: 기존 텍스트 노출
+                        <>{t('mood_desc_pre')} <span className="bg-black text-[#EBE6DD] px-1 font-mono not-italic text-[10px] mx-1">{item.weather}</span> {t('mood_desc_post')}</>
+                      )}
+                    </p>
                   </div>
                   <div className="self-end w-[90%] relative pl-8">
                     <div className="absolute top-0 left-0 w-full h-full border-2 border-dashed border-black/30 transform rotate-3 pointer-events-none" />
@@ -9675,11 +10125,94 @@ export default function DeepDiveModal({ isOpen, onClose, item, triggerHaptic }: 
     </AnimatePresence>
   );
 }
+        ### 📄 app/components/OutlinkConfirmModal.tsx
+        > **Context Summary**
+        * 🔗 **Imports:** `framer-motion, lucide-react`
+* 🧩 **Component (Default):** `OutlinkConfirmModal`
+
+        ```typescript
+        // app/components/OutlinkConfirmModal.tsx
+import { motion, AnimatePresence } from "framer-motion";
+import { ShoppingCart, ExternalLink, ShieldAlert } from "lucide-react";
+
+interface Props {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+export default function OutlinkConfirmModal({ isOpen, onClose, onConfirm }: Props) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          exit={{ opacity: 0 }} 
+          className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md"
+          onClick={onClose}
+        >
+          <motion.div 
+            initial={{ scale: 0.95, y: 20 }} 
+            animate={{ scale: 1, y: 0 }} 
+            exit={{ scale: 0.95, y: 20 }} 
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫힘 방지
+            className="w-full max-w-sm bg-[#111] border border-white/10 rounded-2xl shadow-2xl relative overflow-hidden"
+          >
+            {/* 🌟 텍스처 배경 */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none" />
+
+            <div className="relative z-10 p-8 text-center">
+              <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingCart className="w-6 h-6 text-white" />
+              </div>
+              
+              <h3 className="text-3xl font-serif italic font-black text-white mb-2 uppercase tracking-tighter">
+                Shop the Vibe<span className="text-[#ff3b30]">.</span>
+              </h3>
+              <p className="text-sm text-white/60 leading-relaxed mb-8">
+                W컨셉에서 이 룩과 완벽하게 매칭되는<br/>프리미엄 아이템을 탐색합니다.
+              </p>
+
+              {/* 🌟 법적 고지 (세련된 영수증/터미널 스타일) */}
+              <div className="bg-black/50 border border-white/5 rounded-xl p-4 mb-8 text-left">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldAlert className="w-3 h-3 text-[#ff3b30]" />
+                  <span className="text-[9px] font-mono text-[#ff3b30] tracking-[0.2em] uppercase">Disclosure</span>
+                </div>
+                <p className="text-[10px] font-mono text-white/40 leading-relaxed break-keep">
+                  *본 링크를 통한 구매 시, AURA는 제휴마케팅 커미션을 지급받을 수 있으며 이는 AURA의 독립적인 큐레이션을 유지하는 데 사용됩니다.
+                </p>
+              </div>
+
+              {/* 🌟 액션 버튼 */}
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={onConfirm} 
+                  className="w-full bg-white text-black font-black uppercase tracking-widest text-xs py-4 flex items-center justify-center gap-2 active:scale-95 transition-transform"
+                >
+                  Proceed to W Concept <ExternalLink className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={onClose} 
+                  className="w-full text-[10px] font-mono tracking-[0.2em] uppercase text-white/40 hover:text-white transition-colors py-2 mt-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
         ### 📄 app/components/LocationSelector.tsx
         > **Context Summary**
         * 🔗 **Imports:** `react, lucide-react, @/lib/supabase, @supabase/supabase-js`
 * 🧩 **Component (Default):** `LocationSelector`
-* ww **Hooks:** `useEffect, useState`
+* ww **Hooks:** `useState, useEffect`
 
         ```typescript
         // components/LocationSelector.tsx
@@ -9846,7 +10379,7 @@ export default function LocationSelector({ user, locale = 'en' }: LocationSelect
         ```typescript
         // components/ActionMenuModal.tsx
 import { motion, AnimatePresence } from "framer-motion";
-import { Share2, Bell, Send, ShoppingCart, MessageSquareWarning } from "lucide-react";
+import { Share2, Send, ShoppingCart, MessageSquareWarning } from "lucide-react";
 import { FashionItem } from "../../hooks/useAura";
 import { generateTrackingLink } from "@/lib/affiliate";
 import { track } from '@vercel/analytics/react';
@@ -9857,13 +10390,13 @@ interface ActionMenuModalProps {
   onClose: () => void;
   item: FashionItem;
   onShare: () => void;
-  subscribeToPush: () => void;
+  //subscribeToPush: () => void;
   sendTestPush: () => void;
-  isPushEnabled: boolean; 
-  unsubscribeFromPush: () => void; 
+  //isPushEnabled: boolean; 
+  //unsubscribeFromPush: () => void; 
 }
 
-export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubscribeFromPush, subscribeToPush, sendTestPush, isPushEnabled }: ActionMenuModalProps) {
+export default function ActionMenuModal({ isOpen, onClose, item, onShare, sendTestPush, }: ActionMenuModalProps) {
   const t = useTranslations('ActionMenu');
   // 🌟 쇼핑몰 검색 이동 함수 (수익화 버전으로 업그레이드)
   const handleShopNow = () => {
@@ -9871,11 +10404,12 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubs
     // 1. 태그에서 #을 제거하고 검색어 조립 (예: "미니멀 블랙자켓")
     const query = item.tags.map(t => t.replace('#', '')).join(' ');
 
-    // 2. 커스텀 이벤트 추적: 무신사/쇼핑몰로 넘어간 전환율(CTR) 기록!
+    // 2. 커스텀 이벤트 추적: 전환율(CTR) 기록!
     track('Shop_Link_Clicked', { search_query: query, look_id: item.id });
 
-    // 3. 💸 AURA 어필리에이트 라우터를 통해 트래킹 링크 발급!
-    const trackingUrl = generateTrackingLink('musinsa', query);
+    // 🌟 3. [수정됨] 타겟을 wconcept으로 변경합니다!
+    const trackingUrl = generateTrackingLink('wconcept', query);
+    
     // 4. 새 창으로 열기 (여기서부터 구매 발생 시 AURA 계좌로 수수료 적립)
     window.open(trackingUrl, '_blank');
     onClose();
@@ -9915,38 +10449,6 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubs
                 </div>
               </button>
 
-              {/* 🌟 2. 푸시 알림 버튼을 다이내믹하게 교체! */}
-              <button 
-                onClick={() => { 
-                  // 켜져 있으면 끄고, 꺼져 있으면 켭니다!
-                  if (isPushEnabled) {
-                    unsubscribeFromPush();
-                  } else {
-                    subscribeToPush(); 
-                  }
-                  onClose(); 
-                }}
-                className={`flex items-center gap-4 rounded-2xl p-4 transition-all active:scale-95 border ${
-                  isPushEnabled 
-                    ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' // 켜졌을 때 (영롱한 보라색)
-                    : 'bg-white/5 text-white hover:bg-white/10 border-transparent' // 꺼졌을 때 (기본 흰색)
-                }`}
-              >
-                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isPushEnabled ? 'bg-indigo-500/20' : 'bg-white/10'}`}>
-                  <Bell className={`h-5 w-5 ${isPushEnabled ? 'fill-current' : ''}`} />
-                </div>
-                <div className="flex flex-col items-start text-left">
-                  {/* 🌟 힙스터 타이포그래피 적용 (대문자, 자간 넓게, 굵게) */}
-                  <span className="text-[14px] font-black tracking-widest uppercase">
-                    {isPushEnabled ? t('sync_active') : t('sync_off')}
-                  </span>
-                  {/* 🌟 시크한 서브 텍스트 */}
-                  <span className="text-[11px] opacity-70 mt-0.5">
-                    {isPushEnabled ? t('sync_desc_on') : t('sync_desc_off')}
-                  </span>
-                </div>
-              </button>
-
               {process.env.NODE_ENV === 'development' && (
                 <button onClick={() => { sendTestPush(); onClose(); }} className="flex items-center gap-4 rounded-2xl bg-emerald-500/10 p-4 text-emerald-400 transition-all hover:bg-emerald-500/20 active:scale-95">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20"><Send className="h-5 w-5" /></div>
@@ -9981,7 +10483,7 @@ export default function ActionMenuModal({ isOpen, onClose, item, onShare, unsubs
         > **Context Summary**
         * 🔗 **Imports:** `framer-motion, lucide-react, html-to-image`
 * 🧩 **Component (Default):** `StampEditor`
-* ww **Hooks:** `useMotionValue, useEffect, useState`
+* ww **Hooks:** `useState, useEffect, useMotionValue`
 
         ```typescript
         // components/StampEditor.tsx
@@ -10241,7 +10743,7 @@ const DraggableStamp = ({ stamp, containerRef, isSelected, onSelect, onUpdate, o
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react`
 * 🧩 **Component (Default):** `InstallPrompt`
-* ww **Hooks:** `useEffect, useState`
+* ww **Hooks:** `useState, useEffect`
 
         ```typescript
         // components/InstallPrompt.tsx
@@ -10465,13 +10967,13 @@ export default function LockModal({ isOpen, onVerify }: LockModalProps) {
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react, @supabase/supabase-js, next-intl`...
 * 🧩 **Component (Default):** `ProfileModal`
-* ww **Hooks:** `useEffect, useLocale, useState, useTranslations`
+* ww **Hooks:** `useLocale, useEffect, useState, useTranslations`
 
         ```typescript
         // components/ProfileModal.tsx
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, LogOut, Share2, Volume2, VolumeX, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
+import { X, Bell, BellOff, LogOut, Share2, Sparkles, Instagram, Check, Link, Languages, Download, Loader2 } from "lucide-react";
 import { User } from "@supabase/supabase-js";
 import { FashionItem } from "../../hooks/useAura";
 import { useTranslations, useLocale } from 'next-intl';
@@ -10487,9 +10989,12 @@ interface ProfileModalProps {
   bestLook?: FashionItem;
   onSaveInstagram: (handle: string) => Promise<void> | void; 
   onOpenReport: () => void;
+  isPushEnabled: boolean;
+  subscribeToPush: () => void;
+  unsubscribeFromPush: () => void;
 }
 
-export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport }: ProfileModalProps) {
+export default function ProfileModal({ isOpen, onClose, user, onLogout, uploadedCount, bestLook, onSaveInstagram, onOpenReport, isPushEnabled, subscribeToPush, unsubscribeFromPush }: ProfileModalProps) {
   const t = useTranslations('Profile');
   const locale = useLocale();
 
@@ -10497,8 +11002,8 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
   const cardRef = useRef<HTMLDivElement>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const [isMuted, setIsMuted] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  //const [isMuted, setIsMuted] = useState(false);
+  //const audioRef = useRef<HTMLAudioElement>(null);
   const [isIgSaved, setIsIgSaved] = useState(false); 
   
   const [igHandle, setIgHandle] = useState("");
@@ -10515,7 +11020,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       setIgHandle(user.user_metadata.instagram);
     }
   }, [user]);
-
+{/*
   useEffect(() => {
     if (isOpen && audioRef.current) {
       audioRef.current.volume = 0.3;
@@ -10525,6 +11030,7 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       audioRef.current.pause();
     }
   }, [isOpen]);
+  */}
 
   // 🌟 이미지 다운로드 함수 (스크롤 전체 영역 캡처 수정)
   const handleDownload = async () => {
@@ -10569,13 +11075,14 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
       setIsProcessing(false); 
     }
   };
-
+{/*
   const toggleMute = () => {
     if (!audioRef.current) return;
     if (isMuted) audioRef.current.play();
     else audioRef.current.pause();
     setIsMuted(!isMuted);
   };
+  */}
 
   const toggleLanguage = (newLocale: string) => {
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000;`;
@@ -10640,13 +11147,29 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
             {/* 메인 컨테이너 (여기서 ref 제거됨) */}
             <div className="relative w-full max-w-sm bg-[#EBE6DD] text-black shadow-2xl flex flex-col pointer-events-auto overflow-hidden rounded-sm max-h-[85vh]">
               
-              <audio ref={audioRef} loop src="/ambient.mp3" />
+              {/*<audio ref={audioRef} loop src="/ambient.mp3" />*/}
 
+              {/* 3. 🌟 상단 고정 버튼들에 종(Bell) 버튼 추가*/}
               {/* 상단 고정 버튼들 (캡처 제외) */}
-              <div className="absolute top-4 right-4 flex items-center gap-2 z-50">
+              <div className="absolute top-4 right-4 flex items-center gap-1 z-50">
+                
+                {/* 🌟 [NEW] 푸시 알림 토글 버튼 */}
+                <button 
+                  onClick={() => isPushEnabled ? unsubscribeFromPush() : subscribeToPush()} 
+                  className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm"
+                >
+                  {isPushEnabled ? (
+                    <Bell className="w-5 h-5 text-indigo-600 fill-current" />
+                  ) : (
+                    <BellOff className="w-5 h-5 text-black/40" />
+                  )}
+                </button>
+{/* 
                 <button onClick={toggleMute} className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm">
                   {isMuted ? <VolumeX className="w-5 h-5 text-black" /> : <Volume2 className="w-5 h-5 text-black" />}
                 </button>
+*/}
+
                 <button onClick={onClose} className="p-2 rounded-full hover:bg-black/10 transition-colors bg-[#EBE6DD]/50 backdrop-blur-sm">
                   <X className="w-5 h-5 text-black" />
                 </button>
@@ -10848,22 +11371,27 @@ export default function ProfileModal({ isOpen, onClose, user, onLogout, uploaded
 * 🧩 **Component (Default):** `FloatingDock`
 
         ```typescript
-        // components/FloatingDock.tsx
+        // app/components/FloatingDock.tsx
+
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Download, MoreHorizontal, Crown, Smartphone } from "lucide-react";
+import { Plus, Download, Share2, ShoppingCart, MessageSquareWarning, Crown, Smartphone } from "lucide-react";
 
 interface FloatingDockProps {
   showGyroButton: boolean;
   onRequestGyro: () => void;
   onUpload: () => void;
   onExport: () => void;
-  onOpenMenu: () => void;
+  onShare: () => void;       // 🌟 추가
+  onShop: () => void;        // 🌟 추가
+  onBugReport: () => void;   // 🌟 추가
   onOpenAdmin: () => void;
   isExporting: boolean;
   isAdmin: boolean;
 }
 
-export default function FloatingDock({ showGyroButton, onRequestGyro, onUpload, onExport, onOpenMenu, onOpenAdmin, isExporting, isAdmin }: FloatingDockProps) {
+export default function FloatingDock({ 
+  showGyroButton, onRequestGyro, onUpload, onExport, onShare, onShop, onBugReport, onOpenAdmin, isExporting, isAdmin 
+}: FloatingDockProps) {
   return (
     <>
       <AnimatePresence>
@@ -10877,23 +11405,43 @@ export default function FloatingDock({ showGyroButton, onRequestGyro, onUpload, 
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full border border-white/15 bg-black/40 p-2 shadow-2xl backdrop-blur-2xl">
-      <button onClick={onUpload} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
+      <div className="absolute bottom-8 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-white/15 bg-black/40 p-2 shadow-2xl backdrop-blur-2xl">
+        
+        {/* 1. 업로드 */}
+        <button onClick={onUpload} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
           <Plus className="h-5 w-5" />
         </button>
-        <div className="mx-1 h-8 w-[1px] bg-white/15" />
-        <button onClick={onExport} disabled={isExporting} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95 disabled:opacity-50">
-          {isExporting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" /> : <Download className="h-5 w-5" />}
+        <div className="h-6 w-[1px] bg-white/15" />
+        
+        {/* 2. 다운로드 */}
+        <button onClick={onExport} disabled={isExporting} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95 disabled:opacity-50">
+          {isExporting ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" /> : <Download className="h-4 w-4" />}
         </button>
-        <div className="mx-1 h-8 w-[1px] bg-white/15" />
-        <button onClick={onOpenMenu} className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
-          <MoreHorizontal className="h-5 w-5" />
+        <div className="h-6 w-[1px] bg-white/15" />
+        
+        {/* 🌟 3. 공유하기 */}
+        <button onClick={onShare} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
+          <Share2 className="h-4 w-4" />
         </button>
+        <div className="h-6 w-[1px] bg-white/15" />
+
+        {/* 🌟 4. 쇼핑하기 (W컨셉) */}
+        <button onClick={onShop} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/5 text-white transition-all hover:bg-white/15 active:scale-95">
+          <ShoppingCart className="h-4 w-4" />
+        </button>
+        <div className="h-6 w-[1px] bg-white/15" />
+
+        {/* 🌟 5. 버그 제보 */}
+        <button onClick={onBugReport} className="flex h-10 w-10 items-center justify-center rounded-full bg-red-500/10 text-red-400 transition-all hover:bg-red-500/20 active:scale-95 border border-red-500/20">
+          <MessageSquareWarning className="h-4 w-4" />
+        </button>
+
+        {/* 6. 관리자 데스크 (대표님 전용) */}
         {isAdmin && (
           <>
-            <div className="mx-1 h-8 w-[1px] bg-white/15" />
-            <button onClick={onOpenAdmin} className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30">
-              <Crown className="h-5 w-5" />
+            <div className="h-6 w-[1px] bg-white/15" />
+            <button onClick={onOpenAdmin} className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400/20 to-amber-600/20 text-yellow-500 border border-yellow-500/30">
+              <Crown className="h-4 w-4" />
             </button>
           </>
         )}
@@ -10905,7 +11453,7 @@ export default function FloatingDock({ showGyroButton, onRequestGyro, onUpload, 
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react`
 * 🧩 **Component (Default):** `TutorialOverlay`
-* ww **Hooks:** `useEffect, useState`
+* ww **Hooks:** `useState, useEffect`
 
         ```typescript
         // components/TutorialOverlay.tsx
@@ -10958,77 +11506,109 @@ export default function TutorialOverlay() {
         ### 📄 app/components/FashionCard.tsx
         > **Context Summary**
         * 🔗 **Imports:** `framer-motion, lucide-react, react`
+* ww **Hooks:** `useTransform, useMotionValue`
 
         ```typescript
-        import { motion, MotionValue } from "framer-motion";
+        import { motion, MotionValue, useMotionValue, useTransform } from "framer-motion"; // 🌟 [추가] 카드 내부에서 물리 엔진을 만들기 위해 import!
 import { Heart, Bookmark, Instagram, Crown, Sparkles, Compass, ChevronUp, ArrowUpRight } from "lucide-react";
-import { forwardRef } from "react"; // 🌟 React에서 forwardRef 불러오기
+import { forwardRef } from "react"; 
 import { FashionItem } from "../../hooks/useAura";
 
 interface FashionCardProps {
   item: FashionItem; 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   aura: any;
-  // cardRef: React.RefObject<HTMLDivElement>; ❌ 이건 이제 지웁니다!
   rotateX: MotionValue<number>;
   rotateY: MotionValue<number>;
-  imageX: MotionValue<number>;
   isExporting: boolean;
-  //currentLikes: number;
-  archiveCount: number; // ✅ 아카이브 숫자로 교체
-  x: MotionValue<number>;
+  archiveCount: number; 
+  // 🌟 y와 imageY는 부모에게 받지 않고 스스로 만듭니다! (삭제됨)
   paginate: (newDirection: number) => void;
   onToggleSave: () => void;
 }
 
-// 🌟 스와이프 파워를 계산하는 물리 공식
 const swipeConfidenceThreshold = 10000;
 const swipePower = (offset: number, velocity: number) => Math.abs(offset) * velocity;
 
 const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({ 
-  item, aura, rotateX, rotateY, imageX, isExporting, archiveCount, x, paginate, onToggleSave
+  item, aura, rotateX, rotateY, isExporting, archiveCount, paginate, onToggleSave
 }, ref) => {
   
+  // 🌟 [핵심 수술 1] 1카드 1엔진! 카드가 태어날 때 자신만의 고유한 y축을 만듭니다. 줄다리기 충돌 0%!
+  const y = useMotionValue(0);
+  const imageY = useTransform(y, [-200, 200], [20, -20]);
+
   const isSaved = aura.savedItems.some((i: FashionItem) => String(i.id) === String(item.id));
   const isSponsored = item.isSponsored;
 
   return (
     <motion.div
-      id="aura-main-card" // 🌟 [추가] 메인 카드 이름표
-      style={{ x, rotateX, rotateY }}
-      drag={isExporting ? false : "x"}
-      dragConstraints={{ left: 0, right: 0 }}
+      id="aura-main-card" 
+      style={{ y, rotateX, rotateY, transformStyle: "preserve-3d" }} 
+      drag={isExporting ? false : "y"} 
+      dragConstraints={{ top: 0, bottom: 0 }} 
       dragElastic={0.7}
       onDragEnd={(e, { offset, velocity }) => {
-        const swipe = swipePower(offset.x, velocity.x);
-        if (swipe < -swipeConfidenceThreshold) {
-          paginate(1);
-        } else if (swipe > swipeConfidenceThreshold) {
-          paginate(-1);
-        }
+        const swipe = swipePower(offset.y, velocity.y); 
+        if (swipe < -swipeConfidenceThreshold) paginate(1);
+        else if (swipe > swipeConfidenceThreshold) paginate(-1);
       }}
-      ref={ref} // 🌟 [중요] 받은 ref를 motion.div에 정확히 달아줍니다!
-      // 🌟 스폰서 카드일 경우 테두리에 은은한 플래티넘/골드 글로우 효과를 줍니다.
-      className={`relative z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu transition-all duration-700 ${
+      custom={aura.direction}
+      // 🌟 [핵심 수술] 안착 임팩트 (Cinematic Focus Snap)
+      variants={{
+        enter: (direction: number) => ({
+          y: direction > 0 ? "100%" : "-100%", 
+          opacity: 1, 
+          // 1. 날아올 때는 아주 살짝 확대된 상태(1.02)에서 
+          scale: 1.5, 
+          // 2. 순간적으로 밝아지고(1.2) 흐릿한 모션 블러(8px)를 먹입니다!
+          filter: "brightness(1.5)", 
+        }),
+        center: { 
+          zIndex: 1, 
+          y: 0, 
+          opacity: 1, 
+          // 3. 정중앙에 꽂히는 순간 100% 원본 크기로 타격하며 
+          scale: 1, 
+          // 4. 빛 번짐과 블러가 0초 만에 싹 걷히며 극강의 선명함을 터뜨립니다!
+          filter: "brightness(1)", 
+        },
+        exit: (direction: number) => ({
+          zIndex: 0,
+          y: direction < 0 ? "120%" : "-120%", 
+          opacity: 0, 
+          scale: 0.9, 
+          // 5. 밀려나는 카드는 어두워지며(0.5) 초점이 날아가듯(10px) 뒤로 빠집니다.
+          filter: "brightness(0.5)", 
+        })
+      }}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{
+        // 🌟 안착할 때의 무게감을 위해 스프링 장력을 조금 더 무겁게(mass: 1.2) 튜닝했습니다.
+        y: { type: "spring", stiffness: 400, damping: 35, mass: 0.8 }, 
+        opacity: { duration: 0.15 },
+        scale: { duration: 0.15 },
+        filter: { duration: 0.15 } // 블러와 빛 번짐이 걷히는 속도
+      }}
+      ref={ref} 
+      className={`relative z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu ${
         isSponsored ? 'border-[2px] border-white/40 shadow-[0_0_40px_rgba(255,255,255,0.2)]' : 'border border-white/20'
       }`}
     >
       {/* 백그라운드 이미지 */}
       <div className="absolute inset-0 w-full h-full overflow-hidden bg-black/20">
-        <motion.img style={{ x: imageX, scale: 1.15 }} src={item.imageUrl} crossOrigin="anonymous" className="pointer-events-none h-full w-full object-cover" />
+        <motion.img style={{ y: imageY, scale: 1.15 }} src={item.imageUrl} crossOrigin="anonymous" className="pointer-events-none h-full w-full object-cover" />
         <div className={`absolute inset-0 ${isSponsored ? 'bg-gradient-to-t from-black via-black/20 to-black/40' : 'bg-gradient-to-t from-black/90 via-black/10 to-transparent'} pointer-events-none`} />
       </div>
 
-      {/* 🌟 [NEW] 스폰서 전용 상단 뱃지 */}
+      {/* 스폰서 전용 상단 뱃지 */}
       {isSponsored && (
-        <div className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
+        <div style={{ transform: "translateZ(30px)" }} className="absolute top-6 left-6 right-6 flex justify-between items-start z-20 pointer-events-none">
           <div className="flex flex-col gap-1">
-            <span className="text-[8px] font-mono font-bold tracking-[0.4em] uppercase text-white/60">
-              Presented By
-            </span>
-            <span className="text-xl font-serif italic font-black text-white tracking-tighter mix-blend-overlay">
-              {item.sponsorBrand || "AURA EXCLUSIVE"}
-            </span>
+            <span className="text-[8px] font-mono font-bold tracking-[0.4em] uppercase text-white/60">Presented By</span>
+            <span className="text-xl font-serif italic font-black text-white tracking-tighter mix-blend-overlay">{item.sponsorBrand || "AURA EXCLUSIVE"}</span>
           </div>
           <div className="w-10 h-10 rounded-full border border-white/30 backdrop-blur-md flex items-center justify-center bg-white/10">
             <Crown className="w-4 h-4 text-white" />
@@ -11037,7 +11617,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       )}
 
       {/* 하단 정보 영역 */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8">
+      <div style={{ transform: "translateZ(30px)" }} className="pointer-events-none absolute bottom-0 left-0 right-0 flex flex-col justify-end p-8 z-20">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className={`whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest backdrop-blur-md transition-all duration-500 ${
             item.uploaderName === 'AURA Editor' ? 'border-amber-500/30 bg-amber-500/20 text-amber-300' : archiveCount >= 10 ? 'border-indigo-400/40 bg-indigo-500/20 text-indigo-300' : 'border-white/10 bg-white/10 text-white/80'
@@ -11058,54 +11638,30 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
         <h1 className="flex items-center gap-3 text-[3.5rem] md:text-6xl font-semibold tracking-tighter text-white leading-none">
           <span>{item.weather}</span><span>{item.temperature}</span>
         </h1> 
-        <div className="flex flex-wrap gap-2"> {/* 태그가 많아질 경우를 대비해 flex-wrap과 gap을 추가했습니다 */}
+        <div className="flex flex-wrap gap-2">
           {item.tags?.map((tag: string, index: number) => (
-            <span 
-              key={index} // 리액트가 각 요소를 구분하기 위해 고유한 key가 필요합니다.
-              className="whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-[15px] font-bold text-white/90 backdrop-blur-md"
-            >
+            <span key={index} className="whitespace-nowrap inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-black/20 px-2.5 py-1 text-[15px] font-bold text-white/90 backdrop-blur-md">
               {tag}
             </span>
           ))}
         </div>
 
         <div className="pointer-events-auto flex gap-6 items-center mt-6">
-          {/* 🌟 AURA IMPACT (좋아요) 버튼 */}
-          <button 
-            onPointerDown={(e) => e.stopPropagation()} // 1차 방어
-            onTouchStart={(e) => e.stopPropagation()}  // 2차 방어
-            onClick={(e) => { e.stopPropagation(); aura.toggleLike?.(String(item.id), item.likes || 0); }} 
-            className="flex items-center gap-1.5 group"
-          >
+          <button onPointerDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); aura.toggleLike?.(String(item.id), item.likes || 0); }} className="flex items-center gap-1.5 group">
             <Heart className={`w-7 h-7 transition-transform group-active:scale-75 ${aura.likedItems?.includes(String(item.id)) ? 'fill-red-500 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]' : 'text-white hover:text-red-400 drop-shadow-md'}`} />
             <span className="font-mono text-sm font-bold text-white drop-shadow-md">{item.likes || 0}</span>
           </button>
-
-          {/* 🌟 ARCHIVE (저장/북마크) 버튼 */}
-          <button 
-            onPointerDown={(e) => e.stopPropagation()} // 1차 방어
-            onTouchStart={(e) => e.stopPropagation()}  // 2차 방어
-            onClick={(e) => { e.stopPropagation(); onToggleSave(); }} 
-            className="flex items-center gap-1.5 group ml-auto"
-          >
+          <button onPointerDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onToggleSave(); }} className="flex items-center gap-1.5 group ml-auto">
             <Bookmark className={`w-7 h-7 transition-transform group-active:scale-75 ${isSaved ? 'fill-white text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'text-white hover:text-gray-300 drop-shadow-md'}`} />
             <span className="font-mono text-sm font-bold text-white drop-shadow-md">{archiveCount || 0}</span>
           </button>
         </div>
 
-        {/* 🌟 딥다이브 (상세보기) OR 스폰서 콜투액션(CTA) 버튼 */}
         <div className={`pointer-events-auto mt-8 flex items-center justify-between transition-opacity duration-300 ${isExporting ? 'opacity-0' : 'opacity-100'}`}>
           {isSponsored ? (
-             // 💎 스폰서 전용 아웃링크 버튼
-             <button 
-               onPointerDownCapture={(e) => e.stopPropagation()} 
-               onClick={(e) => { e.stopPropagation(); window.open(item.sponsorUrl || 'https://auraootd.com', '_blank'); }} 
-               className="w-full relative flex items-center justify-between px-6 py-4 overflow-hidden rounded-2xl bg-white text-black active:scale-95 transition-transform group"
-             >
+             <button onPointerDownCapture={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); window.open(item.sponsorUrl || 'https://auraootd.com', '_blank'); }} className="w-full relative flex items-center justify-between px-6 py-4 overflow-hidden rounded-2xl bg-white text-black active:scale-95 transition-transform group">
                <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                    <ArrowUpRight className="w-4 h-4 text-white group-hover:rotate-45 transition-transform" />
-                 </div>
+                 <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center"><ArrowUpRight className="w-4 h-4 text-white group-hover:rotate-45 transition-transform" /></div>
                  <div className="flex flex-col items-start leading-tight">
                    <span className="text-[10px] font-mono font-bold text-black/50 tracking-[0.2em] uppercase">Exclusive Access</span>
                    <p className="text-xl font-bold tracking-tighter uppercase">Explore Collection</p>
@@ -11113,12 +11669,9 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
                </div>
              </button>
           ) : (
-            // 🔎 기존 일반 유저 딥다이브 버튼
             <button onPointerDownCapture={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); aura.triggerHaptic(20); aura.setIsDetailOpen(true); }} className="group relative flex items-center gap-3 px-6 py-3 overflow-hidden active:scale-95">
               <div className="absolute inset-0 skew-x-[-12deg] group-hover:bg-red-500 transition-colors" />
-              <div className="relative z-10 flex items-center justify-center w-8 h-8 bg-black rounded-full border border-white/20 transition-transform duration-700">
-                <Sparkles className="h-4 w-4 text-red-500 fill-current" />
-              </div>
+              <div className="relative z-10 flex items-center justify-center w-8 h-8 bg-black rounded-full border border-white/20 transition-transform duration-700"><Sparkles className="h-4 w-4 text-red-500 fill-current" /></div>
               <div className="relative z-10 flex flex-col items-start leading-none">
                 <span className="text-[8px] font-mono font-bold text-black/60 tracking-[0.2em] mb-0.5 uppercase">Uncover The Vibe</span>
                 <p className="text-xl font-serif italic font-black text-white tracking-tighter uppercase">Deep Dive.</p>
@@ -11132,9 +11685,8 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
   );
 });
 
-// 🌟 [핵심 보수] 파일 맨 밑에 이 두 줄이 정확히 있어야 합니다!
-FashionCard.displayName = "FashionCard"; // 리액트 개발자 도구를 위한 이름표
-export default FashionCard; // 진짜로 밖으로 내보내는 문장!
+FashionCard.displayName = "FashionCard"; 
+export default FashionCard;
         ### 📄 app/components/RankingModal.tsx
         > **Context Summary**
         * 🔗 **Imports:** `framer-motion, lucide-react`
@@ -11274,9 +11826,15 @@ export default function ShopModal({ isOpen, onClose, lookTitle, items }: ShopMod
               )}
             </div>
 
-            <div className="px-6 py-5 border-t border-white/5 flex items-center justify-center gap-2 bg-black/50">
-              <ShieldCheck className="w-4 h-4 text-white/30" />
-              <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{t('verified')}</span>
+            {/* 🌟 수정 후 (대가성 문구 추가) */}
+            <div className="px-6 py-5 border-t border-white/5 flex flex-col items-center justify-center gap-1.5 bg-black/50">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-white/30" />
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">{t('verified')}</span>
+              </div>
+              <p className="text-[8px] text-white/20 tracking-tight">
+                *본 링크를 통한 구매 시 AURA는 제휴마케팅 커미션을 지급받습니다.
+              </p>
             </div>
           </motion.div>
         </>
@@ -11333,7 +11891,7 @@ export default function ShareButton({ item }: ShareButtonProps) {
         > **Context Summary**
         * 🔗 **Imports:** `framer-motion, lucide-react, react, next/navigation`
 * 🧩 **Component (Default):** `AdminModal`
-* ww **Hooks:** `useEffect, useRouter, useState`
+* ww **Hooks:** `useState, useEffect, useRouter`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
@@ -11487,7 +12045,12 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
       });
 
       // 2. 대기자 명단 (Audit)
-      const { data: waitData } = await supabase.from('aura_waitlist').select('*').eq('status', 'pending').order('created_at', { ascending: true });
+      const { data: waitData, error: waitError } = await supabase.from('aura_waitlist').select('*').eq('status', 'pending').order('created_at', { ascending: true });
+      // 🌟 [NEW] 만약 또 DB가 데이터를 숨기면 브라우저 콘솔창(F12)에 범인을 띄워줍니다!
+      if (waitError) {
+        console.error("🚨 Audit Board Fetch Error:", waitError.message);
+      }
+
       if (waitData) setWaitlist(waitData);
 
       // 3. 승인된 멤버 목록 (CRM)
@@ -12131,7 +12694,7 @@ export default function ExploreGrid({ items, onSelect }: ExploreGridProps) {
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, react-dropzone, lucide-react, next-intl`
 * 🧩 **Component (Default):** `UploadModal`
-* ww **Hooks:** `useDropzone, useCallback, useState, useTranslations`
+* ww **Hooks:** `useDropzone, useState, useTranslations, useCallback`
 
         ```typescript
         // components/UploadModal.tsx
@@ -12288,7 +12851,7 @@ export default function UploadModal({
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion, lucide-react, next/link, next-intl`
 * 🧩 **Component (Default):** `MagazineIndex`
-* ww **Hooks:** `useEffect, useLocale, useState, useTranslations`
+* ww **Hooks:** `useLocale, useEffect, useState, useTranslations`
 
         ```typescript
         "use client";
@@ -12435,17 +12998,28 @@ export default function MagazineIndex() {
         > **Context Summary**
         * 🔗 **Imports:** `react, next/navigation, framer-motion, lucide-react, next-intl`
 * 🧩 **Component (Default):** `MagazineDetailPage`
-* ww **Hooks:** `useState, useLocale, useRouter, useEffect, useParams, useTranslations`
+* ww **Hooks:** `useState, useTranslations, useParams, useEffect, useLocale, useRouter`
 
         ```typescript
-        "use client";
+        // app/magazine/[slug]/page.tsx
+"use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Tag, ShoppingBag, ExternalLink, Lock } from "lucide-react";
+// 🌟 [수정] ArrowUpRight 아이콘 import 추가
+import { ArrowLeft, Tag, ShoppingBag, Lock, ArrowUpRight } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { supabase } from "../../../lib/supabase"; 
+
+// 🌟 [NEW] 쇼핑 아이템 규격(Type) 추가
+interface ShoppableItem {
+  brand: string;
+  name: string;
+  price: string;
+  image_url: string;
+  shop_url: string;
+}
 
 interface Article {
   id: string;
@@ -12456,12 +13030,8 @@ interface Article {
   tags: string[];
   created_at: string;
   is_premium?: boolean;
+  shoppable_items?: ShoppableItem[] | null; // 🌟 [수정] 빨간 줄의 원인 해결!
 }
-
-const mockShoppableItems = [
-  { id: 1, brand: "AURA ARCHIVE", name: "Heavy Weight Oversized Blazer", price: "₩239,000", url: "#" },
-  { id: 2, brand: "SEOUL VIBE", name: "Raw Edge Wide Denim", price: "₩129,000", url: "#" }
-];
 
 export default function MagazineDetailPage() {
   const t = useTranslations('MagazineDetail');
@@ -12476,25 +13046,25 @@ export default function MagazineDetailPage() {
   const [isCultMember, setIsCultMember] = useState(false);
 
   useEffect(() => {
-  const checkCultStatus = async () => {
-    // 1. 현재 접속한 유저 정보 가져오기 (Supabase Auth 기준)
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return; // 비로그인 유저는 무조건 false
+    const checkCultStatus = async () => {
+      // 1. 현재 접속한 유저 정보 가져오기 (Supabase Auth 기준)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return; // 비로그인 유저는 무조건 false
 
-    // 2. 이 유저가 'aura_fashion_items' 테이블에 올린 옷 개수 세기
-    const { count, error } = await supabase
-    .from('aura_fashion_items') // 🌟 실제 사용 중인 테이블 이름
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', session.user.id); // 🌟 유저를 식별하는 컬럼 이름 (필요시 수정)
+      // 2. 이 유저가 'aura_fashion_items' 테이블에 올린 옷 개수 세기
+      const { count, error } = await supabase
+      .from('aura_fashion_items') 
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', session.user.id); 
 
-    // 3. 5개 이상 올렸다면 CULT 권한 부여!
-    if (!error && count !== null && count >= 5) {
-    setIsCultMember(true);
-    }
-  };
+      // 3. 5개 이상 올렸다면 CULT 권한 부여!
+      if (!error && count !== null && count >= 5) {
+        setIsCultMember(true);
+      }
+    };
 
-checkCultStatus();
-}, []);
+    checkCultStatus();
+  }, []);
 
   useEffect(() => {
     const fetchArticle = async () => {
@@ -12528,7 +13098,7 @@ checkCultStatus();
     );
   }
 
-  // 🌟 [NEW] 프리미엄 글 접근 거부 뷰 (다국어 적용 완)
+  // 🌟 프리미엄 글 접근 거부 뷰
   if (article.is_premium && !isCultMember) {
     return (
       <main className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white px-6 text-center relative overflow-hidden selection:bg-red-600">
@@ -12561,7 +13131,7 @@ checkCultStatus();
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-red-600 selection:text-white">
       
-      {/* 🌟 1. 헤더 (뒤로가기 & Aura. 마침표 디테일) */}
+      {/* 🌟 1. 헤더 */}
       <header className="fixed top-0 w-full z-50 mix-blend-difference px-6 py-8 flex justify-between items-center">
         <button onClick={() => router.push('/magazine')} className="flex items-center gap-2 group hover:opacity-70 transition-opacity">
           <ArrowLeft className="w-5 h-5 transition-transform group-hover:-translate-x-2" />
@@ -12632,41 +13202,61 @@ checkCultStatus();
         </article>
       </div>
 
-      {/* 🌟 4. [BM 종착지] SHOP THE EDITORIAL */}
-      <div className="max-w-5xl mx-auto px-6 md:px-12 py-24 border-t border-white/10">
-        <div className="flex flex-col items-center mb-16 text-center">
-          <ShoppingBag className="w-8 h-8 text-red-600 mb-4" />
-          <h2 className="text-3xl md:text-5xl font-serif italic font-black uppercase tracking-tighter mb-4">{t('shop_editorial')}</h2>
-          <p className="font-mono text-xs tracking-widest text-white/50">{t('shop_desc')}</p>
+      {/* 🌟 4. [BM 종착지] SHOP THE EDITORIAL 구역 */}
+      {article.shoppable_items && article.shoppable_items.length > 0 && (
+        <div className="max-w-5xl mx-auto px-6 md:px-12 py-24 border-t border-white/10">
+          <div className="flex items-center gap-3 mb-12">
+            <ShoppingBag className="w-5 h-5 text-white/40" />
+            <h2 className="text-xl font-bold uppercase tracking-widest text-white/80">
+              Shop the Editorial
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {article.shoppable_items.map((item: ShoppableItem, idx: number) => (
+              <a 
+                key={idx} 
+                href={item.shop_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group block bg-[#111] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all hover:scale-[1.02]"
+              >
+                <div className="aspect-square bg-white/5 relative overflow-hidden">
+                  <img src={item.image_url} alt={item.name} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[9px] font-mono tracking-widest uppercase text-white">
+                      Verified
+                    </span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-bold text-white/50">{item.brand}</span>
+                    <span className="text-xs font-mono text-white">{item.price}</span>
+                  </div>
+                  <h3 className="text-sm text-white/80 group-hover:text-white transition-colors mb-6">
+                    {item.name}
+                  </h3>
+                  <div className="w-full py-3 bg-white/5 text-center text-[10px] font-bold tracking-widest uppercase text-white group-hover:bg-white group-hover:text-black transition-colors rounded-xl flex items-center justify-center gap-2">
+                    GET <ArrowUpRight className="w-3 h-3" />
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
+      )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {mockShoppableItems.map((item, idx) => (
-            <motion.div 
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: idx * 0.2 }}
-              className="flex items-center gap-6 p-4 bg-white/5 border border-white/10 hover:border-white/30 transition-colors group cursor-pointer"
-            >
-              <div className="w-24 h-32 bg-white/10 overflow-hidden shrink-0 relative">
-                <img src={article.cover_image_url} alt="Item" className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500" />
-              </div>
-              <div className="flex flex-col flex-1">
-                <span className="font-mono text-[10px] font-bold text-red-500 tracking-widest mb-1">{item.brand}</span>
-                <h3 className="text-lg font-serif italic font-bold mb-2 group-hover:text-white/80">{item.name}</h3>
-                <span className="font-mono text-sm tracking-wider text-white/60 mb-4">{item.price}</span>
-                <button className="flex items-center gap-2 w-fit bg-white text-black px-4 py-2 font-black text-[10px] tracking-widest uppercase active:scale-95 transition-transform">
-                  {t('get_item')} <ExternalLink className="w-3 h-3" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
+      {/* 🌟 [법적 고지 필수] 대가성 문구 안내 바 */}
+      {article.shoppable_items && article.shoppable_items.length > 0 && (
+        <div className="text-center pb-8 opacity-40">
+          <p className="text-[9px] font-mono tracking-widest">
+            *이 포스팅은 제휴마케팅이 포함된 광고로 커미션을 지급받을 수 있습니다.
+          </p>
         </div>
-      </div>
+      )}
       
-      {/* 🌟 5. 푸터 다국어 적용 */}
+      {/* 🌟 5. 푸터 */}
       <footer className="py-12 border-t border-white/10 text-center font-mono text-[10px] tracking-widest uppercase text-white/30">
         {t('footer')}
       </footer>
@@ -12691,24 +13281,34 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '정보가 누락되었습니다.' }, { status: 400 });
     }
 
-    // DB에 신청 정보 저장
+    // 🌟 1단계에서 세운 DB 철벽이 있으므로 바로 Insert를 때립니다.
     const { error } = await supabase
       .from('aura_waitlist')
-      .insert([{ instagram_id: instagram, email }]);
+      .insert([{ 
+        instagram_id: instagram, 
+        email: email,
+        status: 'pending' // 🌟 누락되었던 상태값 강제 주입!
+      }]);
 
-    if (error) throw error;
+    // 🌟 에러 코드가 '23505' (Unique violation) 이면 중복 가입 에러로 판단하고 유저에게 알립니다.
+    if (error) {
+      if (error.code === '23505') {
+        return NextResponse.json({ error: '이미 심사 대기 중이거나 승인된 계정/이메일입니다.' }, { status: 409 });
+      }
+      throw error;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Waitlist Error:', error);
-    return NextResponse.json({ error: '신청 중 오류가 발생했습니다.' }, { status: 500 });
+    return NextResponse.json({ error: '신청 중 오류가 발생했습니다. (이미 등록된 계정일 수 있습니다.)' }, { status: 500 });
   }
 }
         ### 📄 app/api/admin/blog/page.tsx
         > **Context Summary**
         * 🔗 **Imports:** `react, next/navigation, lucide-react, @/lib/supabase`
 * 🧩 **Component (Default):** `BlogAdmin`
-* ww **Hooks:** `useEffect, useRouter, useState`
+* ww **Hooks:** `useState, useEffect, useRouter`
 * ⚡ **API Route / Server Action Detected**
 
         ```typescript
@@ -12849,17 +13449,20 @@ export default function BlogAdmin() {
 }
         ### 📄 app/api/admin/approve/route.ts
         > **Context Summary**
-        * 🔗 **Imports:** `next/server, @/lib/supabase, resend`
+        * 🔗 **Imports:** `next/server, @supabase/supabase-js, resend`
 * ⚡ **API Route / Server Action Detected**
 
         ```ts
         // app/api/admin/approve/route.ts
 import { NextResponse } from 'next/server';
-import { supabase } from "@/lib/supabase";
-
+import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 
-
+// 🌟 [핵심 해결책] 일반 유저용(Anon) 키가 아닌, 시스템 최상위 권한(Service Role) 키를 사용해 관리자 전용 클라이언트를 만듭니다.
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // 이 키는 RLS 보안 정책을 모두 무시하는 God Mode 키입니다.
+);
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -12870,22 +13473,30 @@ export async function POST(req: Request) {
     // 1. 고유 초대 코드 생성 (AURA-XXXXXX 포맷)
     const uniqueCode = `AURA-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-    // 2. DB에 초대 코드 등록 (1회만 사용 가능하도록 max_uses: 1 설정)
+    // 2. DB에 초대 코드 등록 (🌟 supabase 사용)
     const { error: codeError } = await supabase
       .from('invite_codes')
       .insert([{ code: uniqueCode, max_uses: 1 }]);
-    if (codeError) throw codeError;
+      
+    if (codeError) {
+      console.error("🚨 DB Invite Code Insert Error:", codeError);
+      throw new Error(`초대 코드 생성 실패: ${codeError.message}`);
+    }
 
-    // 3. 대기자 명단 상태를 'approved'로 변경
+    // 3. 대기자 명단 상태를 'approved'로 변경 (🌟 supabase 사용)
     const { error: updateError } = await supabase
       .from('aura_waitlist')
       .update({ status: 'approved' })
       .eq('id', waitlistId);
-    if (updateError) throw updateError;
+      
+    if (updateError) {
+      console.error("🚨 DB Waitlist Update Error:", updateError);
+      throw new Error(`대기자 상태 업데이트 실패: ${updateError.message}`);
+    }
 
     // 4. 💌 힙스터 감성의 다크모드 이메일 발송
     const { error: emailError } = await resend.emails.send({
-      from: 'AURA CEO <ceo@auraootd.com>', // 🌟 도메인 연결 전에는 테스트용 발신자 사용
+      from: 'AURA CEO <ceo@auraootd.com>', 
       to: email,
       subject: '[AURA] Vibe Audit Passed. Access Granted.',
       html: `
@@ -12916,12 +13527,70 @@ export async function POST(req: Request) {
       `,
     });
 
-    if (emailError) throw emailError;
+    if (emailError) {
+      console.error('🚨 Resend Email Error:', emailError);
+      throw new Error(`이메일 발송 실패: ${emailError.message}`);
+    }
 
     return NextResponse.json({ success: true, code: uniqueCode });
+    
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    console.error('🚨 Fatal Approve Error:', error);
+    // 💡 에러의 정확한 이유를 터미널과 네트워크 창에 던져줍니다.
+    return NextResponse.json({ error: error.message || '승인 처리 중 오류 발생' }, { status: 500 });
+  }
+}
+        ### 📄 app/api/admin/extract-tags/route.ts
+        > **Context Summary**
+        * 🔗 **Imports:** `next/server, @google/generative-ai`
+* ⚡ **API Route / Server Action Detected**
+
+        ```ts
+        // app/api/admin/extract-tags/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey || '');
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const file = formData.get('image') as File;
+
+    if (!file) return NextResponse.json({ error: '이미지가 없습니다.' }, { status: 400 });
+
+    // 이미지를 Gemini가 읽을 수 있는 버퍼로 변환
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64Image = buffer.toString('base64');
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+    // 🌟 핵심 프롬프트: 아이템과 무드를 영어 해시태그로 추출
+    const prompt = `
+      Analyze this fashion image. 
+      Extract 1) the specific fashion items (e.g., #TrenchCoat, #LeatherBoots) and 2) the overall mood/style (e.g., #Minimalism, #AvantGarde, #DarkWear). 
+      Return ONLY a JSON object with a 'tags' array containing 7 to 9 English hashtags.
+      Do not include markdown or any other text.
+      Example: {"tags": ["#BlackTrenchCoat", "#Minimalism", "#LeatherBoots", "#Chic"]}
+    `;
+
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { data: base64Image, mimeType: file.type } }
+    ]);
+
+    const responseText = result.response.text();
+    const cleanJsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const data = JSON.parse(cleanJsonString);
+
+    return NextResponse.json(data);
+
   } catch (error) {
-    console.error('Approve Error:', error);
-    return NextResponse.json({ error: '승인 처리 중 오류 발생' }, { status: 500 });
+    console.error("Vision Tag Extraction Error:", error);
+    return NextResponse.json({ error: '이미지 분석에 실패했습니다.' }, { status: 500 });
   }
 }
         ### 📄 app/api/fashion/route.ts
@@ -12958,6 +13627,7 @@ export async function GET() {
         temperature: item.temperature || '20°C',
         tags: Array.isArray(item.tags) ? item.tags : [],
         colors: Array.isArray(item.colors) ? item.colors : ["#E5E0D8", "#2C2C2C", "#8A7B6E"],
+        curatorNote: item.curator_note, // 🌟 이 줄 추가!
         uploaderName: item.uploader_name || 'AURA Editor', // 🌟 DB에서 가져온 이름표 세팅 
         uploaderIg: item.uploader_ig, // 🌟 
         likes: item.likes_count || 0, // 🌟
@@ -12995,7 +13665,7 @@ export async function POST(req: NextRequest) {
     // 모델 초기화
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    // 🌟 AI에게 부여하는 '수석 에디터' 페르소나 프롬프트
+    // 🌟 AI에게 부여하는 '수석 에디터' 페르소나 및 극강의 감성 프롬프트
     const prompt = `
       You are the Editor-in-Chief of a high-end, minimalist fashion magazine called 'AURA'.
       Write a compelling, poetic, and trendy fashion editorial based on the following keyword: "${keyword}".
@@ -13007,12 +13677,22 @@ export async function POST(req: NextRequest) {
       - Use rich sensory details (textures, weather, lighting).
       - Do not use generic AI-sounding words. Keep it raw and editorial.
 
+      [🌟 CRITICAL NEW INSTRUCTION: Heritage & Outfit-Centric Praise]
+      - The VERY FIRST LINE of the editorial content MUST be a famous quote or core philosophy from a legendary fashion designer (e.g., Martin Margiela, Yves Saint Laurent, Jil Sander, Yohji Yamamoto, Phoebe Philo, Coco Chanel).
+      - After the quote, leave a blank line (\\n\\n), and then begin the main editorial text.
+      - Beautifully connect this historical philosophy to the featured LOOKS (the outfits themselves, NOT the people wearing them).
+      - NEVER praise the wearer or the person. Focus ALL praise entirely on the FASHION ITSELF.
+      - Treat the ensemble as a standalone masterpiece of modern archiving.
+
+      [🌟 NEW INSTRUCTION: Hashtags in Content]
+      - At the very end of the editorial body, leave a blank line (\\n\\n) and append the relevant English hashtags extracted from the keyword (e.g., #AvantGarde #BlackCoat #Minimalism).
+      
       Output Format (Strictly return a valid JSON object without markdown code blocks):
       {
         "title": "A catchy, high-end editorial title",
         "slug": "url-friendly-slug-in-english-only-like-this",
-        "tags": "3 to 4 comma separated tags, lowercase",
-        "content": "The main editorial body. Use 2-3 short paragraphs. Include newlines (\\n\\n) for formatting."
+        "tags": "Extract 3 to 5 english hashtags from the keyword and context (e.g., #AvantGarde, #BlackCoat). Format as a comma separated string.",
+        "content": "\\"Quote here\\" - Designer Name\\n\\nThe first paragraph beautifully connecting the quote to the outfits...\\n\\nThe second paragraph analyzing the textures, silhouettes, and mood. (NO HASHTAGS AT THE END OF THIS CONTENT)"
       }
     `;
 
@@ -13020,14 +13700,14 @@ export async function POST(req: NextRequest) {
     const result = await model.generateContent(prompt);
     const responseText = result.response.text();
 
-    // 🌟 마크다운 잔재(```json 등)를 제거하고 순수 JSON 객체로 파싱
+    // 🌟 마크다운 잔재(\`\`\`json 등)를 제거하고 순수 JSON 객체로 파싱
     const cleanJsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
     const editorialData = JSON.parse(cleanJsonString);
 
     return NextResponse.json(editorialData);
 
-  } catch (error) { // ⭕ 타입을 지우거나 unknown으로 처리
-    console.error("OpenAI Error:", error);
+  } catch (error) {
+    console.error("Gemini Error:", error);
     // 에러가 Error 객체인지 확인 후 메시지 추출
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     return NextResponse.json({ error: errorMessage }, { status: 500 });
@@ -13147,8 +13827,8 @@ export async function GET() {
 
     if (error || !subscriptions) throw error;
 
-    const title = "AURA 모닝 브리핑 🌤️";
-    const body = "좋은 아침입니다! 오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
+    const title = "AURA 브리핑 🌤️";
+    const body = "오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
 
     // 🌟 [해결책 1] 푸시 발송 전, SYSTEM LOGS에 기록을 먼저 남깁니다.
     // 루프 밖에서 한 번만 호출하므로 중복 저장이 방지됩니다.
@@ -13166,7 +13846,7 @@ export async function GET() {
     else console.log('✅ SYSTEM LOGS 기록 성공');
 
     // 2. 푸시 메시지 설정
-    const payload = JSON.stringify({ title, body, url: '/' });
+    const payload = JSON.stringify({ title, body, url: '/home' });
 
     // 🌟 [해결책 2] 발송 및 만료된(410) 구독 정보 자동 삭제 (자가 치유)
     const sendPromises = subscriptions.map(async (sub) => {
@@ -13226,7 +13906,7 @@ export async function POST(req: Request) {
     // 🌟 [STEP 1] DB에 로그를 '딱 한 번만' 기록합니다.
     const { error: dbError } = await supabase
       .from('notifications')
-      .insert([{ title, body, type: 'system', link_url: url || '/', is_public: true }]);
+      .insert([{ title, body, type: 'system', link_url: url || '/home', is_public: true }]);
 
     if (dbError) console.error('DB Log Error:', dbError);
 
@@ -13240,7 +13920,7 @@ export async function POST(req: Request) {
     }
 
     // 🌟 [STEP 3] 모든 유저에게 병렬로 푸시 발송
-    const payload = JSON.stringify({ title, body, url: url || '/' });
+    const payload = JSON.stringify({ title, body, url: url || '/home' });
     const sendPromises = subscriptions.map((sub) =>
       webpush.sendNotification(sub.subscription, payload).catch(e => console.error("발송 실패:", e))
     );
@@ -13321,9 +14001,10 @@ export async function POST(req: Request) {
       당신은 세계 최고의 패션 디렉터입니다. 사진의 옷을 분석하여 아래 JSON 형식으로만 완벽하게 대답해주세요. 다른 말은 절대 하지마. 마크다운(\`\`\`json 등)은 절대 포함하지 마세요.
         {
           "weather": "어울리는 날씨 이모지 1개 (☀️, ☁️, ☔️, ❄️ 중 택 1)",
-          "temperature": "어울리는 온도 (예: 15°C, 28°C 등)",
+          "temperature": "이 옷의 소재와 두께를 분석하여 입기 가장 완벽한 온도를 1도 단위로 정밀하게 예측할 것. (예: 12°C, 17°C, 23°C 등)",
           "tags": ["#태그1", "#태그2", "#태그3"], // ${tagInstruction}
-          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"]
+          "colors": ["#HexCode1", "#HexCode2", "#HexCode3"],
+          "curatorNote": "이 사진의 스타일(미니멀, 스트릿, 아방가르드 등)을 분석하여, 그와 가장 잘 어울리는 유명 패션 디자이너(마르지엘라, 르메르, 질 샌더, 요지 야마모토 등)의 실제 명언이나 패션 철학을 하나 인용하고,  반드시 줄바꿈(\\n\\n)을 두 번 한 뒤에 이 룩을 평가하는 에디터의 코멘트를 작성해. 명언과 코멘트를 시각적으로 확실히 분리할 것. (예시: '우아함은 거절의 예술이다.' - 코코 샤넬\\n\\n불필요한 레이어드를 걷어내고 떨어지는 캐시미어의 질감만으로 오늘의 서늘한 바람을 완벽하게 통제했습니다.) (${isEnglish ? '반드시 영어로' : '반드시 한국어로'})"
         }
     `;
 
@@ -13370,6 +14051,7 @@ export async function POST(req: Request) {
         temperature: customTemp || aiData.temperature || "20°C",
         tags: finalTags || ["#OOTD"],
         colors: finalColors,
+        curator_note: aiData.curatorNote || null, // 🌟 [NEW] AI가 뽑아낸 명언을 DB에 저장!
         
         // 스폰서 전용 데이터 삽입
         is_sponsored: isSponsored,
@@ -13397,6 +14079,9 @@ export async function POST(req: Request) {
 
         ```ts
         // app/api/cron/route.ts
+export const dynamic = 'force-dynamic'; // 🌟 [핵심] 캐시 절대 금지, 매번 무조건 새로 계산해!
+export const revalidate = 0;            // 🌟 [핵심] 0초 캐싱 (데이터 즉시 폐기)
+
 import { NextResponse } from 'next/server';
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
@@ -13413,15 +14098,29 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!
 );
 
-// 1. 날씨 API 호출 (도시 단위 캐싱 효과)
-async function getCityWeather(lat: number, lon: number) {
+// 🌟 [추가] 하이엔드 패션 거장의 어록 리스트
+const FASHION_QUOTES = [
+  `"단순함은 궁극의 정교함이다." - 질 샌더`,
+  `"침묵은 가장 완벽한 핏이다." - 마틴 마르지엘라`,
+  `"우아함은 거절의 예술이다." - 코코 샤넬`,
+  `"패션은 사라지지만 스타일은 영원하다." - 이브 생 로랑`,
+  `"완벽함은 더 이상 보탤 것이 없을 때가 아니라, 빼낼 것이 없을 때 완성된다." - 앙투안 드 생텍쥐페리`
+];
+
+// 1. 날씨 API 호출 (🌟 isEvening 여부에 따라 오늘 현재기온 or 내일 최고기온 추출)
+async function getCityWeather(lat: number, lon: number, isEvening: boolean) {
   try {
     const res = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FSeoul`,
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max&timezone=Asia%2FSeoul`,
       { cache: 'no-store' }
     );
     const data = await res.json();
-    // 소수점 반올림 (예: 12.7 -> 13)
+    
+    // 저녁 알림(내일 준비)일 경우 내일(index 1)의 최고 기온 반환
+    if (isEvening && data.daily?.temperature_2m_max?.[1]) {
+      return Math.round(data.daily.temperature_2m_max[1]);
+    }
+    // 아침 알림일 경우 오늘 현재 기온 반환
     return Math.round(data.current_weather.temperature);
   } catch (e) {
     console.error("Weather API Error:", e);
@@ -13433,25 +14132,33 @@ async function getCityWeather(lat: number, lon: number) {
 function findBestMatchItem(items: { temperature?: string | number; [key: string]: unknown }[], targetTemp: number) {
   if (!items || items.length === 0) return null;
   return items.reduce((prev, curr) => {
-    // DB의 문자열(예: "25°C")에서 숫자만 추출
     const prevTemp = parseFloat(String(prev.temperature).replace(/[^0-9.-]/g, '')) || 20;
     const currTemp = parseFloat(String(curr.temperature).replace(/[^0-9.-]/g, '')) || 20;
-    
-    // 현재 기온과의 차이가 더 적은 쪽을 선택
     return Math.abs(currTemp - targetTemp) < Math.abs(prevTemp - targetTemp) ? curr : prev;
   });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // 1. 오늘의 전략 선정
+    console.log(`📡 [Cron Triggered] Request URL: ${request.url}`);
+    // 🌟 1. 한국 시간(KST) 기준 현재 시간 및 요일 파악
+    const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    const currentHour = kstDate.getHours();
+    const currentDay = kstDate.getDay(); // 0: 일, 1: 월, 2: 화, 3: 수, 4: 목, 5: 금, 6: 토
+
+    // 🌟 2. 아침 vs 저녁 모드 판별 (오후 6시 이후면 저녁 모드)
+    const isEvening = currentHour >= 18; 
+    
+    // 🌟 3. 주 2회 (화요일, 목요일) 어록 추가 플래그
+    const shouldAddQuote = (currentDay === 2 || currentDay === 4);
+    const randomQuote = FASHION_QUOTES[Math.floor(Math.random() * FASHION_QUOTES.length)];
+
+    // 4. 오늘의 전략 선정
     const strategies = ['weather', 'trend_tag', 'trend_look'];
     const selectedStrategy = strategies[Math.floor(Math.random() * strategies.length)];
-    // const selectedStrategy = 'weather'; // 테스트 시 주석 해제
 
-    console.log(`🚀 [Cron Start] 전략: ${selectedStrategy}`);
+    console.log(`🚀 [Cron Start] 전략: ${selectedStrategy} | 저녁모드: ${isEvening} | 어록추가: ${shouldAddQuote}`);
 
-    // 2. 구독자 전체 조회
     const { data: subscriptions } = await supabase
       .from('aura_push_subscriptions')
       .select('id, subscription, location_name, latitude, longitude');
@@ -13466,64 +14173,42 @@ export async function GET() {
     // [CASE A] 날씨 전략 (최적화: 도시별 그룹핑)
     // ============================================================
     if (selectedStrategy === 'weather') {
-      
-      // 1) 도시별 그룹핑 (Grouping)
       const groups: Record<string, typeof subscriptions> = {};
-      
       subscriptions.forEach(sub => {
         const city = sub.location_name || '서울';
         if (!groups[city]) groups[city] = [];
         groups[city].push(sub);
       });
 
-      // 2) 후보 아이템 조회 (인기순 30개)
-      const { data: candidates } = await supabase
-        .from('aura_fashion_items')
-        .select('*')
-        .order('likes_count', { ascending: false })
-        .limit(30);
-
+      const { data: candidates } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(30);
       const items = candidates || [];
-
-      // 3) 도시별 루프 (도시 개수만큼만 API 호출)
       const cityNames = Object.keys(groups);
-      console.log(`🏙️ 총 ${cityNames.length}개 도시 날씨 조회 시작`);
 
       for (const city of cityNames) {
         const cityUsers = groups[city];
-        // 대표 좌표 (모두 같은 도시이므로 0번째 유저 좌표 사용)
         const lat = cityUsers[0].latitude || 37.5665;
         const lon = cityUsers[0].longitude || 126.9780;
 
-        // 🌟 [핵심] API 호출 (1번)
-        const realTemp = await getCityWeather(lat, lon);
-        const currentTemp = realTemp !== null ? realTemp : 20; // 실패 시 20도
-        
-        // 🌟 [핵심] 이 도시에 맞는 옷 선정
+        // 🌟 isEvening 변수를 넘겨서 저녁이면 내일 최고기온을 가져옴
+        const realTemp = await getCityWeather(lat, lon, isEvening);
+        const currentTemp = realTemp !== null ? realTemp : 20; 
         const targetItem = findBestMatchItem(items, currentTemp);
 
         if (targetItem) {
-          // 변수를 밖으로 빼서 푸시와 DB 양쪽에서 쓸 수 있게 함
-          const title = "AURA 모닝 브리핑 🌤️";
-          const body = `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`;
-          const url = `/home?item_id=${targetItem.id}&source=morning_weather`;
+          // 🌟 시간대에 따른 문구 변경 및 어록 추가
+          const title = isEvening ? "내일 뭐 입지? 🌙" : "AURA 모닝 브리핑 🌤️";
+          let body = isEvening 
+            ? `내일 ${city} 최고 ${currentTemp}°C 예상. 미리 준비하는 완벽한 룩.` 
+            : `현재 ${city} ${currentTemp}°C. 이 날씨엔 이런 스타일이 딱이죠!`;
+          
+          if (shouldAddQuote) body += `\n\n${randomQuote}`; // 어록 추가
 
+          const url = `/home?item_id=${targetItem.id}&source=${isEvening ? 'evening' : 'morning'}_weather`;
           const payload = JSON.stringify({ type: 'weather', title, body, url });
 
-          // 🌟 [추가된 부분 1] 날씨 전략 DB 저장 (도시별로 한 번씩 저장)
-          const { error: dbError } = await supabase
-            .from('notifications')
-            .insert([{ 
-              title, 
-              body, 
-              type: 'system', 
-              link_url: url, // 동적 url 적용
-              is_public: true 
-            }]);
-            
+          const { error: dbError } = await supabase.from('notifications').insert([{ title, body, type: 'system', link_url: url, is_public: true }]);
           if (dbError) console.error(`DB Insert Error (${city}):`, dbError);
 
-          // 해당 도시 유저들에게 일괄 발송
           const pushTasks = cityUsers.map(user => 
             webpush.sendNotification(user.subscription, payload)
               .catch(async (e) => {
@@ -13541,41 +14226,30 @@ export async function GET() {
     // [CASE B] 트렌드 전략 (전체 동일 발송)
     // ============================================================
     else {
-      // 1등 아이템 조회
-      const { data: targetItem } = await supabase
-        .from('aura_fashion_items')
-        .select('*')
-        .order('likes_count', { ascending: false })
-        .limit(1)
-        .single();
+      const { data: targetItem } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(1).single();
 
       if (targetItem) {
-        let title = "", body = "", url = "";
+        let title = "", bodyText = "", url = "";
 
+        // 🌟 시간대에 따른 트렌드 문구 변경
         if (selectedStrategy === 'trend_tag') {
           const hotTag = targetItem.tags?.[0] || 'OOTD';
-          title = `오늘의 키워드: #${hotTag}`;
-          body = `#${hotTag} 스타일이 트렌드입니다.`;
+          title = isEvening ? `내일을 위한 키워드: #${hotTag} 🌙` : `오늘의 키워드: #${hotTag} ☀️`;
+          bodyText = `#${hotTag} 스타일이 트렌드입니다.`;
           url = `/home?item_id=${targetItem.id}&tag=${hotTag}`;
         } else {
-          title = `🔥 지금 가장 핫한 룩`;
-          body = `현재 ${targetItem.likes_count}명이 주목하고 있습니다.`;
-          url = `/home?item_id=${targetItem.id}&source=morning_trend`;
+          title = isEvening ? `🌙 내일 주목받을 룩` : `🔥 지금 가장 핫한 룩`;
+          bodyText = `현재 ${targetItem.likes_count}명이 주목하고 있습니다.`;
+          url = `/home?item_id=${targetItem.id}&source=${isEvening ? 'evening' : 'morning'}_trend`;
         }
 
+        if (shouldAddQuote) bodyText += `\n\n${randomQuote}`; // 어록 추가
+        const body = bodyText;
         const payload = JSON.stringify({ type: selectedStrategy, title, body, url });
-        // 🌟 [추가된 부분 2] 트렌드 전략 DB 저장 (모두 동일하므로 한 번만 저장)
-        const { error: dbError } = await supabase
-        .from('notifications')
-        .insert([{ 
-          title, 
-          body, 
-          type: 'system', 
-          link_url: url, // 동적 url 적용
-          is_public: true 
-        }]);
+        
+        const { error: dbError } = await supabase.from('notifications').insert([{ title, body, type: 'system', link_url: url, is_public: true }]);
         if (dbError) console.error("DB Insert Error (Trend):", dbError);
-        // 전체 발송
+
         const pushTasks = subscriptions.map(sub => 
           webpush.sendNotification(sub.subscription, payload)
             .catch(async (e) => {
@@ -13588,16 +14262,113 @@ export async function GET() {
       }
     }
 
-
-    // 4. 모든 발송 대기
     await Promise.all(sendPromises);
     console.log(`✅ [Cron Finish] 총 ${sendPromises.length}건 처리 완료`);
+    // 🌟 [추가] 7일이 지난 휘발성 시스템 로그(알림) 자동 파기
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { error: deleteError } = await supabase
+      .from('notifications')
+      .delete()
+      .lt('created_at', sevenDaysAgo);
+      
+    if (deleteError) console.error("오래된 알림 자동 파기 실패:", deleteError);
+    else console.log("🧹 7일 경과 알림 자동 파기 완료");
 
     return NextResponse.json({ success: true, strategy: selectedStrategy });
 
   } catch (error) {
     console.error("Cron Fatal Error:", error);
     return NextResponse.json({ error: 'Server Error' }, { status: 500 });
+  }
+}
+        ### 📄 app/api/cron/auto-pilot/route.ts
+        > **Context Summary**
+        * 🔗 **Imports:** `next/server, @/lib/supabase, @google/generative-ai`
+* ⚡ **API Route / Server Action Detected**
+
+        ```ts
+        // app/api/cron/auto-pilot/route.ts
+import { NextResponse } from 'next/server';
+import { supabase } from "@/lib/supabase";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+export async function GET(req: Request) {
+  try {
+    // 🌟 1. 보안 검사: Vercel Cron에서 보낸 정상적인 요청인지 확인 (외부 공격 차단)
+    const authHeader = req.headers.get('authorization');
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    // 🌟 2. 마스터 스위치 확인: 어드민에서 Auto-Pilot이 켜져 있는지 체크
+    const { data: settings } = await supabase
+      .from('aura_system_settings')
+      .select('auto_pilot_enabled')
+      .single();
+
+    if (!settings?.auto_pilot_enabled) {
+      return NextResponse.json({ message: "Auto-Pilot is OFF. Skipping generation." });
+    }
+
+    // 🌟 3. 오늘 요일 파악 (UTC 기준 00:00 = 한국 시간 오전 9시)
+    const today = new Date().getDay(); // 0:일, 1:월, 2:화, 3:수, 4:목, 5:금, 6:토
+    
+    let platform = '';
+    let prompt = '';
+
+    // 🌟 4. AURA의 전략적 배포 스케줄 (The Golden Cadence)
+    if (today === 2 || today === 4 || today === 6) {
+      // 화, 목, 토: X (Twitter)
+      platform = 'X';
+      prompt = `Write a short, provocative fashion tweet (max 280 chars) for a high-end platform called 'AURA'. 
+      Include a quote from a legendary fashion designer (like Margiela, Jil Sander, etc). 
+      Focus on minimalism, textures, and rejecting loud logos. 
+      End with 3 english hashtags. Korean language.`;
+    } 
+    else if (today === 5) {
+      // 금: Substack
+      platform = 'Substack';
+      prompt = `Write an exclusive, secretive weekly newsletter intro for 'AURA CULT' members.
+      The tone should be private, arrogant yet elegant. 
+      Review the high-end minimalist looks uploaded this week. 
+      Make them feel special for being part of this underground fashion archiving system. Korean language. Use 2-3 paragraphs.`;
+    } 
+    else if (today === 3) {
+      // 수: Medium
+      platform = 'Medium';
+      prompt = `Write an authoritative tech and fashion philosophy article intro for 'AURA' on Medium.
+      Discuss how AI vision analysis intersects with high-end fashion design.
+      Explore the philosophical deconstruction of modern streetwear using tech. 
+      Tone: Deep, intellectual, and professional. Korean language. Use 3-4 paragraphs.`;
+    } 
+    else {
+      // 일, 월: 휴식 (작성 안 함)
+      return NextResponse.json({ message: "No scheduled content for today." });
+    }
+
+    // 🌟 5. Gemini AI에게 원고 집필 명령
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    const content = result.response.text();
+
+    // 🌟 6. 작성된 원고를 DB (Distribution Center의 Draft 열)에 조용히 꽂아넣기
+    const { error } = await supabase
+      .from('aura_content_pipeline')
+      .insert([{ 
+        platform: platform, 
+        content: content.trim(), 
+        status: 'draft' 
+      }]);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, platform, message: `Generated draft for ${platform}` });
+
+  } catch (error) {
+    console.error("Auto-Pilot Cron Error:", error);
+    return NextResponse.json({ error: "Failed to run auto-pilot" }, { status: 500 });
   }
 }
         ### 📄 app/[username]/page.tsx
@@ -13785,15 +14556,20 @@ self.addEventListener('install', (event) => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 
 self.addEventListener('push', function (event) {
-  if (!event.data) return;
-  const payload = event.data.json();
-  const options = {
-    body: payload.body,
-    icon: '/icon.png',
-    badge: '/icon.png',
-    data: { url: payload.url || '/' }, // URL 저장
-  };
-  event.waitUntil(self.registration.showNotification(payload.title, options));
+  if (event.data) {
+    // 서버에서 보낸 payload (title, body, url) 파싱
+    const data = event.data.json(); 
+    
+    const options = {
+      body: data.body,
+      icon: '/push-icon.png', // 앱 아이콘 경로 (필수)
+      badge: '/push-icon.png',       // 안드로이드용 작은 아이콘
+      data: { url: data.url }    // 클릭 시 이동할 URL 저장
+    };
+
+    // 브라우저에 네이티브 알림 띄우기
+    event.waitUntil(self.registration.showNotification(data.title, options));
+  }
 });
 
 self.addEventListener('notificationclick', function(event) {
@@ -13824,7 +14600,7 @@ self.addEventListener('notificationclick', function(event) {
         * 🔗 **Imports:** `react`
 * wb **Type/Intf:** `FashionItem`
 * wf **Function:** `useAura`
-* ww **Hooks:** `useSocial, useState, useFeed, useWeather, useAuth, useEffect, useAura`
+* ww **Hooks:** `useState, useSocial, useAura, useFeed, useEffect, useAuth, useWeather`
 
         ```ts
         // hooks/useAura.ts
@@ -13835,6 +14611,9 @@ import { useWeather } from "./useWeather";
 import { useSocial } from "./useSocial";
 import { useFeed } from "./useFeed";
 import { supabase } from "../lib/supabase";
+import { auraSensory } from "../lib/sensory";
+
+// hooks/useAura.ts (약 13번째 줄 FashionItem 인터페이스 내부)
 
 export interface FashionItem {
   id: string | number;
@@ -13846,11 +14625,13 @@ export interface FashionItem {
   uploaderName?: string;
   uploaderIg?: string;
   likes?: number;
-  // 🌟 [NEW] Phase 2: 스폰서십 전용 데이터
-  isSponsored?: boolean;      // 스폰서 카드 여부 (true/false)
-  sponsorBrand?: string;      // 브랜드명 (예: GENTLE MONSTER)
-  sponsorUrl?: string;        // 아웃링크 (컬렉션 구매 페이지)
-  sponsorMessage?: string;    // 브랜드 메시지
+  
+  curatorNote?: string; // 🌟 [NEW] AI가 작성한 큐레이터 노트 추가!
+
+  isSponsored?: boolean;      
+  sponsorBrand?: string;      
+  sponsorUrl?: string;        
+  sponsorMessage?: string;    
 }
 
 export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionItem | null }) {
@@ -13871,9 +14652,16 @@ export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionIt
   const social = useSocial(auth.user, () => setIsLoginModalOpen(true), triggerHaptic);
   const feed = useFeed(weather.localWeather.temp, social.savedItems, isPaused, injectedItem);
   // 🌟 기존 UI와 완벽 호환되도록 파라미터 랩핑
-  const toggleArchiveWrapper = (lookId: string) => social.toggleArchive(lookId, feed.fashionItems);
-  const toggleLikeWrapper = (lookId: string, currentLikes: number) => social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
-
+  const toggleArchiveWrapper = (lookId: string) => {
+    social.toggleArchive(lookId, feed.fashionItems);
+    auraSensory.triggerHaptic('like');
+    auraSensory.playSFX('swipe_like');
+  }
+  const toggleLikeWrapper = (lookId: string, currentLikes: number) => {
+    social.toggleLike(lookId, currentLikes, feed.updateFeedLikes);
+    auraSensory.triggerHaptic('like');
+    auraSensory.playSFX('swipe_like');
+  }
     // 🌟 2. useEffect들이 모여있는 곳에 구독 상태 체크 로직 추가
   useEffect(() => {
     const checkPushStatus = async () => {
@@ -13929,6 +14717,9 @@ export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionIt
         console.error("DB Upsert Error:", error);
         throw error;
       }
+
+      // 🌟 [추가된 핵심 코드] DB 저장까지 성공했다면, UI 상태도 켜짐(true)으로 변경!
+      setIsPushEnabled(true);
       
       triggerHaptic([50, 100, 50]);
       alert("AURA와 주파수 동기화가 시작되었습니다! 🚀");
@@ -13994,7 +14785,7 @@ export function useAura(options?: { isPaused?: boolean; injectedItem?: FashionIt
         > **Context Summary**
         * 🔗 **Imports:** `react`
 * wf **Function:** `useSocial`
-* ww **Hooks:** `useSocial, useEffect, useMemo, useState`
+* ww **Hooks:** `useSocial, useState, useEffect, useMemo`
 
         ```ts
         // hooks/useSocial.ts
@@ -14102,7 +14893,7 @@ export function useSocial(user: any, onRequireLogin: () => void, triggerHaptic: 
         > **Context Summary**
         * 🔗 **Imports:** `react, framer-motion`
 * wf **Function:** `useGyroscope`
-* ww **Hooks:** `useEffect, useGyroscope, useState`
+* ww **Hooks:** `useGyroscope, useState, useEffect`
 
         ```ts
         // hooks/useGyroscope.ts
@@ -14161,7 +14952,7 @@ export function useGyroscope(mouseX: MotionValue<number>, mouseY: MotionValue<nu
         > **Context Summary**
         * 🔗 **Imports:** `react`
 * wf **Function:** `useAuth`
-* ww **Hooks:** `useEffect, useAuth`
+* ww **Hooks:** `useAuth, useEffect`
 
         ```ts
         // hooks/useAuth.ts
@@ -14217,7 +15008,7 @@ export function useAuth() {
         > **Context Summary**
         * 🔗 **Imports:** `react`
 * wf **Function:** `useWeather`
-* ww **Hooks:** `useEffect, useWeather, useState`
+* ww **Hooks:** `useState, useEffect, useWeather`
 
         ```ts
         // hooks/useWeather.ts
@@ -14261,14 +15052,24 @@ export function useWeather() {
 }
         ### 📄 hooks/useGatekeeper.ts
         > **Context Summary**
-        * 🔗 **Imports:** `react, @/lib/supabase`
+        * 🔗 **Imports:** `react, @/lib/supabase, resend`
 * wb **Type/Intf:** `VerifyResult`
 * wf **Function:** `useGatekeeper`
-* ww **Hooks:** `useGatekeeper, useEffect, useState`
+* ww **Hooks:** `useState, useEffect, useGatekeeper`
 
         ```ts
-        import { useState, useEffect } from 'react';
+        // hooks/useGatekeeper.ts
+
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+//import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
+
+// 🌟 [핵심 해결책] 일반 유저용(Anon) 키가 아닌, 시스템 최상위 권한(Service Role) 키를 사용해 관리자 전용 클라이언트를 만듭니다.
+//const supabase = createClient(
+//  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+//  process.env.SUPABASE_SERVICE_ROLE_KEY! // 이 키는 RLS 보안 정책을 모두 무시하는 God Mode 키입니다.
+//);
 
 export interface VerifyResult {
   success: boolean;
@@ -14323,10 +15124,17 @@ export function useGatekeeper(userId: string | undefined) {
 
       if (updateError) return { success: false, message: "승인 처리 중 오류 발생" };
 
-      await supabase
+      // 🌟 [핵심 수술] 에러를 반환받도록 수정합니다.
+      const { error: countUpdateError } = await supabase
         .from('invite_codes')
         .update({ used_count: codeData.used_count + 1 })
         .eq('code', code.toUpperCase());
+
+        // 만약 업데이트가 차단(RLS 에러)되면 콘솔에 경고를 띄웁니다!
+      if (countUpdateError) {
+        console.error("🚨 초대 코드 카운트 업데이트 차단됨 (RLS 문제):", countUpdateError);
+        // (선택) 여기서 실패 처리할 수도 있지만, 일단 유저 승인은 진행시킵니다.
+      }
 
       setIsApproved(true);
       return { success: true };
@@ -14341,7 +15149,7 @@ export function useGatekeeper(userId: string | undefined) {
         > **Context Summary**
         * 🔗 **Imports:** `react`
 * wf **Function:** `useFeed`
-* ww **Hooks:** `useEffect, useFeed, useState`
+* ww **Hooks:** `useFeed, useState, useEffect`
 * ⚡ **API Route / Server Action Detected**
 
         ```ts
@@ -14405,10 +15213,39 @@ export function useFeed(
     setFashionItems(finalItems);
   }, [rawItems, currentTemp, savedItems.length, isPaused, injectedItem]);
 
-  // 3. 글로벌 랭킹 페칭
+  // 3. 글로벌 랭킹 페칭 (데이터 누락 복구 및 캐싱 최적화)
   const fetchTrendingItems = async () => {
-    const { data } = await supabase.from('aura_fashion_items').select('*').order('likes_count', { ascending: false }).limit(50);
-    if (data) setTrendingItems(data.map((d: any) => ({ id: d.id, imageUrl: d.image_url, weather: d.weather, temperature: d.temperature, tags: d.tags, uploaderName: d.uploader_name, uploaderIg: d.uploader_ig, likes: d.likes_count || 0 })));
+    // 🌟 [최적화 1] 이미 랭킹 데이터를 한 번 불러왔다면, 다시 서버를 찌르지 않고 함수를 종료합니다! (불필요한 과금/부하 완벽 차단)
+    // (만약 trendingItems 상태 변수 이름이 다르다면 그 이름에 맞춰주세요)
+    if (trendingItems && trendingItems.length > 0) return; 
+
+    const { data, error } = await supabase
+      .from('aura_fashion_items')
+      .select('*')
+      .order('likes_count', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error("Explore Load Error:", error);
+      return;
+    }
+
+    if (data) {
+      setTrendingItems(data.map((d: any) => ({ 
+        id: d.id, 
+        imageUrl: d.image_url, 
+        weather: d.weather, 
+        temperature: d.temperature, 
+        tags: d.tags, 
+        uploaderName: d.uploader_name, 
+        uploaderIg: d.uploader_ig, 
+        likes: d.likes_count || 0,
+        
+        // 🌟 [핵심 해결] 큐레이터 노트와 컬러칩 누락 복구!
+        curatorNote: d.curator_note, 
+        colors: d.colors 
+      })));
+    }
   };
 
   // 4. 쇼핑 아이템 페칭
@@ -14433,33 +15270,28 @@ export function useFeed(
         ```ts
         // lib/affiliate.ts
 
-// 🌟 제휴 마케팅사에서 발급받을 매체사(Publisher) ID
-// 추후 Vercel 환경 변수(.env)에 등록하여 보안을 유지합니다.
 const AFFILIATE_IDS = {
-    linkprice_musinsa: process.env.NEXT_PUBLIC_LINKPRICE_ID || "AURA_TEST_ID",
-    rakuten_ssense: process.env.NEXT_PUBLIC_RAKUTEN_ID || "AURA_TEST_ID",
-  };
+  // Vercel 환경변수가 없으면 대표님의 실제 ID로 작동합니다.
+  linkprice_id: process.env.NEXT_PUBLIC_LINKPRICE_ID || "A100702899",
+  rakuten_ssense: process.env.NEXT_PUBLIC_RAKUTEN_ID || "AURA_TEST_ID",
+};
   
-  /**
-   * 💸 AURA Affiliate Router
-   * 일반 링크나 검색어를 돈이 되는 '트래킹 링크'로 변환해주는 엔진입니다.
-   */
-  export function generateTrackingLink(platform: 'musinsa' | 'ssense' | 'farfetch', queryOrUrl: string) {
-    switch (platform.toLowerCase()) {
-      case 'musinsa':
-        // 무신사 검색 결과를 링크프라이스 딥링크로 감싸는 로직 (예시 구조)
-        const rawMusinsaUrl = `https://www.musinsa.com/search/musinsa/integration?q=${encodeURIComponent(queryOrUrl)}`;
-        // 💡 실제 링크프라이스 가입 후, 제공받는 포맷으로 아래 URL을 교체합니다.
-        return `https://click.linkprice.com/click.php?m=musinsa&a=${AFFILIATE_IDS.linkprice_musinsa}&url=${encodeURIComponent(rawMusinsaUrl)}`;
-        
-      case 'ssense':
-        // 센스, 파페치 등 글로벌 부티크 라쿠텐 어필리에이트 로직
-        return `https://click.rakuten.com/click.php?id=${AFFILIATE_IDS.rakuten_ssense}&url=${encodeURIComponent(queryOrUrl)}`;
-        
-      default:
-        return queryOrUrl;
-    }
+export function generateTrackingLink(platform: 'wconcept' | 'ssense' | 'farfetch', queryOrUrl: string) {
+  switch (platform.toLowerCase()) {
+    case 'wconcept':
+      // 1. W컨셉 검색창 원본 URL
+      const rawWconceptUrl = `https://www.wconcept.co.kr/Search?keyword=${encodeURIComponent(queryOrUrl)}`;
+      
+      // 🌟 2. [핵심 수정] &l=0000 파라미터를 추가했습니다! (소문자 L과 숫자 0000)
+      return `https://click.linkprice.com/click.php?m=wconcept&a=${AFFILIATE_IDS.linkprice_id}&l=0000&url=${encodeURIComponent(rawWconceptUrl)}`;
+      
+    case 'ssense':
+      return `https://click.rakuten.com/click.php?id=${AFFILIATE_IDS.rakuten_ssense}&url=${encodeURIComponent(queryOrUrl)}`;
+      
+    default:
+      return queryOrUrl;
   }
+}
         ### 📄 lib/recommendation.ts
         > **Context Summary**
         * wf **Function:** `getPersonalizedFeed`
@@ -14502,6 +15334,138 @@ export function getPersonalizedFeed(
     return finalScoreB - finalScoreA;
   });
 }
+        ### 📄 lib/sensory.ts
+        > **Context Summary**
+        * (No structural elements detected)
+
+        ```ts
+        // lib/sensory.ts
+
+class SensoryManager {
+    private currentBGM: HTMLAudioElement | null = null;
+    private targetVolume: number = 0.3; // 🌟 배경음악은 은은해야 하므로 최대 볼륨 30%로 제한
+  
+    // 🌟 [핵심 1] 탄창(Pool) 준비: 자주 쓰는 효과음을 메모리에 미리 올려둡니다.
+    private sfxPool: Record<string, HTMLAudioElement> = {};
+
+    constructor() {
+        // 앱이 켜질 때 (브라우저 환경일 때만) 무기(SFX)를 미리 장전합니다.
+        if (typeof window !== 'undefined') {
+        this.sfxPool['swipe_pass'] = new Audio('/audio/sfx_pass.mp3');
+        this.sfxPool['swipe_like'] = new Audio('/audio/sfx_like.mp3');
+        this.sfxPool['flip'] = new Audio('/audio/sfx_flip.mp3');
+        this.sfxPool['success'] = new Audio('/audio/sfx_save.mp3'); 
+        // 필요하다면 다른 효과음도 여기에 추가
+        }
+    }
+    // ==========================================
+    // 📳 1. 하이엔드 햅틱 (진동) 제어기
+    // ==========================================
+    triggerHaptic(pattern: 'light' | 'medium' | 'heavy' | 'flip' | 'like' | 'success') {
+      if (typeof window === 'undefined' || !navigator.vibrate) return;
+      
+      const patterns = {
+        light: 10,                 // 스치듯 가벼운 진동 (Pass)
+        medium: 25,                // 명확한 탭
+        heavy: 40,                 // 묵직한 타격감 (DeepDive 진입)
+        flip: [15, 30, 15],        // 기계식 태엽/종이 넘어가는 촉감 (카드 뒤집기)
+        like: [20, 50, 20],        // 심장 박동 (Like)
+        success: [15, 50, 20]      // 잠금 해제, 다운로드 완료
+      };
+      
+      navigator.vibrate(patterns[pattern]);
+    }
+  
+    // ==========================================
+    // 🎵 2. 앰비언트 BGM 제어기 (크로스페이드 적용)
+    // ==========================================
+    playBGM(view: 'foryou' | 'explore' | 'magazine') {
+      if (typeof window === 'undefined') return;
+  
+      const bgmPaths = {
+        foryou: '/audio/bgm_foryou.ogg',
+        explore: '/audio/bgm_explore.ogg',
+        magazine: '/audio/bgm_magazine.ogg'
+      };
+  
+      const newPath = bgmPaths[view];
+  
+      // 이미 같은 음악이 재생 중이면 무시
+      if (this.currentBGM && this.currentBGM.src.includes(newPath)) return;
+  
+      // 기존 음악이 있으면 부드럽게 페이드아웃 후 새 음악 재생
+      this.fadeOutAndStop(() => {
+        this.currentBGM = new Audio(newPath);
+        this.currentBGM.loop = true; // 무한 반복
+        this.currentBGM.volume = 0;  // 볼륨 0에서 시작
+        
+        this.currentBGM.play().then(() => {
+          this.fadeIn(this.currentBGM!);
+        }).catch(err => {
+          console.warn("오디오 자동재생 정책에 의해 BGM이 대기 중입니다.", err);
+        });
+      });
+    }
+  
+    // 부드럽게 소리가 줄어드는 효과 (Fade Out)
+    private fadeOutAndStop(callback: () => void) {
+      if (!this.currentBGM) {
+        callback();
+        return;
+      }
+      const audio = this.currentBGM;
+      const step = 0.05;
+      
+      const fadeAudio = setInterval(() => {
+        if (audio.volume > step) {
+          audio.volume -= step;
+        } else {
+          audio.volume = 0;
+          audio.pause();
+          clearInterval(fadeAudio);
+          callback();
+        }
+      }, 50); // 50ms마다 볼륨 감소
+    }
+  
+    // 부드럽게 소리가 커지는 효과 (Fade In)
+    private fadeIn(audio: HTMLAudioElement) {
+      const step = 0.02;
+      const fadeAudio = setInterval(() => {
+        if (audio.volume < this.targetVolume - step) {
+          audio.volume += step;
+        } else {
+          audio.volume = this.targetVolume;
+          clearInterval(fadeAudio);
+        }
+      }, 50);
+    }
+  
+    // ==========================================
+    // 🔊 3. 효과음 (SFX) 제어기
+    // ==========================================
+    playSFX(type: 'flip' | 'swipe_pass' | 'swipe_like' | 'login' | 'upload' | 'save' | 'deepdive_in' | 'deepdive_out') {
+      if (typeof window === 'undefined') return;
+      
+      const sfxPaths = {
+        deepdive_in: '/audio/sfx_deepdive_in.mp3',   // 웅장한 저음 (Woom)
+        deepdive_out: '/audio/sfx_deepdive_out.mp3', // 스쳐가는 바람 (Swoosh)
+        flip: '/audio/sfx_flip.mp3',                 // 종이 바스락
+        swipe_pass: '/audio/sfx_pass.mp3',           // 파찰음
+        swipe_like: '/audio/sfx_like.mp3',           // 영롱한 크리스탈
+        login: '/audio/sfx_login.mp3',               // 묵직한 도어락
+        upload: '/audio/sfx_upload.mp3',             // 지포 라이터 클릭
+        save: '/audio/sfx_save.mp3'                  // 아날로그 셔터
+      };
+      
+      const audio = new Audio(sfxPaths[type]);
+      audio.volume = 0.6; // 효과음은 BGM보다 살짝 크게
+      audio.play().catch(e => console.warn("SFX 재생 차단됨", e));
+    }
+  }
+  
+  // 싱글톤으로 내보내기 (앱 전체에서 1개의 오디오만 유지)
+  export const auraSensory = new SensoryManager();
         ### 📄 lib/constants.ts
         > **Context Summary**
         * (No structural elements detected)
