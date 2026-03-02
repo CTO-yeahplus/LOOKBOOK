@@ -1,7 +1,7 @@
 // app/components/FloatingDock.tsx
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Share2, ShoppingCart, ArrowDown, MessageSquareWarning, Crown, Smartphone } from "lucide-react"; // Download 삭제
+import { Plus, ShoppingCart, ArrowDown, MessageSquareWarning, Crown, Smartphone } from "lucide-react"; // Download 삭제
 
 interface FloatingDockProps {
   showGyroButton: boolean;

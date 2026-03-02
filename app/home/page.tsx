@@ -196,6 +196,7 @@ export default function Home() {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aura.user, isApproved]);
 
   // 🌟 [통합 로직] EXPLORE 모드 진입 시 데이터 동기화 및 햅틱 피드백
@@ -215,6 +216,7 @@ export default function Home() {
       // 3. 사용자 경험(UX) 피드백
       aura.triggerHaptic(10); 
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, aura.styleReport?.vibeKey, aura.user?.id]); 
 
   // 탭이 바뀔 때마다 BGM 알아서 크로스페이드 됨!
