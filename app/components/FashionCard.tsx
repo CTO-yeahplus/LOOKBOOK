@@ -33,7 +33,8 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
   return (
     <motion.div
       id="aura-main-card" 
-      style={{ y, rotateX, rotateY, transformStyle: "preserve-3d" }} 
+      // 🌟 [수정 1] willChange: "transform" 을 추가하여 모바일 그래픽카드가 카드를 미리 로딩하게 강제합니다!
+      style={{ y, rotateX, rotateY, transformStyle: "preserve-3d", willChange: "transform" }} 
       drag={isExporting ? false : "y"} 
       dragConstraints={{ top: 0, bottom: 0 }} 
       dragElastic={0.7}
@@ -43,46 +44,40 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
         else if (swipe > swipeConfidenceThreshold) paginate(-1);
       }}
       custom={aura.direction}
-      // 🌟 [핵심 수술] 안착 임팩트 (Cinematic Focus Snap)
       variants={{
         enter: (direction: number) => ({
           y: direction > 0 ? "100%" : "-100%", 
           opacity: 1, 
-          // 1. 날아올 때는 아주 살짝 확대된 상태(1.02)에서 
-          scale: 1.5, 
-          // 2. 순간적으로 밝아지고(1.2) 흐릿한 모션 블러(8px)를 먹입니다!
-          filter: "brightness(1.5)", 
+          scale: 1.05, 
+          // 🚨 filter: "brightness(1.5)" 삭제!
         }),
         center: { 
           zIndex: 1, 
           y: 0, 
           opacity: 1, 
-          // 3. 정중앙에 꽂히는 순간 100% 원본 크기로 타격하며 
           scale: 1, 
-          // 4. 빛 번짐과 블러가 0초 만에 싹 걷히며 극강의 선명함을 터뜨립니다!
-          filter: "brightness(1)", 
+          // 🚨 filter: "brightness(1)" 삭제!
         },
         exit: (direction: number) => ({
           zIndex: 0,
           y: direction < 0 ? "120%" : "-120%", 
           opacity: 0, 
           scale: 0.9, 
-          // 5. 밀려나는 카드는 어두워지며(0.5) 초점이 날아가듯(10px) 뒤로 빠집니다.
-          filter: "brightness(0.5)", 
+          // 🚨 filter: "brightness(0.5)" 삭제!
         })
       }}
       initial="enter"
       animate="center"
       exit="exit"
       transition={{
-        // 🌟 안착할 때의 무게감을 위해 스프링 장력을 조금 더 무겁게(mass: 1.2) 튜닝했습니다.
         y: { type: "spring", stiffness: 400, damping: 35, mass: 0.8 }, 
         opacity: { duration: 0.15 },
         scale: { duration: 0.15 },
-        filter: { duration: 0.15 } // 블러와 빛 번짐이 걷히는 속도
+        // 🚨 filter: { duration: 0.15 } 삭제!
       }}
       ref={ref} 
-      className={`relative z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu ${
+      // 🌟 [수정 2] className 맨 앞의 relative를 'absolute'로 바꿉니다! (popLayout 없이도 카드가 완벽하게 겹치게 만듭니다)
+      className={`absolute z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu ${
         isSponsored ? 'border-[2px] border-white/40 shadow-[0_0_40px_rgba(255,255,255,0.2)]' : 'border border-white/20'
       }`}
     >

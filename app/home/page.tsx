@@ -549,7 +549,7 @@ useEffect(() => {
       <main className="relative z-10 w-full h-full flex flex-col items-center justify-center">
         {viewMode === 'recommend' ? (
           /* 추천 모드: 기존 3D 카드 */
-          <AnimatePresence initial={false} custom={aura.direction} mode="popLayout">
+          <AnimatePresence initial={false} custom={aura.direction}>
             <FashionCard 
               key={`card-${currentItem.id}`}
               item={currentItem}
