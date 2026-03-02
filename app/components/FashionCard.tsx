@@ -49,18 +49,18 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
           y: direction > 0 ? "100%" : "-100%", 
           opacity: 1, 
           // 1. 날아올 때는 아주 살짝 확대된 상태(1.02)에서 
-          //scale: 1.5, 
+          scale: 1.5, 
           // 2. 순간적으로 밝아지고(1.2) 흐릿한 모션 블러(8px)를 먹입니다!
-          //filter: "brightness(2.4) blur(8px)", 
+          filter: "brightness(1.5)", 
         }),
         center: { 
           zIndex: 1, 
           y: 0, 
           opacity: 1, 
           // 3. 정중앙에 꽂히는 순간 100% 원본 크기로 타격하며 
-          //scale: 1, 
+          scale: 1, 
           // 4. 빛 번짐과 블러가 0초 만에 싹 걷히며 극강의 선명함을 터뜨립니다!
-          //filter: "brightness(1) blur(0px)", 
+          filter: "brightness(1)", 
         },
         exit: (direction: number) => ({
           zIndex: 0,
@@ -68,7 +68,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
           opacity: 0, 
           scale: 0.9, 
           // 5. 밀려나는 카드는 어두워지며(0.5) 초점이 날아가듯(10px) 뒤로 빠집니다.
-          filter: "brightness(0.5) blur(10px)", 
+          filter: "brightness(0.5)", 
         })
       }}
       initial="enter"
@@ -76,10 +76,10 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
       exit="exit"
       transition={{
         // 🌟 안착할 때의 무게감을 위해 스프링 장력을 조금 더 무겁게(mass: 1.2) 튜닝했습니다.
-        y: { type: "spring", stiffness: 600, damping: 50, mass: 1.2 }, 
-        opacity: { duration: 0.2 },
-        scale: { duration: 0.2 },
-        filter: { duration: 0.2 } // 블러와 빛 번짐이 걷히는 속도
+        y: { type: "spring", stiffness: 400, damping: 35, mass: 0.8 }, 
+        opacity: { duration: 0.15 },
+        scale: { duration: 0.15 },
+        filter: { duration: 0.15 } // 블러와 빛 번짐이 걷히는 속도
       }}
       ref={ref} 
       className={`relative z-10 flex h-[79vh] md:h-[85vh] w-[95vw] max-w-[420px] flex-col overflow-hidden rounded-[2.5rem] bg-white/5 shadow-2xl aspect-[2/3] transform-gpu ${
