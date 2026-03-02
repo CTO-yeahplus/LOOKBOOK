@@ -56,7 +56,7 @@ export default function Home() {
   const [isShopModalOpen, setIsShopModalOpen] = useState(false);
   const [archiveCount, setArchiveCount] = useState(0);
   const [isRankingOpen, setIsRankingOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  //const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -648,7 +648,7 @@ export default function Home() {
             </button>
           ) : (
             <button 
-              onClick={() => { setIsLoginModalOpen(true); }}
+              onClick={() => { aura.setIsLoginModalOpen(true); }}
               className="flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white shadow-xl backdrop-blur-2xl transition-all hover:bg-white/20 active:scale-95" 
             >
               <User />
