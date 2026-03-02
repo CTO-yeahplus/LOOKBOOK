@@ -49,9 +49,9 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
           y: direction > 0 ? "100%" : "-100%", 
           opacity: 1, 
           // 1. 날아올 때는 아주 살짝 확대된 상태(1.02)에서 
-          scale: 1.1, 
+          scale: 1.5, 
           // 2. 순간적으로 밝아지고(1.2) 흐릿한 모션 블러(8px)를 먹입니다!
-          filter: "brightness(2.4) blur(8px)", 
+          //filter: "brightness(2.4) blur(8px)", 
         }),
         center: { 
           zIndex: 1, 
@@ -60,7 +60,7 @@ const FashionCard = forwardRef<HTMLDivElement, FashionCardProps>(({
           // 3. 정중앙에 꽂히는 순간 100% 원본 크기로 타격하며 
           scale: 1, 
           // 4. 빛 번짐과 블러가 0초 만에 싹 걷히며 극강의 선명함을 터뜨립니다!
-          filter: "brightness(1) blur(0px)", 
+          //filter: "brightness(1) blur(0px)", 
         },
         exit: (direction: number) => ({
           zIndex: 0,
