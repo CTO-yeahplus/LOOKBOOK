@@ -5,7 +5,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Activity, Power, Twitter, Mail, FileText, 
+  Activity, Power, Twitter, Mail, FileText, Copy, Trash2,
   Clock, CheckCircle2, Send, Loader2, RefreshCw, Plus
 } from "lucide-react";
 import { supabase } from "../../../lib/supabase";
@@ -26,6 +26,8 @@ export default function DistributionAdmin() {
   const [autoPilot, setAutoPilot] = useState(false);
   const [pipeline, setPipeline] = useState<PipelineItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  // 🌟 2. 어떤 버튼이 뺑뺑이(로딩)를 돌아야 하는지 추적하는 상태 추가
+  const [generatingPlatform, setGeneratingPlatform] = useState<string | null>(null);
 
   // 🌟 관리자 인증 및 데이터 로드
   useEffect(() => {
@@ -95,25 +97,47 @@ export default function DistributionAdmin() {
     }
   };
 
-  // 🌟 즉시 테스트용 강제 초안 생성 (플랫폼별 톤앤매너 완벽 분리)
+  // 🌟 [수술 1] 중복 클릭 방지 & 개별 버튼 로딩 상태 적용
   const generateTestDraft = async (platform: string) => {
-    let dummyContent = '';
-    
-    if (platform === 'X') {
-      dummyContent = `[AURA Insight]\n"침묵은 가장 완벽한 핏이다." - 마틴 마르지엘라\n\n오늘 AURA 아카이브에 포착된 서늘한 미니멀리즘. 로고의 과시를 거부하고 오직 실루엣과 텍스처만으로 압도하는 룩을 확인하십시오.\n\n#AURA #HighEnd #Minimalism #OOTD`;
-    } 
-    else if (platform === 'Substack') {
-      dummyContent = `[AURA CULT EXCLUSIVE] 주간 아카이브 리포트\n\n친애하는 컬트 멤버 여러분, 이번 주 AURA 시스템이 포착한 가장 완벽한 텍스처와 무드를 공유합니다. 남들과 다른 길을 걷는 오리지널들을 위한 프라이빗 에디토리얼과 큐레이션 아이템들을 지금 확인하십시오. 오직 여러분에게만 열려있습니다.`;
-    } 
-    else if (platform === 'Medium') {
-      dummyContent = `[Tech & Philosophy] AURA의 AI 비전 분석은 어떻게 패션을 해체하는가.\n\n우리의 시스템은 단순히 옷의 종류를 인식하는 데 그치지 않습니다. 픽셀 단위로 텍스처를 스캔하고, 실루엣의 무드를 읽어내며, 과거 거장들의 패션 철학을 현대의 스트릿 씬과 교차 분석합니다. 기술이 개인의 데일리룩을 어떻게 하이엔드 예술로 격상시키는지에 대한 기술적, 철학적 딥 다이브 리포트.`;
-    }
+    if (generatingPlatform) return; // 이미 다른 걸 생성 중이면 클릭 차단
+    setGeneratingPlatform(platform); // 뺑뺑이 시작
 
+    try {
+      const response = await fetch('/api/admin/generate-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platform })
+      });
+
+      if (!response.ok) throw new Error('AI 원고 생성 실패');
+
+      await fetchData();
+      alert(`${platform}용 AI 원고가 성공적으로 생성되었습니다! ✍️`);
+    } catch (error) {
+      console.error(error);
+      alert("🚨 AI 호출 실패. 백엔드 API가 준비되지 않았거나 오류가 발생했습니다.");
+    } finally {
+      setGeneratingPlatform(null); // 뺑뺑이 종료
+    }
+  };
+
+  // 🌟 [수술 2] 완벽한 삭제 엔진 (DB 연동)
+  const deleteItem = async (id: string) => {
+    if (!window.confirm("정말 이 원고를 삭제하시겠습니까? DB에서도 영구 삭제됩니다. 🗑️")) return;
+    
+    // UI에서 즉각적으로 먼저 지워버림 (Optimistic UI - 더 빠른 체감 속도)
+    setPipeline(prev => prev.filter(item => item.id !== id));
+
+    // DB에서 실제 삭제 진행
     const { error } = await supabase
       .from('aura_content_pipeline')
-      .insert([{ platform, content: dummyContent, status: 'draft' }]);
-    
-    if (!error) fetchData();
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert("삭제 중 오류가 발생했습니다.");
+      fetchData(); // 실패 시 원래대로 복구
+    }
   };
 
   if (isCheckingAuth) {
@@ -159,27 +183,57 @@ export default function DistributionAdmin() {
                   <span className="text-[9px] font-mono text-white/40">{new Date(item.created_at).toLocaleDateString()}</span>
                 </div>
                 
-                <p className="text-xs text-white/80 line-clamp-4 leading-relaxed font-serif">
-                  {item.content}
-                </p>
+                {/* 🌟 [수술 완료] 줄임표(line-clamp)를 없애고 스크롤과 원클릭 복사 버튼을 장착합니다. */}
+                <div className="relative group mt-2 mb-4">
+                  {/* 1. 스크롤이 가능한 넉넉한 텍스트 박스 (줄바꿈 완벽 유지) */}
+                  <div className="text-xs text-white/70 max-h-48 overflow-y-auto whitespace-pre-wrap pr-2 border border-white/10 rounded-lg p-3 bg-black/40 custom-scrollbar leading-relaxed">
+                    {item.content} {/* 변수명이 draft.content 라면 맞게 수정해 주세요 */}
+                  </div>
+
+                  {/* 2. 마우스를 올리면 나타나는(Hover) 원클릭 전체 복사 버튼 */}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation(); // 부모 카드 클릭 이벤트 방지
+                      navigator.clipboard.writeText(item.content);
+                      alert('전체 원고가 클립보드에 복사되었습니다! 📝');
+                    }}
+                    className="absolute top-2 right-4 p-1.5 rounded-md bg-white/20 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white/40 shadow-lg backdrop-blur-md active:scale-95"
+                    title="전체 텍스트 복사"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
 
                 {/* 상태별 액션 버튼 */}
-                <div className="mt-2 pt-3 border-t border-white/10 flex justify-end gap-2">
-                  {status === 'draft' && (
-                    <button onClick={() => updateStatus(item.id, 'scheduled')} className="flex items-center gap-1 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
-                      <Clock className="w-3 h-3"/> Schedule
-                    </button>
-                  )}
-                  {status === 'scheduled' && (
-                    <button onClick={() => updateStatus(item.id, 'published')} className="flex items-center gap-1 bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
-                      <Send className="w-3 h-3"/> Mark Published
-                    </button>
-                  )}
-                  {status === 'published' && (
-                    <span className="flex items-center gap-1 text-white/30 text-[10px] font-bold uppercase tracking-widest">
-                      <CheckCircle2 className="w-3 h-3"/> Done
-                    </span>
-                  )}
+                <div className="mt-2 pt-3 border-t border-white/10 flex justify-between items-center">
+                  
+                  {/* 🌟 1. 좌측: 영구 삭제(Trash) 버튼 장착 */}
+                  <button 
+                    onClick={() => deleteItem(item.id)} 
+                    className="p-1.5 text-white/30 hover:text-red-500 hover:bg-red-500/10 rounded transition-colors active:scale-95"
+                    title="영구 삭제"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+
+                  {/* 2. 우측: 기존 기능 버튼들 */}
+                  <div className="flex gap-2">
+                    {status === 'draft' && (
+                      <button onClick={() => updateStatus(item.id, 'scheduled')} className="flex items-center gap-1 bg-yellow-500/20 text-yellow-500 hover:bg-yellow-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
+                        <Clock className="w-3 h-3"/> Schedule
+                      </button>
+                    )}
+                    {status === 'scheduled' && (
+                      <button onClick={() => updateStatus(item.id, 'published')} className="flex items-center gap-1 bg-green-500/20 text-green-400 hover:bg-green-500 hover:text-black px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-widest transition-colors">
+                        <Send className="w-3 h-3"/> Mark Published
+                      </button>
+                    )}
+                    {status === 'published' && (
+                      <span className="flex items-center gap-1 text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                        <CheckCircle2 className="w-3 h-3"/> Done
+                      </span>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -228,21 +282,22 @@ export default function DistributionAdmin() {
       {/* 🌟 2. 툴바 (수동 테스트 & 새로고침) */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex gap-2">
-          <button onClick={() => generateTestDraft('X')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
-            <Plus className="w-3 h-3"/> Draft X
+          {/* 🌟 로딩 중이면 버튼을 비활성화하고 스피너를 돌립니다! */}
+          <button onClick={() => generateTestDraft('X')} disabled={generatingPlatform !== null} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors disabled:opacity-50">
+            {generatingPlatform === 'X' ? <Loader2 className="w-3 h-3 animate-spin text-red-500"/> : <Plus className="w-3 h-3"/>} Draft X
           </button>
-          <button onClick={() => generateTestDraft('Substack')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
-            <Plus className="w-3 h-3"/> Draft Substack
+          <button onClick={() => generateTestDraft('Substack')} disabled={generatingPlatform !== null} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors disabled:opacity-50">
+            {generatingPlatform === 'Substack' ? <Loader2 className="w-3 h-3 animate-spin text-red-500"/> : <Plus className="w-3 h-3"/>} Draft Substack
           </button>
-          {/* 🌟 Medium 초안 생성 버튼 추가 */}
-          <button onClick={() => generateTestDraft('Medium')} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors">
-            <Plus className="w-3 h-3"/> Draft Medium
+          <button onClick={() => generateTestDraft('Medium')} disabled={generatingPlatform !== null} className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-md text-[10px] font-mono tracking-widest uppercase transition-colors disabled:opacity-50">
+            {generatingPlatform === 'Medium' ? <Loader2 className="w-3 h-3 animate-spin text-red-500"/> : <Plus className="w-3 h-3"/>} Draft Medium
           </button>
         </div>
         <button onClick={fetchData} className="flex items-center gap-1.5 text-white/50 hover:text-white text-[10px] font-mono tracking-widest uppercase transition-colors">
           <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} /> Sync DB
         </button>
       </div>
+      
 
       {/* 🌟 3. 3단 칸반 보드 (Pipeline) */}
       <div className="flex flex-col md:flex-row gap-6">
