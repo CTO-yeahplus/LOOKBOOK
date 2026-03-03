@@ -83,8 +83,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
     
-  } catch (error: any) {
-    console.error("Gemini 생성 에러:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // 🌟 [수정 완료] any 대신 unknown을 사용하고, 안전하게 Error 객체로 취급합니다.
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("Gemini 생성 에러:", err);
+    return NextResponse.json({ error: err.message || "알 수 없는 오류 발생" }, { status: 500 });
   }
 }
