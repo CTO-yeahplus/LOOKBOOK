@@ -114,7 +114,7 @@ export default function MagazineDetailPage() {
         </div>
 
         <div className="flex flex-col gap-4 relative z-10 w-full max-w-xs">
-          <button onClick={() => router.push('/')} className="w-full bg-red-600 text-white px-8 py-4 font-black text-[10px] tracking-[0.2em] uppercase active:scale-95 transition-transform hover:bg-red-700 shadow-[4px_4px_0px_rgba(255,255,255,0.1)]">
+          <button onClick={() => router.push('/home')} className="w-full bg-red-600 text-white px-8 py-4 font-black text-[10px] tracking-[0.2em] uppercase active:scale-95 transition-transform hover:bg-red-700 shadow-[4px_4px_0px_rgba(255,255,255,0.1)]">
             {t('go_to_upload')}
           </button>
           <button onClick={() => router.push('/magazine')} className="w-full text-[10px] font-mono tracking-widest uppercase text-white/40 border-b border-white/10 pb-2 hover:text-white transition-colors mt-2">

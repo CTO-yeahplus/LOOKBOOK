@@ -64,7 +64,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
         formData.append('image', file);
         formData.append('mode', 'analyzeOnly'); // 💡 핵심: DB 저장 금지 명령!
         
-        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, { method: 'POST', body: formData });
         const data = await res.json();
         
         if (data.success) {
@@ -114,7 +114,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
       formData.append('tags', sponsorData.tags);
       formData.append('colors', JSON.stringify(sponsorData.colors)); 
 
-      const res = await fetch('/api/upload', { method: 'POST', body: formData });
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/upload`, { method: 'POST', body: formData });
       const data = await res.json();
 
       if (!data.success) throw new Error(data.error);
@@ -202,7 +202,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
     if (!confirmApprove) return;
     
     triggerHaptic(50);
-    const res = await fetch('/api/admin/approve', {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ waitlistId: user.id, email: user.email, instagram: user.instagram_id })
@@ -226,7 +226,7 @@ export default function AdminModal({ isOpen, onClose, triggerHaptic }: AdminModa
     setIsSending(true);
     try {
       // 🌟 [변경] 개별 호출 대신 단일 'broadcast' API를 호출합니다.
-      const response = await fetch('/api/broadcast', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/broadcast`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

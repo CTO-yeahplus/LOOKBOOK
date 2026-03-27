@@ -103,7 +103,7 @@ export default function DistributionAdmin() {
     setGeneratingPlatform(platform); // 뺑뺑이 시작
 
     try {
-      const response = await fetch('/api/admin/generate-draft', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/generate-draft`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ platform })

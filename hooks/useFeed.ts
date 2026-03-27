@@ -30,10 +30,28 @@ export function useFeed(
 
     const fetchItems = async () => {
       try {
-        const response = await fetch(`/api/fashion?timestamp=${new Date().getTime()}`, { cache: 'no-store' });
-        const data = await response.json();
-        setRawItems(data);
-      } catch (e) { console.error(e); }
+        // 🌟 1. 앱을 켜자마자 내 주머니(localStorage)에 예전 데이터가 있는지 확인하고 0.01초 만에 화면에 뿌림
+        const cachedData = localStorage.getItem('aura_feed_cache');
+        if (cachedData) {
+          setRawItems(JSON.parse(cachedData));
+        }
+
+        // 🌟 2. 사용자 모르게 뒤에서 최신 데이터를 가져옴 (타임스탬프 제거)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, { 
+          // Next.js 14 기준, 약간의 캐시를 허용 (예: 1시간 단위 갱신 등)
+          next: { revalidate: 3600 } 
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // 🌟 3. 주머니(캐시) 업데이트 및 상태 업데이트
+          localStorage.setItem('aura_feed_cache', JSON.stringify(data));
+          setRawItems(data);
+        }
+      } catch (e) { 
+        console.error(e); 
+      }
     };
     fetchItems();
   }, [isPaused, injectedItem]); // 👈 의존성 추가

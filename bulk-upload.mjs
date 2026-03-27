@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
 // 🌟 .env.local 파일을 읽어오라고 명령합니다.
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env.production' });
 
 // 🔑 환경 변수에서 열쇠를 안전하게 꺼내옵니다.
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;

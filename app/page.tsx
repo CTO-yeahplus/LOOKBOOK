@@ -47,7 +47,7 @@ export default function LandingPage() {
     if (!igHandle || !email) return alert("인스타그램 ID와 이메일을 모두 입력해주세요.");
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/waitlist', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/waitlist`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ instagram: igHandle, email })

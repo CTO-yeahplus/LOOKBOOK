@@ -113,7 +113,7 @@ export default function MagazineAdmin() {
       const formData = new FormData();
       formData.append('image', file);
 
-      const res = await fetch('/api/admin/extract-tags', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/extract-tags`, {
         method: 'POST',
         body: formData,
       });
@@ -172,7 +172,7 @@ export default function MagazineAdmin() {
     setIsGenerating(true);
     
     try {
-      const response = await fetch('/api/generate-editorial', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/generate-editorial`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword, locale })
