@@ -47,7 +47,7 @@ export async function POST(req: Request) {
     });
 
     // 🌟 [STEP 4] 알림 내용 구성
-    let note = new apn.Notification();
+    const note = new apn.Notification();
     note.expiry = Math.floor(Date.now() / 1000) + 3600; // 1시간 동안 유효
     note.badge = 1;
     note.sound = "ping.aiff";

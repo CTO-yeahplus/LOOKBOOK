@@ -30,7 +30,7 @@ async function getCityWeather(lat: number, lon: number, isEvening: boolean) {
     const data = await res.json();
     if (isEvening && data.daily?.temperature_2m_max?.[1]) return Math.round(data.daily.temperature_2m_max[1]);
     return Math.round(data.current_weather.temperature);
-  } catch (_e) {
+  } catch {
     return 20; // 에러 시 기본 온도
   }
 }
