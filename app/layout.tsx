@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
+import PushManager from "@/components/PushManager";
 
 // 🌟 방금 만든 스플래시 매니저 부품을 가져옵니다.
 import SplashScreenManager from "@/components/SplashScreenManager";
@@ -58,6 +59,7 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-black text-white antialiased`}>
         {/* 🌟 여기에 투명한 스플래시 매니저를 달아줍니다! (UI에는 안 보이지만 뒤에서 일합니다) */}
         <SplashScreenManager />
+        <PushManager />
         
         <NextIntlClientProvider messages={messages}>
           {children}

@@ -12,7 +12,11 @@ PODS:
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCordova (7.6.0)
+  - CapacitorPushNotifications (8.0.3):
+    - Capacitor
   - CapacitorSplashScreen (7.0.5):
+    - Capacitor
+  - CapgoCapacitorAppTrackingTransparency (8.1.5):
     - Capacitor
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
     - Capacitor
@@ -31,7 +35,9 @@ DEPENDENCIES:
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorPushNotifications (from `../../node_modules/@capacitor/push-notifications`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
+  - "CapgoCapacitorAppTrackingTransparency (from `../../node_modules/@capgo/capacitor-app-tracking-transparency`)"
   - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
 
 SPEC REPOS:
@@ -50,8 +56,12 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorPushNotifications:
+    :path: "../../node_modules/@capacitor/push-notifications"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
+  CapgoCapacitorAppTrackingTransparency:
+    :path: "../../node_modules/@capgo/capacitor-app-tracking-transparency"
   CodetrixStudioCapacitorGoogleAuth:
     :path: "../../node_modules/@codetrix-studio/capacitor-google-auth"
 
@@ -61,12 +71,14 @@ SPEC CHECKSUMS:
   CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCordova: f163aa2e84b79efc54d6a75b305bc7e05fb80c5d
+  CapacitorPushNotifications: e4437b4ec1b2070685bf032c210f346432214c5f
   CapacitorSplashScreen: 409eeaaeac603d264f209c0fcb718aa22fe1f7bb
+  CapgoCapacitorAppTrackingTransparency: b3468697a46ca50981bbb268f484368599724e6a
   CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
   GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
   GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
 
-PODFILE CHECKSUM: 192c0fe8c94f130f321a81f6be884cba833b4eb8
+PODFILE CHECKSUM: 3281792d0fde4ebdb20fa6a008b4f17723a22e17
 
 COCOAPODS: 1.16.2

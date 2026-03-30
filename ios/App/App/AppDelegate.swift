@@ -45,5 +45,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // tracking app url opens, make sure to keep this call
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
+    // 🌟 1. 애플 서버에서 기기 토큰을 성공적으로 받아왔을 때, 프론트엔드(Capacitor)로 넘겨주는 다리
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: deviceToken)
+    }
+
+    // 🌟 2. 애플 서버에서 기기 토큰 발급을 거절했을 때, 프론트엔드에 에러를 넘겨주는 다리
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .capacitorDidFailToRegisterForRemoteNotifications, object: error)
+    }
 
 }

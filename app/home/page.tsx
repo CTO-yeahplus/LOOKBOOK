@@ -569,7 +569,7 @@ function HomeContent() {
   }
 
   // 3. 로그인은 했지만 승인이 안 된 유저 (초대 코드 입력)
-  if (isApproved === false) {
+  if (aura.user && isApproved === false) {
     return (
       <main className="min-h-screen bg-black relative">
         <LockModal isOpen={true} onVerify={verifyCode} />
@@ -846,11 +846,12 @@ function HomeContent() {
         )}
       </AnimatePresence>
 
-      {/* 🛡️ Gatekeeper 모달: 승인되지 않았을 때만 열림 */}
+      {/* 🛡️ Gatekeeper 모달: 승인되지 않았을 때만 열림 
       <LockModal 
         isOpen={!isApproved} 
         onVerify={verifyCode} 
       />
+      */}
 
       {/* 3. 하단 도크 */}
       <FloatingDock 

@@ -1,6 +1,6 @@
 require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 
-platform :ios, '14.0'
+platform :ios, '15.0'
 use_frameworks!
 
 install! 'cocoapods', :disable_input_output_paths => true
@@ -10,7 +10,9 @@ def capacitor_pods
   pod 'CapacitorCordova', :path => '../../node_modules/@capacitor/ios'
   pod 'CapacitorCommunityAppleSignIn', :path => '../../node_modules/@capacitor-community/apple-sign-in'
   pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'
+  pod 'CapacitorPushNotifications', :path => '../../node_modules/@capacitor/push-notifications'
   pod 'CapacitorSplashScreen', :path => '../../node_modules/@capacitor/splash-screen'
+  pod 'CapgoCapacitorAppTrackingTransparency', :path => '../../node_modules/@capgo/capacitor-app-tracking-transparency'
   pod 'CodetrixStudioCapacitorGoogleAuth', :path => '../../node_modules/@codetrix-studio/capacitor-google-auth'
 end
 

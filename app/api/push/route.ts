@@ -1,75 +1,65 @@
-// app/api/cron/route.ts
+// app/api/test-push/route.ts
 import { NextResponse } from 'next/server';
-import webpush from 'web-push';
-import { createClient } from '@supabase/supabase-js'; // 🌟 createClient 직접 가져오기
+import apn from '@parse/node-apn';
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
+// =========================================================
+// 🌟 [핵심 수술] RLS 보안을 뚫고 지나가는 관리자(God Mode) 클라이언트 생성
+// =========================================================
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // 👈 이게 핵심입니다! (RLS 우회)
-);
-
-webpush.setVapidDetails(
-  'mailto:contact@auraootd.com',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // 일반 ANON 키가 아닌 서비스 롤 키 사용!
 );
 
 export async function GET() {
   try {
-    // 1. 모든 구독 정보 가져오기
-    const { data: subscriptions, error } = await supabase
-      .from('aura_push_subscriptions')
-      .select('id, subscription');
+    // 1. 관리자 권한으로 아이폰 토큰 싹쓸이 조회
+    const { data: tokens, error } = await supabaseAdmin
+      .from('aura_device_tokens')
+      .select('token')
+      .eq('platform', 'ios');
 
-    if (error || !subscriptions) throw error;
+    if (error || !tokens || tokens.length === 0) {
+      console.error("DB 조회 에러 또는 토큰 없음:", error);
+      return NextResponse.json({ success: false, message: 'DB에 저장된 토큰이 없습니다.' });
+    }
 
-    const title = "AURA 브리핑 🌤️";
-    const body = "오늘 날씨에 어울리는 완벽한 룩이 준비되었습니다.";
+    // 2. 애플 APNs 통신 엔진 세팅
+    const options = {
+      token: {
+        key: process.env.APPLE_P8_KEY!.replace(/\\n/g, '\n'), 
+        keyId: process.env.APPLE_KEY_ID!,
+        teamId: process.env.APPLE_TEAM_ID!
+      },
+      production: false // 엑스코드 테스트 중이므로 sandbox 모드
+    };
+    
+    const apnProvider = new apn.Provider(options);
 
-    // 🌟 [해결책 1] 푸시 발송 전, SYSTEM LOGS에 기록을 먼저 남깁니다.
-    // 루프 밖에서 한 번만 호출하므로 중복 저장이 방지됩니다.
-    const { error: dbError } = await supabase
-      .from('notifications')
-      .insert([{ 
-        title, 
-        body, 
-        type: 'system', 
-        link_url: '/', 
-        is_public: true 
-      }]);
+    // 3. 발송할 알림 내용
+    let note = new apn.Notification();
+    note.expiry = Math.floor(Date.now() / 1000) + 3600;
+    note.badge = 1;
+    note.sound = "ping.aiff";
+    note.alert = "AURA 시스템: 첫 번째 네이티브 푸시 알림 발사 성공! 🚀";
+    note.payload = { 'custom_link': '/home' };
+    note.topic = process.env.APPLE_BUNDLE_ID!;
 
-    if (dbError) console.error('❌ DB Logging Error:', dbError);
-    else console.log('✅ SYSTEM LOGS 기록 성공');
+    // 4. 장전된 모든 토큰으로 발사!
+    const deviceTokens = tokens.map(t => t.token);
+    const result = await apnProvider.send(note, deviceTokens);
 
-    // 2. 푸시 메시지 설정
-    const payload = JSON.stringify({ title, body, url: '/home' });
-
-    // 🌟 [해결책 2] 발송 및 만료된(410) 구독 정보 자동 삭제 (자가 치유)
-    const sendPromises = subscriptions.map(async (sub) => {
-      try {
-        await webpush.sendNotification(sub.subscription, payload);
-      } catch (e: unknown) {
-        const pushError = e as { statusCode?: number }; // 에러의 형태를 임시로 지정
-        // 410(Gone) 또는 404(Not Found) 에러 시 DB에서 해당 유령 구독자 삭제
-        if (pushError.statusCode === 410 || pushError.statusCode === 404) {
-          console.log(`🗑️ 유효하지 않은 구독 삭제: ID ${sub.id}`);
-          await supabase.from('aura_push_subscriptions').delete().eq('id', sub.id);
-        } else {
-          console.error("발송 실패:", e);
-        }
-      }
-    });
-
-    await Promise.all(sendPromises);
+    apnProvider.shutdown();
 
     return NextResponse.json({ 
       success: true, 
-      logged: !dbError,
-      processedCount: subscriptions.length 
+      sent: result.sent.length, 
+      failed: result.failed.length,
+      details: result
     });
 
   } catch (error) {
-    console.error('🔥 Cron Critical Error:', error);
+    console.error('🔥 Push Error:', error);
     return NextResponse.json({ error: '시스템 오류' }, { status: 500 });
   }
 }

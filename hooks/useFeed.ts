@@ -30,27 +30,32 @@ export function useFeed(
 
     const fetchItems = async () => {
       try {
-        // 🌟 1. 앱을 켜자마자 내 주머니(localStorage)에 예전 데이터가 있는지 확인하고 0.01초 만에 화면에 뿌림
+        // 1. 주머니(localStorage) 캐시 로드 (오프라인의 생명줄)
         const cachedData = localStorage.getItem('aura_feed_cache');
         if (cachedData) {
           setRawItems(JSON.parse(cachedData));
         }
-
-        // 🌟 2. 사용자 모르게 뒤에서 최신 데이터를 가져옴 (타임스탬프 제거)
+    
+        // 2. 뒤에서 조용히 최신 데이터 호출 시도
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, { 
-          // Next.js 14 기준, 약간의 캐시를 허용 (예: 1시간 단위 갱신 등)
-          next: { revalidate: 3600 } 
+          next: { revalidate: 3600 },
+          signal: AbortSignal.timeout(5000) // 🌟 [핵심] 5초 안에 응답 안 오면 인터넷 끊긴 걸로 간주하고 바로 포기!
         });
         
         if (response.ok) {
           const data = await response.json();
-          
-          // 🌟 3. 주머니(캐시) 업데이트 및 상태 업데이트
           localStorage.setItem('aura_feed_cache', JSON.stringify(data));
           setRawItems(data);
+        } else {
+          throw new Error("서버 응답 오류");
         }
       } catch (e) { 
-        console.error(e); 
+        console.warn("오프라인 상태이거나 네트워크가 불안정합니다. 캐시된 데이터를 유지합니다.", e);
+        // 🌟 [UX 디테일] 만약 캐시된 데이터마저 없다면? (앱 처음 켰는데 인터넷 없을 때)
+        if (!localStorage.getItem('aura_feed_cache')) {
+          alert("네트워크 연결이 불안정합니다. 연결 회복 후 다시 시도해주세요.");
+          // 추후 alert 대신 우아한 Toast UI로 변경하시면 완벽합니다.
+        }
       }
     };
     fetchItems();
