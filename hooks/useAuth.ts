@@ -104,19 +104,35 @@ export function useAuth() {
     return { data, error };
   };
 
-  // 🌟 이메일 매직 링크 & 심사관 프리패스 통합 엔진
-  const signInWithEmail = async (email: string) => {
-    // 1. [심사관 전용 로직] 특정 계정은 비밀번호로 즉시 로그인
+  // 🌟 이메일 매직 링크 & 심사관 프리패스 통합 엔진 (강화 버전)
+  const signInWithEmail = async (rawEmail: string) => {
+    // 1. 공백 제거 및 소문자 변환 (오타 방어)
+    const email = rawEmail.trim().toLowerCase(); 
+
+    // 2. [심사관 전용 프리패스 로직]
     if (email === "test@auraootd.com") {
-      console.log("🛠️ 애플 심사관 계정 감지: 비밀번호 로그인을 시도합니다.");
+      console.log("🛠️ 심사관 계정 진입 시도");
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: "test@auraootd.com",
-        password: "Aura1234!", // App Store Connect에 기재한 비밀번호와 일치해야 함
+        password: "Aura1234!", // 👆 위 Supabase 대시보드에서 만든 비밀번호
       });
-      return { data, error };
+
+      if (error) {
+        // 🚨 에러의 진짜 원인을 팝업으로 띄워줍니다. (네트워크 에러로 퉁치지 않음)
+        alert("심사관 로그인 실패: " + error.message);
+        return { data: null, error };
+      }
+
+      // ✅ 로그인 성공 시: 매직링크 대기 화면으로 가지 않고 강제로 홈으로 꽂아버립니다.
+      if (typeof window !== "undefined") {
+        alert("심사관 계정으로 로그인되었습니다."); // 테스트용 알림 (성공 확인 후 지우셔도 됩니다)
+        window.location.href = '/home'; 
+      }
+      return { data, error: null };
     }
 
-    // 2. [일반 유저 로직] 기존 매직링크 발송
+    // 3. [일반 유저 로직] 기존 매직링크 발송
     const redirectUrl = typeof window !== "undefined" 
       ? `${window.location.origin}/home` 
       : "http://localhost:3000/home";
