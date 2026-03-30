@@ -104,8 +104,19 @@ export function useAuth() {
     return { data, error };
   };
 
-  // 🌟 이메일 매직 링크 발송 엔진
+  // 🌟 이메일 매직 링크 & 심사관 프리패스 통합 엔진
   const signInWithEmail = async (email: string) => {
+    // 1. [심사관 전용 로직] 특정 계정은 비밀번호로 즉시 로그인
+    if (email === "test@auraootd.com") {
+      console.log("🛠️ 애플 심사관 계정 감지: 비밀번호 로그인을 시도합니다.");
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "test@auraootd.com",
+        password: "Aura1234!", // App Store Connect에 기재한 비밀번호와 일치해야 함
+      });
+      return { data, error };
+    }
+
+    // 2. [일반 유저 로직] 기존 매직링크 발송
     const redirectUrl = typeof window !== "undefined" 
       ? `${window.location.origin}/home` 
       : "http://localhost:3000/home";
@@ -114,6 +125,7 @@ export function useAuth() {
       email,
       options: { emailRedirectTo: redirectUrl }
     });
+    
     return { data, error };
   };
 
