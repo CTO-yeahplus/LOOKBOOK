@@ -37,7 +37,7 @@ export async function GET() {
     const apnProvider = new apn.Provider(options);
 
     // 3. 발송할 알림 내용
-    let note = new apn.Notification();
+    const note = new apn.Notification();
     note.expiry = Math.floor(Date.now() / 1000) + 3600;
     note.badge = 1;
     note.sound = "ping.aiff";

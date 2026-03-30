@@ -30,12 +30,12 @@ async function getCityWeather(lat: number, lon: number, isEvening: boolean) {
     const data = await res.json();
     if (isEvening && data.daily?.temperature_2m_max?.[1]) return Math.round(data.daily.temperature_2m_max[1]);
     return Math.round(data.current_weather.temperature);
-  } catch (e) {
+  } catch (_e) {
     return 20; // 에러 시 기본 온도
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // 🌟 KST 기준 시간 파악
     const kstDate = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       // (간소화를 위해 서울 기준으로 예시 작성, 필요시 유저별 위치 연동 가능)
       const temp = await getCityWeather(37.5665, 126.9780, isEvening);
       
-      let note = new apn.Notification();
+      const note = new apn.Notification();
       note.expiry = Math.floor(Date.now() / 1000) + 3600;
       note.badge = 1;
       note.sound = "ping.aiff";
