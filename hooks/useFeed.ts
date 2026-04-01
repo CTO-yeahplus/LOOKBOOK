@@ -36,10 +36,13 @@ export function useFeed(
         if (cachedData) {
           setRawItems(JSON.parse(cachedData));
         }
+
+        const targetUrl = getApiUrl('/api/fashion');
+        console.log("🚀 현재 요청하는 API 주소:", targetUrl); // 이 로그가 어떻게 찍히는지 확인!
     
         // 2. 뒤에서 조용히 최신 데이터 호출 시도 fetch(getApiUrl('/api/fashion'))
         //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, {
-        const response = await fetch(getApiUrl('/api/fashion'), { 
+        const response = await fetch(targetUrl, { 
           //next: { revalidate: 3600 },
           signal: AbortSignal.timeout(5000) // 🌟 [핵심] 5초 안에 응답 안 오면 인터넷 끊긴 걸로 간주하고 바로 포기!
         });
