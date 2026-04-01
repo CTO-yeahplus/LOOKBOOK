@@ -226,6 +226,105 @@ export default function IRPage() {
         </div>
       </section>
 
+      {/* 🌟 IR 페이지 내 Founder 섹션 (사진 추가 및 레이아웃 업데이트 버전) */}
+      <section className="py-40 px-6 border-t border-white/10">
+        <div className="max-w-7xl mx-auto flex flex-col items-center">
+          
+          {/* 1. 타이틀 & 인용구 (섹션 상단 배치로 임팩트 부여) */}
+          <div className="text-center max-w-3xl mb-24 flex flex-col items-center">
+              <motion.div initial={{ opacity: 0, scale: 0.8 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 1.5 }} className="mb-6 inline-block border border-[#ff3b30] px-4 py-1 rounded-full">
+                  <span className="text-[#ff3b30] text-[10px] font-black tracking-[0.5em] uppercase">The Architect</span>
+              </motion.div>
+              <h2 className="text-6xl md:text-8xl font-serif italic font-black uppercase mb-12 mix-blend-difference tracking-tighter leading-none">
+                  Behind the <br/><span className="text-[#ff3b30]">Monolith.</span>
+              </h2>
+              <blockquote className="text-2xl md:text-3xl text-white/60 font-light leading-snug italic mb-6 break-keep">
+                  "I didn't study fashion. I spent my life engineering the impossible out of massive data."
+              </blockquote>
+              <p className="text-xl text-white/30 font-sans tracking-tight break-keep leading-relaxed">
+                  "저는 패션을 공부하지 않았습니다. 대부분의 이력을 방대한 데이터를 엔지니어링하면서 이력을 쌓았습니다."
+              </p>
+          </div>
+
+          {/* 2. 비대칭 그리드 (좌: 사진 / 우: 이력 설명) */}
+          <div className="grid md:grid-cols-[1.2fr,2fr] gap-16 items-start w-full">
+            
+            {/* 📸 좌측: 시각적 증거 (Visual Proofs) */}
+            <div className="space-y-10 order-2 md:order-1 w-full max-w-sm mx-auto md:max-w-none">
+              
+              {/* 프로필 사진 (1:1 정사각형) */}
+              <div className="group relative aspect-square rounded-sm overflow-hidden border border-white/10 shadow-2xl">
+                  {/* 데이터 렌더링 효과 필터 적용 */}
+                  <img 
+                      src="/images/founder_profile.jpg" 
+                      alt="AURA Founder & CTO Profile" 
+                      className="w-full h-full object-cover grayscale contrast-125 group-hover:grayscale-0 group-hover:scale-105 transition-all duration-1000 ease-[0.16,1,0.3,1]"
+                  />
+                  {/* 데이터 오버레이 연출 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute bottom-4 left-4 font-mono text-[9px] text-white/50 uppercase tracking-[0.3em] opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                      Founding Originator / CTO
+                  </div>
+              </div>
+
+              {/* 조지 루카스 단체 사진 (세로형 - 4:5 비율) */}
+              <div className="group relative aspect-[4/5] rounded-sm overflow-hidden border border-white/10 shadow-2xl">
+                  <img 
+                      src="/images/lucasfilm_group.jpg" 
+                      alt="Group photo with George Lucas at Lucasfilm/ILM" 
+                      // 💡 단체사진이 세로로 잘릴 때 중요 인물이 중앙에 오도록 object-center를 사용했습니다.
+                      // 필요시 object-left 또는 object-right로 수정하세요.
+                      className="w-full h-full object-cover object-center grayscale contrast-125 brightness-90 group-hover:grayscale-0 transition-all duration-1000 ease-[0.16,1,0.3,1]"
+                  />
+                  {/* 자막 연출 */}
+                  <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md p-4 border border-white/10 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                      <p className="text-white font-bold text-xs mb-1.5 uppercase tracking-widest border-b border-white/20 pb-2">
+                          With George Lucas <br/><span className="text-[9px] text-white/50">@ Lucasfilm</span>
+                      </p>
+                      <p className="text-[10px] font-sans text-white/50 tracking-normal normal-case break-keep mt-2 leading-relaxed">
+                          상상할 수 없는 규모의 시각 데이터를 통제하던 마스터들과 함께
+                      </p>
+                  </div>
+              </div>
+
+            </div>
+
+            {/* 📄 우측: 이력 설명 (기존 내용 유지하면서 디자인 보완) */}
+            <div className="order-1 md:order-2 space-y-16 py-6 font-mono tracking-widest uppercase text-white/60">
+              
+              <div className="border-l-2 border-[#ff3b30] pl-8 py-2 relative">
+                  <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-3 h-3 bg-[#ff3b30] rounded-full shadow-[0_0_15px_rgba(255,59,48,0.8)]" />
+                  <h3 className="text-xl text-white font-black mb-3">Lucasfilm / ILM (5 Years 8 Months)</h3>
+                  <p className="text-sm text-white/80 mb-3">Mastered unimaginable scales of visual data rendering & pipeline engineering.</p>
+                  <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
+                  상상할 수 없는 규모의 페타바이트(PB)급 시각 데이터를 통제하고, 전 세계 탑티어 아티스트들과 협업하며 완벽한 '픽셀'을 깎아내던 데이터 공학 기술
+                  </p>
+              </div>
+
+              <div className="border-l-2 border-white/20 pl-8 py-2 relative">
+                  <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-3 h-3 bg-white/20 rounded-full" />
+                  <h3 className="text-xl text-white font-black mb-3">Pioneer of Katana Pipeline in Korea</h3>
+                  <p className="text-sm text-white/80 mb-3">Built the unseen from data. (e.g., Blockbuster movie 'The Battleship Island')</p>
+                  <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
+                  국내 최초 카타나(Katana) 파이프라인 도입 및 한국 VFX 산업 표준 재수립. 존재하지 않던 시스템을 설계하고 '데이터로 불가능을 시각화'하는 프론티어 경험 (ex. 영화 '군함도')
+                  </p>
+              </div>
+
+              <div className="border-l-2 border-white/20 pl-8 py-2 relative">
+                  <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-3 h-3 bg-white/20 rounded-full" />
+                  <h3 className="text-xl text-white font-black mb-3">Current CTO @ Global Photo Tech Leader</h3>
+                  <p className="text-sm text-white/80 mb-3">Handling real-time massive global user data & infrastructure.</p>
+                  <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
+                  전 세계 수천 대의 셀프 포토 키오스크 인프라를 총괄하며 쏟아지는 글로벌 실시간 유저 데이터를 안정적으로 핸들링. AURA의 '글로벌 스케일 확장'을 기술적으로 보장하는 현직 마스터.
+                  </p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
       {/* 🚀 4. Outro & Contact */}
       <section className="py-40 px-6 max-w-4xl mx-auto text-center relative overflow-hidden">
          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#ff3b30]/20 rounded-full blur-[120px] pointer-events-none opacity-50" />
@@ -234,8 +333,8 @@ export default function IRPage() {
           <p className="text-2xl text-white/60 font-light mb-16">
             소프트웨어와 패션이 결합하는 방식을 재정의할 파트너를 찾습니다.
           </p>
-          <a href="mailto:cto@yeahplus.co.kr" className="inline-flex items-center justify-center px-10 py-5 rounded-full bg-[#ff3b30] text-white font-bold text-lg hover:bg-[#ff5b50] hover:scale-105 active:scale-95 transition-all shadow-[0_10px_40px_rgba(255,59,48,0.4)]">
-            Connect with Leadership
+          <a href="mailto:contact@auraootd.com" className="inline-flex items-center justify-center px-10 py-5 rounded-full bg-[#ff3b30] text-white font-bold text-lg hover:bg-[#ff5b50] hover:scale-105 active:scale-95 transition-all shadow-[0_10px_40px_rgba(255,59,48,0.4)]">
+            contact@auraootd.com
           </a>
         </motion.div>
       </section>
