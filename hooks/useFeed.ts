@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { getPersonalizedFeed } from "../lib/recommendation";
 import { FashionItem } from "./useAura";
+import { getApiUrl } from "@/utils/api";
 
 export function useFeed(
   currentTemp: number, 
@@ -36,8 +37,9 @@ export function useFeed(
           setRawItems(JSON.parse(cachedData));
         }
     
-        // 2. 뒤에서 조용히 최신 데이터 호출 시도
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, { 
+        // 2. 뒤에서 조용히 최신 데이터 호출 시도 fetch(getApiUrl('/api/fashion'))
+        //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, {
+        const response = await fetch(getApiUrl('/api/fashion'), { 
           next: { revalidate: 3600 },
           signal: AbortSignal.timeout(5000) // 🌟 [핵심] 5초 안에 응답 안 오면 인터넷 끊긴 걸로 간주하고 바로 포기!
         });

@@ -20,7 +20,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-96.webp",
+      "src": "../images/icon-96.webp",
       "type": "image/png",
       "sizes": "96x96",
       "purpose": "any maskable"
@@ -32,7 +32,7 @@
       "purpose": "any maskable"
     },
     {
-      "src": "../icons/icon-192.webp",
+      "src": "../images/icon_192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
