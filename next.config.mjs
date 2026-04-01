@@ -2,13 +2,13 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
-/** @type {import('import('next').NextConfig')} */
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 🌟 [추가 1] 모바일 앱(Capacitor) 껍데기에 담기 위해 HTML/JS/CSS 정적 파일로 강제 추출합니다.
-  output: 'export', 
+  // 🌟 [핵심 수술] Vercel 환경에서는 서버(undefined)로 작동하여 /api 폴더를 살리고,
+  // 내 맥북(TestFlight 앱 빌드용)에서는 정적 파일(export)로 작동하도록 지능형 분기!
+  output: process.env.VERCEL ? undefined : 'export', 
   
   images: {
-    // 기존 설정 유지 (외부 도메인 이미지 허용)
     remotePatterns: [
       {
         protocol: 'https',
@@ -19,7 +19,7 @@ const nextConfig = {
         hostname: '*.supabase.co',
       },
     ],
-    // 🌟 [추가 2] 정적 추출 환경(앱 내부)에서는 Next.js 고유의 이미지 최적화 서버가 작동하지 않으므로, 에러 방지를 위해 꺼줍니다.
+    // 🌟 [유지] Vercel이든 앱이든 이미지 최적화 끄기 (Capacitor와 호환성을 위해 유지)
     unoptimized: true, 
   },
 };

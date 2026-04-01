@@ -90,7 +90,7 @@ export function useAuth() {
     }
 
     // 💻 [경로 B: 위에서 안 걸러진 PC 웹이거나 카카오/깃허브일 때만 실행]
-    alert('🚨 웹(OAuth) 브라우저 모드로 진입했습니다!'); // 아이폰 구글 로그인 시 이 알림이 뜨면 안 됩니다.
+    //alert('🚨 웹(OAuth) 브라우저 모드로 진입했습니다!'); // 아이폰 구글 로그인 시 이 알림이 뜨면 안 됩니다.
 
     const redirectUrl = typeof window !== "undefined" 
       ? `${window.location.origin}/home` 
