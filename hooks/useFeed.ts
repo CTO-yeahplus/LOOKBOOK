@@ -40,7 +40,7 @@ export function useFeed(
         // 2. 뒤에서 조용히 최신 데이터 호출 시도 fetch(getApiUrl('/api/fashion'))
         //const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/fashion`, {
         const response = await fetch(getApiUrl('/api/fashion'), { 
-          next: { revalidate: 3600 },
+          //next: { revalidate: 3600 },
           signal: AbortSignal.timeout(5000) // 🌟 [핵심] 5초 안에 응답 안 오면 인터넷 끊긴 걸로 간주하고 바로 포기!
         });
         
@@ -49,7 +49,8 @@ export function useFeed(
           localStorage.setItem('aura_feed_cache', JSON.stringify(data));
           setRawItems(data);
         } else {
-          throw new Error("서버 응답 오류");
+          const errorText = await response.text();
+          throw new Error(`[${response.status}] 서버 응답 오류: ${errorText}`);
         }
       } catch (e) { 
         console.warn("오프라인 상태이거나 네트워크가 불안정합니다. 캐시된 데이터를 유지합니다.", e);
