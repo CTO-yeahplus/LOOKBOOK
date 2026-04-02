@@ -239,10 +239,10 @@ export default function IRPage() {
                   Behind the <br/><span className="text-[#ff3b30]">Monolith.</span>
               </h2>
               <blockquote className="text-2xl md:text-3xl text-white/60 font-light leading-snug italic mb-6 break-keep">
-                  "I didn't study fashion. I spent my life engineering the impossible out of massive data."
+                &quot;I didn&apos;t study fashion. I spent my life engineering the impossible out of massive data.&quot;
               </blockquote>
               <p className="text-xl text-white/30 font-sans tracking-tight break-keep leading-relaxed">
-                  "저는 패션을 공부하지 않았습니다. 대부분의 이력을 방대한 데이터를 엔지니어링하면서 이력을 쌓았습니다."
+              &quot;저는 패션을 공부하지 않았습니다. 대부분의 이력을 방대한 데이터를 엔지니어링하면서 이력을 쌓았습니다.&quot;
               </p>
           </div>
 
@@ -297,16 +297,16 @@ export default function IRPage() {
                   <h3 className="text-xl text-white font-black mb-3">Lucasfilm / ILM (5 Years 8 Months)</h3>
                   <p className="text-sm text-white/80 mb-3">Mastered unimaginable scales of visual data rendering & pipeline engineering.</p>
                   <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
-                  상상할 수 없는 규모의 페타바이트(PB)급 시각 데이터를 통제하고, 전 세계 탑티어 아티스트들과 협업하며 완벽한 '픽셀'을 깎아내던 데이터 공학 기술
+                  상상할 수 없는 규모의 페타바이트(PB)급 시각 데이터를 통제하고, 전 세계 탑티어 아티스트들과 협업하며 완벽한 &apos;픽셀&apos;을 깎아내던 데이터 공학 기술
                   </p>
               </div>
 
               <div className="border-l-2 border-white/20 pl-8 py-2 relative">
                   <div className="absolute -left-[7px] top-1/2 -translate-y-1/2 w-3 h-3 bg-white/20 rounded-full" />
                   <h3 className="text-xl text-white font-black mb-3">Pioneer of Katana Pipeline in Korea</h3>
-                  <p className="text-sm text-white/80 mb-3">Built the unseen from data. (e.g., Blockbuster movie 'The Battleship Island')</p>
+                  <p className="text-sm text-white/80 mb-3">Built the unseen from data. (e.g., Blockbuster movie &apos;The Battleship Island&apos;)</p>
                   <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
-                  국내 최초 카타나(Katana) 파이프라인 도입 및 한국 VFX 산업 표준 재수립. 존재하지 않던 시스템을 설계하고 '데이터로 불가능을 시각화'하는 프론티어 경험 (ex. 영화 '군함도')
+                  국내 최초 카타나(Katana) 파이프라인 도입 및 한국 VFX 산업 표준 재수립. 존재하지 않던 시스템을 설계하고 &apos;데이터로 불가능을 시각화&apos;하는 프론티어 경험 (ex. 영화 &apos;군함도&apos;)
                   </p>
               </div>
 
@@ -315,7 +315,7 @@ export default function IRPage() {
                   <h3 className="text-xl text-white font-black mb-3">Current CTO @ Global Photo Tech Leader</h3>
                   <p className="text-sm text-white/80 mb-3">Handling real-time massive global user data & infrastructure.</p>
                   <p className="text-[14px] font-sans text-white/30 tracking-normal normal-case break-keep leading-relaxed">
-                  전 세계 수천 대의 셀프 포토 키오스크 인프라를 총괄하며 쏟아지는 글로벌 실시간 유저 데이터를 안정적으로 핸들링. AURA의 '글로벌 스케일 확장'을 기술적으로 보장하는 현직 마스터.
+                  전 세계 수천 대의 셀프 포토 키오스크 인프라를 총괄하며 쏟아지는 글로벌 실시간 유저 데이터를 안정적으로 핸들링. AURA의 &apos;글로벌 스케일 확장&apos;을 기술적으로 보장하는 현직 마스터.
                   </p>
               </div>
 
